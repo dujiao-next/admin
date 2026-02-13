@@ -396,7 +396,7 @@ watch(
     </div>
 
     <Dialog v-model:open="showDetail" @update:open="(value) => { if (!value) closeDetail() }">
-      <DialogScrollContent class="w-full max-w-4xl">
+      <DialogScrollContent class="w-full max-w-5xl">
         <DialogHeader>
           <DialogTitle>{{ t('admin.payments.detailTitle') }}</DialogTitle>
         </DialogHeader>
@@ -406,19 +406,19 @@ watch(
             {{ detailError }}
           </div>
           <div v-else-if="detailPayment" class="space-y-6 text-sm text-muted-foreground">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <Card class="rounded-lg border-border bg-background shadow-none">
-                <CardContent class="p-3">
-                  <div class="text-xs text-muted-foreground">{{ t('admin.payments.detailPaymentId') }}</div>
-                  <div class="text-foreground font-mono mt-1">
+                <CardContent class="p-4">
+                  <div class="text-xs text-muted-foreground mb-2">{{ t('admin.payments.detailPaymentId') }}</div>
+                  <div class="text-foreground font-mono text-sm break-all">
                     <IdCell :value="detailPayment.id" />
                   </div>
                 </CardContent>
               </Card>
               <Card class="rounded-lg border-border bg-background shadow-none">
-                <CardContent class="p-3">
-                  <div class="text-xs text-muted-foreground">{{ t('admin.payments.detailOrderId') }}</div>
-                  <div class="text-foreground font-mono mt-1">
+                <CardContent class="p-4">
+                  <div class="text-xs text-muted-foreground mb-2">{{ t('admin.payments.detailOrderId') }}</div>
+                  <div class="text-foreground font-mono text-sm break-all">
                     <a v-if="detailPayment.order_id" :href="orderLink(detailPayment.order_id)" target="_blank" rel="noopener" class="text-primary underline-offset-4 hover:underline">
                       #{{ detailPayment.order_id }}
                     </a>
@@ -427,16 +427,16 @@ watch(
                 </CardContent>
               </Card>
               <Card class="rounded-lg border-border bg-background shadow-none">
-                <CardContent class="p-3">
-                  <div class="text-xs text-muted-foreground">{{ t('admin.payments.detailChannel') }}</div>
-                  <div class="text-foreground">{{ detailPayment.channel_name || '-' }}</div>
-                  <div class="text-xs text-muted-foreground mt-1">{{ providerTypeLabel(detailPayment.provider_type) }} / {{ channelTypeLabel(detailPayment.channel_type) }}</div>
+                <CardContent class="p-4">
+                  <div class="text-xs text-muted-foreground mb-2">{{ t('admin.payments.detailChannel') }}</div>
+                  <div class="text-foreground text-sm break-words">{{ detailPayment.channel_name || '-' }}</div>
+                  <div class="text-xs text-muted-foreground mt-1 break-words">{{ providerTypeLabel(detailPayment.provider_type) }} / {{ channelTypeLabel(detailPayment.channel_type) }}</div>
                 </CardContent>
               </Card>
               <Card class="rounded-lg border-border bg-background shadow-none">
-                <CardContent class="p-3">
-                  <div class="text-xs text-muted-foreground">{{ t('admin.payments.channelId') }}</div>
-                  <div class="text-foreground font-mono mt-1">
+                <CardContent class="p-4">
+                  <div class="text-xs text-muted-foreground mb-2">{{ t('admin.payments.channelId') }}</div>
+                  <div class="text-foreground font-mono text-sm break-all">
                     <a v-if="detailPayment.channel_id" :href="channelLink(detailPayment.channel_id)" target="_blank" rel="noopener" class="text-primary underline-offset-4 hover:underline">
                       #{{ detailPayment.channel_id }}
                     </a>
@@ -445,83 +445,83 @@ watch(
                 </CardContent>
               </Card>
               <Card class="rounded-lg border-border bg-background shadow-none">
-                <CardContent class="p-3">
-                  <div class="text-xs text-muted-foreground">{{ t('admin.payments.detailStatus') }}</div>
-                  <div class="text-foreground">{{ statusLabel(detailPayment.status) }}</div>
+                <CardContent class="p-4">
+                  <div class="text-xs text-muted-foreground mb-2">{{ t('admin.payments.detailStatus') }}</div>
+                  <div class="text-foreground text-sm">{{ statusLabel(detailPayment.status) }}</div>
                 </CardContent>
               </Card>
               <Card class="rounded-lg border-border bg-background shadow-none">
-                <CardContent class="p-3">
-                  <div class="text-xs text-muted-foreground">{{ t('admin.payments.detailAmount') }}</div>
-                  <div class="text-foreground font-mono mt-1">{{ detailPayment.amount }} {{ detailPayment.currency }}</div>
+                <CardContent class="p-4">
+                  <div class="text-xs text-muted-foreground mb-2">{{ t('admin.payments.detailAmount') }}</div>
+                  <div class="text-foreground font-mono text-sm">{{ detailPayment.amount }} {{ detailPayment.currency }}</div>
                 </CardContent>
               </Card>
               <Card class="rounded-lg border-border bg-background shadow-none">
-                <CardContent class="p-3">
-                  <div class="text-xs text-muted-foreground">{{ t('admin.payments.detailFeeRate') }}</div>
-                  <div class="text-foreground font-mono mt-1">{{ formatFeeRate(detailPayment.fee_rate) }}</div>
+                <CardContent class="p-4">
+                  <div class="text-xs text-muted-foreground mb-2">{{ t('admin.payments.detailFeeRate') }}</div>
+                  <div class="text-foreground font-mono text-sm">{{ formatFeeRate(detailPayment.fee_rate) }}</div>
                 </CardContent>
               </Card>
               <Card class="rounded-lg border-border bg-background shadow-none">
-                <CardContent class="p-3">
-                  <div class="text-xs text-muted-foreground">{{ t('admin.payments.detailFeeAmount') }}</div>
-                  <div class="text-foreground font-mono mt-1">{{ formatMoney(detailPayment.fee_amount, detailPayment.currency) }}</div>
+                <CardContent class="p-4">
+                  <div class="text-xs text-muted-foreground mb-2">{{ t('admin.payments.detailFeeAmount') }}</div>
+                  <div class="text-foreground font-mono text-sm">{{ formatMoney(detailPayment.fee_amount, detailPayment.currency) }}</div>
                 </CardContent>
               </Card>
               <Card class="rounded-lg border-border bg-background shadow-none">
-                <CardContent class="p-3">
-                  <div class="text-xs text-muted-foreground">{{ t('admin.payments.detailInteraction') }}</div>
-                  <div class="text-foreground">{{ interactionModeLabel(detailPayment.interaction_mode) }}</div>
+                <CardContent class="p-4">
+                  <div class="text-xs text-muted-foreground mb-2">{{ t('admin.payments.detailInteraction') }}</div>
+                  <div class="text-foreground text-sm">{{ interactionModeLabel(detailPayment.interaction_mode) }}</div>
                 </CardContent>
               </Card>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <Card class="rounded-lg border-border bg-background shadow-none">
-                <CardContent class="p-3">
-                  <div class="text-xs text-muted-foreground">{{ t('admin.payments.detailCreatedAt') }}</div>
-                  <div class="text-foreground">{{ formatDate(detailPayment.created_at) }}</div>
+                <CardContent class="p-4">
+                  <div class="text-xs text-muted-foreground mb-2">{{ t('admin.payments.detailCreatedAt') }}</div>
+                  <div class="text-foreground text-sm">{{ formatDate(detailPayment.created_at) }}</div>
                 </CardContent>
               </Card>
               <Card class="rounded-lg border-border bg-background shadow-none">
-                <CardContent class="p-3">
-                  <div class="text-xs text-muted-foreground">{{ t('admin.payments.detailPaidAt') }}</div>
-                  <div class="text-foreground">{{ formatDate(detailPayment.paid_at) }}</div>
+                <CardContent class="p-4">
+                  <div class="text-xs text-muted-foreground mb-2">{{ t('admin.payments.detailPaidAt') }}</div>
+                  <div class="text-foreground text-sm">{{ formatDate(detailPayment.paid_at) }}</div>
                 </CardContent>
               </Card>
               <Card class="rounded-lg border-border bg-background shadow-none">
-                <CardContent class="p-3">
-                  <div class="text-xs text-muted-foreground">{{ t('admin.payments.detailExpiredAt') }}</div>
-                  <div class="text-foreground">{{ formatDate(detailPayment.expired_at) }}</div>
+                <CardContent class="p-4">
+                  <div class="text-xs text-muted-foreground mb-2">{{ t('admin.payments.detailExpiredAt') }}</div>
+                  <div class="text-foreground text-sm">{{ formatDate(detailPayment.expired_at) }}</div>
                 </CardContent>
               </Card>
             </div>
 
             <Card class="rounded-lg border-border bg-background shadow-none">
-              <CardContent class="p-3">
-                <div class="text-xs text-muted-foreground mb-2">{{ t('admin.payments.detailProviderRef') }}</div>
-                <div class="text-foreground break-all">{{ detailPayment.provider_ref || '-' }}</div>
+              <CardContent class="p-4">
+                <div class="text-xs text-muted-foreground mb-3">{{ t('admin.payments.detailProviderRef') }}</div>
+                <div class="text-foreground break-all text-sm">{{ detailPayment.provider_ref || '-' }}</div>
               </CardContent>
             </Card>
 
             <Card v-if="detailPayment.pay_url" class="rounded-lg border-border bg-background shadow-none">
-              <CardContent class="p-3">
-                <div class="text-xs text-muted-foreground mb-2">{{ t('admin.payments.detailPayUrl') }}</div>
-                <div class="text-foreground break-all">{{ detailPayment.pay_url }}</div>
+              <CardContent class="p-4">
+                <div class="text-xs text-muted-foreground mb-3">{{ t('admin.payments.detailPayUrl') }}</div>
+                <div class="text-foreground break-all text-sm">{{ detailPayment.pay_url }}</div>
               </CardContent>
             </Card>
 
             <Card v-if="detailPayment.qr_code" class="rounded-lg border-border bg-background shadow-none">
-              <CardContent class="p-3">
-                <div class="text-xs text-muted-foreground mb-2">{{ t('admin.payments.detailQrCode') }}</div>
-                <div class="text-foreground break-all">{{ detailPayment.qr_code }}</div>
+              <CardContent class="p-4">
+                <div class="text-xs text-muted-foreground mb-3">{{ t('admin.payments.detailQrCode') }}</div>
+                <div class="text-foreground break-all text-sm">{{ detailPayment.qr_code }}</div>
               </CardContent>
             </Card>
 
             <Card class="rounded-lg border-border bg-background shadow-none">
-              <CardContent class="p-3">
-                <div class="text-xs text-muted-foreground mb-2">{{ t('admin.payments.detailPayload') }}</div>
-                <div class="text-xs text-muted-foreground whitespace-pre-wrap font-mono bg-muted/40 p-3 rounded-lg border border-border">
+              <CardContent class="p-4">
+                <div class="text-xs text-muted-foreground mb-3">{{ t('admin.payments.detailPayload') }}</div>
+                <div class="text-xs text-muted-foreground whitespace-pre-wrap font-mono bg-muted/40 p-4 rounded-lg border border-border overflow-auto max-h-64 break-all word-break-break-all">
                   {{ formatPayload(detailPayment.provider_payload) }}
                 </div>
               </CardContent>
@@ -532,3 +532,10 @@ watch(
     </Dialog>
   </div>
 </template>
+
+<style scoped>
+.break-all {
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+</style>
