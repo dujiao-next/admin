@@ -53,7 +53,6 @@ const isLocalizedFieldNotEmpty = (value: Record<SupportedLanguage, string>) => {
 
 const form = reactive({
   brand: {
-    logo_text: '',
     site_name: '',
   },
   contact: {
@@ -190,7 +189,6 @@ const fetchSettings = async () => {
     if (siteRes.data && siteRes.data.data) {
       const data = siteRes.data.data as any
       if (data.brand) {
-        form.brand.logo_text = String(data.brand.logo_text || '')
         form.brand.site_name = String(data.brand.site_name || '')
       }
       if (data.contact) {
@@ -528,11 +526,7 @@ onMounted(() => {
           <h2 class="text-lg font-semibold">{{ t('admin.settings.brand.title') }}</h2>
           <p class="mt-1 text-xs text-muted-foreground">{{ t('admin.settings.brand.subtitle') }}</p>
         </div>
-        <div class="grid grid-cols-1 gap-6 p-6 md:grid-cols-2">
-          <div class="space-y-2">
-            <label class="text-xs font-medium text-muted-foreground">{{ t('admin.settings.brand.logoText') }}</label>
-            <Input v-model="form.brand.logo_text" :placeholder="t('admin.settings.brand.logoTextPlaceholder')" />
-          </div>
+        <div class="grid grid-cols-1 gap-6 p-6">
           <div class="space-y-2">
             <label class="text-xs font-medium text-muted-foreground">{{ t('admin.settings.brand.siteName') }}</label>
             <Input v-model="form.brand.site_name" :placeholder="t('admin.settings.brand.siteNamePlaceholder')" />

@@ -1112,8 +1112,6 @@ const messages = {
         brand: {
           title: '品牌展示配置',
           subtitle: '配置前台导航栏品牌展示文案',
-          logoText: 'Logo 文本',
-          logoTextPlaceholder: '例如：D&N',
           siteName: '站点名称',
           siteNamePlaceholder: '例如：Dujiao-Next',
         },
@@ -2396,8 +2394,6 @@ const messages = {
         brand: {
           title: '品牌展示配置',
           subtitle: '配置前台導覽列品牌展示文案',
-          logoText: 'Logo 文字',
-          logoTextPlaceholder: '例如：D&N',
           siteName: '站點名稱',
           siteNamePlaceholder: '例如：Dujiao-Next',
         },
@@ -3680,8 +3676,6 @@ const messages = {
         brand: {
           title: 'Brand Display',
           subtitle: 'Configure brand text shown on front-end navbar',
-          logoText: 'Logo text',
-          logoTextPlaceholder: 'e.g. D&N',
           siteName: 'Site name',
           siteNamePlaceholder: 'e.g. Dujiao-Next',
         },
