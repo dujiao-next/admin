@@ -326,7 +326,7 @@ watch(
     </div>
 
     <Dialog v-model:open="showModal" @update:open="(value) => { if (!value) closeModal() }">
-      <DialogScrollContent class="w-full max-w-5xl">
+      <DialogScrollContent class="w-full max-w-5xl" @interact-outside="(e) => e.preventDefault()">
         <DialogHeader>
           <DialogTitle>{{ isEditing ? t('admin.posts.modal.editTitle') : t('admin.posts.modal.createTitle') }}</DialogTitle>
         </DialogHeader>

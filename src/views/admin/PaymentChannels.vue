@@ -891,7 +891,7 @@ const openEditById = async (rawId: unknown) => {
     </div>
 
     <Dialog v-model:open="showModal" @update:open="(value) => { if (!value) closeModal() }">
-      <DialogScrollContent class="w-full max-w-3xl">
+      <DialogScrollContent class="w-full max-w-3xl" @interact-outside="(e) => e.preventDefault()">
         <DialogHeader>
           <DialogTitle>{{ isEditing ? t('admin.paymentChannels.modal.editTitle') : t('admin.paymentChannels.modal.createTitle') }}</DialogTitle>
         </DialogHeader>
