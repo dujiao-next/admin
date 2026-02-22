@@ -50,6 +50,7 @@ const form = reactive({
   id: 0,
   title: { 'zh-CN': '', 'zh-TW': '', 'en-US': '' } as any,
   slug: '',
+  seo_meta: { keywords: '', description: '' } as any,
   description: { 'zh-CN': '', 'zh-TW': '', 'en-US': '' } as any,
   content: { 'zh-CN': '', 'zh-TW': '', 'en-US': '' } as any,
   price_amount: 0,
@@ -354,6 +355,7 @@ const openEditModal = (product: any) => {
     id: product.id,
     title: product.title || { 'zh-CN': '', 'zh-TW': '', 'en-US': '' },
     slug: product.slug,
+    seo_meta: product.seo_meta || { keywords: '', description: '' },
     description: product.description || { 'zh-CN': '', 'zh-TW': '', 'en-US': '' },
     content: product.content || { 'zh-CN': '', 'zh-TW': '', 'en-US': '' },
     price_amount: Number(product.price_amount || 0),
@@ -380,6 +382,7 @@ const resetForm = () => {
     id: 0,
     title: { 'zh-CN': '', 'zh-TW': '', 'en-US': '' },
     slug: '',
+    seo_meta: { keywords: '', description: '' },
     description: { 'zh-CN': '', 'zh-TW': '', 'en-US': '' },
     content: { 'zh-CN': '', 'zh-TW': '', 'en-US': '' },
     price_amount: 0,
@@ -402,6 +405,7 @@ const handleSubmit = async () => {
     const payload = {
       slug: String(form.slug || '').trim(),
       category_id: Number(form.category_id),
+      seo_meta: form.seo_meta,
       title: form.title,
       description: form.description,
       content: form.content,
@@ -720,6 +724,18 @@ watch(
               <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.products.form.slug') }}</label>
               <Input v-model="form.slug" required :placeholder="t('admin.products.form.slugPlaceholder')" />
               <p class="mt-1 text-xs text-muted-foreground">{{ t('admin.products.form.slugTip') }}</p>
+            </div>
+
+            <div class="col-span-1">
+              <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.products.form.seoMetaKeywords') }}</label>
+              <Input v-model="form.seo_meta.keywords" :placeholder="t('admin.products.form.seoMetaKeywordsPlaceholder')" />
+              <p class="mt-1 text-xs text-muted-foreground">{{ t('admin.products.form.seoMetaKeywordsTip') }}</p>
+            </div>
+
+            <div class="col-span-2">
+              <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.products.form.seoMetaDescription') }}</label>
+              <Textarea v-model="form.seo_meta.description" :placeholder="t('admin.products.form.seoMetaDescriptionPlaceholder')" class="min-h-[80px]" />
+              <p class="mt-1 text-xs text-muted-foreground">{{ t('admin.products.form.seoMetaDescriptionTip') }}</p>
             </div>
 
             <div class="col-span-1">
