@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Dialog, DialogHeader, DialogScrollContent, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { formatDate } from '@/utils/format'
+import { formatDate, getLocalizedText } from '@/utils/format'
 import { notifyError } from '@/utils/notify'
 import { confirmAction } from '@/utils/confirm'
 
@@ -25,20 +25,26 @@ const jumpPage = ref('')
 const filters = reactive({
   id: '',
   code: '',
+  scopeRefId: '__all__',
   isActive: '__all__',
 })
 const autoOpenId = ref<number | null>(null)
 const normalizeFilterValue = (value: string) => (value === '__all__' ? '' : value)
+const normalizeScopeFilterValue = (value: string) => (value === '__all__' ? '' : value)
 
 const showModal = ref(false)
 const error = ref('')
 const isEditing = ref(false)
 const editingId = ref<number | null>(null)
+const scopeFilterKeyword = ref('')
+const productKeyword = ref('')
+const productOptions = ref<any[]>([])
+const productOptionsLoading = ref(false)
+const selectedScopeIDs = ref<number[]>([])
 const form = reactive({
   code: '',
   type: 'percent',
   value: 0,
-  scope_ref_ids: '',
   min_amount: 0,
   max_discount: 0,
   usage_limit: 0,
@@ -62,10 +68,17 @@ const applyRouteFilter = () => {
   if (Number.isFinite(parsed) && parsed > 0) {
     filters.id = String(parsed)
     autoOpenId.value = parsed
-    return
+  } else {
+    filters.id = ''
+    autoOpenId.value = null
   }
-  filters.id = ''
-  autoOpenId.value = null
+
+  const rawScopeRefID = Number(route.query.scope_ref_id)
+  if (Number.isFinite(rawScopeRefID) && rawScopeRefID > 0) {
+    filters.scopeRefId = String(Math.floor(rawScopeRefID))
+  } else {
+    filters.scopeRefId = '__all__'
+  }
 }
 
 const discountTypeLabel = (type: string) => {
@@ -80,7 +93,6 @@ const resetForm = () => {
   form.code = ''
   form.type = 'percent'
   form.value = 0
-  form.scope_ref_ids = ''
   form.min_amount = 0
   form.max_discount = 0
   form.usage_limit = 0
@@ -88,6 +100,7 @@ const resetForm = () => {
   form.starts_at = ''
   form.ends_at = ''
   form.is_active = true
+  selectedScopeIDs.value = []
   editingId.value = null
   isEditing.value = false
 }
@@ -108,38 +121,157 @@ const toLocalInput = (raw?: string) => {
   return local.toISOString().slice(0, 16)
 }
 
-const formatScopeInput = (scope: any) => {
-  if (Array.isArray(scope)) return scope.join(', ')
-  if (typeof scope === 'string') {
-    try {
-      const parsed = JSON.parse(scope)
-      if (Array.isArray(parsed)) {
-        return parsed.join(', ')
-      }
-    } catch (_err) {
-      return scope
-    }
+const normalizeScopeIDs = (raw: any) => {
+  if (Array.isArray(raw)) {
+    return Array.from(
+      new Set(
+        raw
+          .map((item) => Number(item))
+          .filter((item) => Number.isFinite(item) && item > 0)
+          .map((item) => Math.floor(item))
+      )
+    )
   }
-  return ''
+  if (typeof raw === 'string') {
+    const text = raw.trim()
+    if (!text) return []
+    try {
+      const parsed = JSON.parse(text)
+      if (Array.isArray(parsed)) return normalizeScopeIDs(parsed)
+    } catch (_err) {
+      // 兼容历史逗号分隔的输入格式
+    }
+    return Array.from(
+      new Set(
+        text
+          .split(/[,，\s]+/)
+          .map((item) => Number(item))
+          .filter((item) => Number.isFinite(item) && item > 0)
+          .map((item) => Math.floor(item))
+      )
+    )
+  }
+  return []
 }
 
-const parseScopeIDs = (raw: string) => {
-  return raw
-    .split(/[,，\s]+/)
-    .map((item) => Number(item))
-    .filter((item) => Number.isFinite(item) && item > 0)
+const buildProductLabel = (product: any) => {
+  const id = Number(product?.id || 0)
+  const name = getLocalizedText(product?.title || {})
+  if (id > 0 && name) return `#${id} ${name}`
+  if (id > 0) return `#${id}`
+  return name || '-'
+}
+
+const ensureScopeProductsInOptions = (rows: any[]) => {
+  if (!selectedScopeIDs.value.length) return rows
+  const exists = new Set(
+    rows.map((item: any) => Number(item?.id || 0)).filter((id: number) => Number.isFinite(id) && id > 0)
+  )
+  selectedScopeIDs.value.forEach((id) => {
+    if (exists.has(id)) return
+    rows.unshift({
+      id,
+      title: {
+        'zh-CN': `#${id}`,
+        'zh-TW': `#${id}`,
+        'en-US': `#${id}`,
+      },
+    })
+    exists.add(id)
+  })
+  return rows
+}
+
+const loadProductOptions = async (keywordInput?: string) => {
+  productOptionsLoading.value = true
+  try {
+    const keyword = String((keywordInput ?? productKeyword.value) || '').trim()
+    const rows: any[] = []
+    let page = 1
+    let totalPage = 1
+    do {
+      const response = await adminAPI.getProducts({
+        page,
+        page_size: 100,
+        search: keyword || undefined,
+      })
+      const list = Array.isArray(response.data.data) ? response.data.data : []
+      rows.push(...list)
+      totalPage = Number(response.data?.pagination?.total_page || 1)
+      page += 1
+    } while (page <= totalPage && page <= 20)
+
+    const dedup = new Map<number, any>()
+    rows.forEach((item: any) => {
+      const id = Number(item?.id || 0)
+      if (!Number.isFinite(id) || id <= 0) return
+      if (!dedup.has(id)) dedup.set(id, item)
+    })
+    productOptions.value = ensureScopeProductsInOptions(Array.from(dedup.values()))
+  } catch {
+    productOptions.value = ensureScopeProductsInOptions([])
+  } finally {
+    productOptionsLoading.value = false
+  }
+}
+
+const handleSearchProducts = async () => {
+  await loadProductOptions(productKeyword.value)
+}
+
+const handleSearchScopeProducts = async () => {
+  await loadProductOptions(scopeFilterKeyword.value)
+}
+
+const toggleScopeProduct = (rawProductID: number | string) => {
+  const productID = Number(rawProductID)
+  if (!Number.isFinite(productID) || productID <= 0) return
+  const normalizedID = Math.floor(productID)
+  if (selectedScopeIDs.value.includes(normalizedID)) {
+    selectedScopeIDs.value = selectedScopeIDs.value.filter((id) => id !== normalizedID)
+    return
+  }
+  selectedScopeIDs.value = Array.from(new Set([...selectedScopeIDs.value, normalizedID])).sort((a, b) => a - b)
+}
+
+const scopeProductChecked = (rawProductID: number | string) => {
+  const productID = Number(rawProductID)
+  if (!Number.isFinite(productID) || productID <= 0) return false
+  return selectedScopeIDs.value.includes(Math.floor(productID))
+}
+
+const selectAllScopeProducts = () => {
+  const ids = productOptions.value
+    .map((item: any) => Number(item?.id || 0))
+    .filter((id: number) => Number.isFinite(id) && id > 0)
+    .map((id: number) => Math.floor(id))
+  selectedScopeIDs.value = Array.from(new Set([...selectedScopeIDs.value, ...ids])).sort((a, b) => a - b)
+}
+
+const clearScopeProducts = () => {
+  selectedScopeIDs.value = []
+}
+
+const resolveProductNameByID = (rawProductID: number | string) => {
+  const productID = Number(rawProductID)
+  if (!Number.isFinite(productID) || productID <= 0) return ''
+  const target = productOptions.value.find((item: any) => Number(item?.id || 0) === Math.floor(productID))
+  if (!target) return ''
+  return getLocalizedText(target?.title || {})
 }
 
 const fetchCoupons = async (page = 1) => {
   loading.value = true
   try {
     const normalizedIsActive = normalizeFilterValue(filters.isActive)
+    const normalizedScopeRefID = normalizeScopeFilterValue(filters.scopeRefId)
     const isActiveValue = normalizedIsActive === '' ? undefined : normalizedIsActive === 'true'
     const response = await adminAPI.getCoupons({
       page,
       page_size: pagination.value.page_size,
       id: filters.id || undefined,
       code: filters.code || undefined,
+      scope_ref_id: normalizedScopeRefID || undefined,
       is_active: isActiveValue,
     })
     coupons.value = (response.data.data as any[]) || []
@@ -159,6 +291,10 @@ const fetchCoupons = async (page = 1) => {
 }
 
 const handleSearch = () => {
+  fetchCoupons(1)
+}
+
+const handleScopeFilterChange = () => {
   fetchCoupons(1)
 }
 
@@ -184,6 +320,7 @@ const openCreateModal = () => {
   error.value = ''
   resetForm()
   showModal.value = true
+  void loadProductOptions()
 }
 
 const openEditModal = (coupon: any) => {
@@ -193,7 +330,7 @@ const openEditModal = (coupon: any) => {
   form.code = coupon.code || ''
   form.type = coupon.type || 'percent'
   form.value = coupon.value || 0
-  form.scope_ref_ids = formatScopeInput(coupon.scope_ref_ids)
+  selectedScopeIDs.value = normalizeScopeIDs(coupon.scope_ref_ids)
   form.min_amount = coupon.min_amount || 0
   form.max_discount = coupon.max_discount || 0
   form.usage_limit = coupon.usage_limit || 0
@@ -202,6 +339,7 @@ const openEditModal = (coupon: any) => {
   form.ends_at = toLocalInput(coupon.ends_at)
   form.is_active = Boolean(coupon.is_active)
   showModal.value = true
+  void loadProductOptions()
 }
 
 const closeModal = () => {
@@ -212,7 +350,7 @@ const closeModal = () => {
 
 const handleSubmit = async () => {
   error.value = ''
-  const scopeIDs = parseScopeIDs(form.scope_ref_ids)
+  const scopeIDs = normalizeScopeIDs(selectedScopeIDs.value)
   if (!scopeIDs.length) {
     error.value = t('admin.coupons.errors.scopeRequired')
     return
@@ -258,24 +396,20 @@ const handleDelete = async (coupon: any) => {
 }
 
 const formatScope = (scope?: any) => {
-  if (Array.isArray(scope) && scope.length > 0) {
-    return scope.join(', ')
-  }
-  if (typeof scope === 'string') {
-    try {
-      const parsed = JSON.parse(scope)
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed.join(', ')
-      }
-    } catch (_err) {
-      return scope || '-'
-    }
-  }
-  return '-'
+  const ids = normalizeScopeIDs(scope)
+  if (!ids.length) return '-'
+  return ids
+    .map((id) => {
+      const productName = resolveProductNameByID(id)
+      if (productName) return `#${id} ${productName}`
+      return `#${id}`
+    })
+    .join(', ')
 }
 
-onMounted(() => {
+onMounted(async () => {
   applyRouteFilter()
+  await loadProductOptions()
   fetchCoupons()
 })
 
@@ -302,6 +436,14 @@ watch(
     fetchCoupons(1)
   }
 )
+
+watch(
+  () => route.query.scope_ref_id,
+  () => {
+    applyRouteFilter()
+    fetchCoupons(1)
+  }
+)
 </script>
 
 <template>
@@ -320,6 +462,38 @@ watch(
       <div class="flex flex-wrap items-center gap-3">
         <div class="w-full md:w-48">
           <Input v-model="filters.code" :placeholder="t('admin.coupons.filterCode')" @update:modelValue="handleSearch" />
+        </div>
+        <div class="w-full md:w-72 flex items-center gap-2">
+          <Input
+            v-model="scopeFilterKeyword"
+            :placeholder="t('admin.coupons.filterScopeSearchPlaceholder')"
+            @keyup.enter="handleSearchScopeProducts"
+          />
+          <Button
+            size="sm"
+            variant="outline"
+            :disabled="productOptionsLoading"
+            @click="handleSearchScopeProducts"
+          >
+            {{ productOptionsLoading ? t('admin.common.loading') : t('admin.coupons.filterScopeSearchAction') }}
+          </Button>
+        </div>
+        <div class="w-full md:w-60">
+          <Select v-model="filters.scopeRefId" @update:modelValue="handleScopeFilterChange">
+            <SelectTrigger class="h-9 w-full">
+              <SelectValue :placeholder="t('admin.coupons.filterScope')" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">{{ t('admin.coupons.filterScopeAll') }}</SelectItem>
+              <SelectItem
+                v-for="product in productOptions"
+                :key="`coupon-filter-product-${product.id}`"
+                :value="String(product.id)"
+              >
+                {{ buildProductLabel(product) }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div class="w-full md:w-48">
           <Select v-model="filters.isActive" @update:modelValue="handleSearch">
@@ -464,9 +638,56 @@ watch(
               <label class="mb-1.5 block text-xs font-medium text-muted-foreground">{{ t('admin.coupons.modal.value') }} *</label>
               <Input v-model.number="form.value" type="number" step="0.01" required placeholder="20" />
             </div>
-            <div>
+            <div class="md:col-span-2">
               <label class="mb-1.5 block text-xs font-medium text-muted-foreground">{{ t('admin.coupons.modal.scope') }} *</label>
-              <Input v-model="form.scope_ref_ids" placeholder="10,11,12" />
+              <div class="space-y-2">
+                <div class="flex items-center gap-2">
+                  <Input
+                    v-model="productKeyword"
+                    :placeholder="t('admin.coupons.modal.scopeSearchPlaceholder')"
+                    @keyup.enter="handleSearchProducts"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    :disabled="productOptionsLoading"
+                    @click="handleSearchProducts"
+                  >
+                    {{ productOptionsLoading ? t('admin.common.loading') : t('admin.coupons.modal.scopeSearchAction') }}
+                  </Button>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <span>{{ t('admin.coupons.modal.scopeSelectedCount', { count: selectedScopeIDs.length }) }}</span>
+                  <Button type="button" size="sm" variant="ghost" class="h-7 px-2" @click="selectAllScopeProducts">
+                    {{ t('admin.coupons.modal.scopeSelectAll') }}
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" class="h-7 px-2" @click="clearScopeProducts">
+                    {{ t('admin.coupons.modal.scopeClear') }}
+                  </Button>
+                </div>
+                <div class="max-h-56 overflow-auto rounded-lg border border-border bg-background">
+                  <div v-if="productOptionsLoading" class="px-3 py-3 text-xs text-muted-foreground">
+                    {{ t('admin.common.loading') }}
+                  </div>
+                  <div v-else-if="productOptions.length === 0" class="px-3 py-3 text-xs text-muted-foreground">
+                    {{ t('admin.coupons.modal.scopeEmpty') }}
+                  </div>
+                  <label
+                    v-for="product in productOptions"
+                    :key="`scope-product-${product.id}`"
+                    class="flex cursor-pointer items-center gap-2 border-b border-border/60 px-3 py-2 text-sm last:border-b-0 hover:bg-muted/30"
+                  >
+                    <input
+                      type="checkbox"
+                      class="h-4 w-4 accent-primary"
+                      :checked="scopeProductChecked(product.id)"
+                      @change="toggleScopeProduct(product.id)"
+                    />
+                    <span class="truncate">{{ buildProductLabel(product) }}</span>
+                  </label>
+                </div>
+              </div>
             </div>
             <div>
               <label class="mb-1.5 block text-xs font-medium text-muted-foreground">{{ t('admin.coupons.modal.minAmount') }}</label>

@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Dialog, DialogHeader, DialogScrollContent, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { formatDate } from '@/utils/format'
+import { formatDate, getLocalizedText } from '@/utils/format'
 import { notifyError } from '@/utils/notify'
 import { confirmAction } from '@/utils/confirm'
 
@@ -24,16 +24,21 @@ const pagination = ref({
 const jumpPage = ref('')
 const filters = reactive({
   id: '',
-  scopeRefId: '',
+  scopeRefId: '__all__',
   isActive: '__all__',
 })
 const autoOpenId = ref<number | null>(null)
 const normalizeFilterValue = (value: string) => (value === '__all__' ? '' : value)
+const normalizeScopeFilterValue = (value: string) => (value === '__all__' ? '' : value)
 
 const showModal = ref(false)
 const error = ref('')
 const isEditing = ref(false)
 const editingId = ref<number | null>(null)
+const productKeyword = ref('')
+const productOptions = ref<any[]>([])
+const productOptionsLoading = ref(false)
+const modalScopeValue = ref('__none__')
 const form = reactive({
   name: '',
   type: 'percent',
@@ -75,6 +80,7 @@ const resetForm = () => {
   form.starts_at = ''
   form.ends_at = ''
   form.is_active = true
+  modalScopeValue.value = '__none__'
 }
 
 const toISO = (raw: string) => {
@@ -93,16 +99,111 @@ const toLocalInput = (raw?: string) => {
   return local.toISOString().slice(0, 16)
 }
 
+const parseScopeFilterID = () => {
+  const normalized = normalizeScopeFilterValue(filters.scopeRefId)
+  if (!normalized) return 0
+  const parsed = Number(normalized)
+  if (!Number.isFinite(parsed) || parsed <= 0) return 0
+  return Math.floor(parsed)
+}
+
+const buildProductLabel = (product: any) => {
+  const id = Number(product?.id || 0)
+  const name = getLocalizedText(product?.title || {})
+  if (id > 0 && name) return `#${id} ${name}`
+  if (id > 0) return `#${id}`
+  return name || '-'
+}
+
+const ensureReferencedProductsInOptions = (rows: any[]) => {
+  const ids: number[] = []
+  const scopeFilterID = parseScopeFilterID()
+  if (scopeFilterID > 0) ids.push(scopeFilterID)
+  if (form.scope_ref_id > 0) ids.push(Math.floor(form.scope_ref_id))
+
+  if (!ids.length) return rows
+  const exists = new Set(
+    rows.map((item: any) => Number(item?.id || 0)).filter((id: number) => Number.isFinite(id) && id > 0)
+  )
+  ids.forEach((id) => {
+    if (exists.has(id)) return
+    rows.unshift({
+      id,
+      title: {
+        'zh-CN': `#${id}`,
+        'zh-TW': `#${id}`,
+        'en-US': `#${id}`,
+      },
+    })
+    exists.add(id)
+  })
+  return rows
+}
+
+const loadProductOptions = async () => {
+  productOptionsLoading.value = true
+  try {
+    const keyword = String(productKeyword.value || '').trim()
+    const rows: any[] = []
+    let page = 1
+    let totalPage = 1
+    do {
+      const response = await adminAPI.getProducts({
+        page,
+        page_size: 100,
+        search: keyword || undefined,
+      })
+      const list = Array.isArray(response.data.data) ? response.data.data : []
+      rows.push(...list)
+      totalPage = Number(response.data?.pagination?.total_page || 1)
+      page += 1
+    } while (page <= totalPage && page <= 20)
+
+    const dedup = new Map<number, any>()
+    rows.forEach((item: any) => {
+      const id = Number(item?.id || 0)
+      if (!Number.isFinite(id) || id <= 0) return
+      if (!dedup.has(id)) dedup.set(id, item)
+    })
+    productOptions.value = ensureReferencedProductsInOptions(Array.from(dedup.values()))
+  } catch {
+    productOptions.value = ensureReferencedProductsInOptions([])
+  } finally {
+    productOptionsLoading.value = false
+  }
+}
+
+const handleSearchProducts = async () => {
+  await loadProductOptions()
+}
+
+const resolveProductNameByID = (rawProductID: number | string) => {
+  const productID = Number(rawProductID)
+  if (!Number.isFinite(productID) || productID <= 0) return ''
+  const target = productOptions.value.find((item: any) => Number(item?.id || 0) === Math.floor(productID))
+  if (!target) return ''
+  return getLocalizedText(target?.title || {})
+}
+
+const formatPromotionScope = (rawScopeID: any) => {
+  const scopeID = Number(rawScopeID || 0)
+  if (!Number.isFinite(scopeID) || scopeID <= 0) return '-'
+  const productName = resolveProductNameByID(scopeID)
+  if (productName) return `#${Math.floor(scopeID)} ${productName}`
+  return `#${Math.floor(scopeID)}`
+}
+
 const fetchPromotions = async (page = 1) => {
   loading.value = true
   try {
     const normalizedIsActive = normalizeFilterValue(filters.isActive)
+    const normalizedScope = normalizeScopeFilterValue(filters.scopeRefId)
     const isActiveValue = normalizedIsActive === '' ? undefined : normalizedIsActive === 'true'
     const response = await adminAPI.getPromotions({
       page,
       page_size: pagination.value.page_size,
       id: filters.id || undefined,
-      scope_ref_id: filters.scopeRefId || undefined,
+      scope_ref_id: normalizedScope || undefined,
       is_active: isActiveValue,
     })
     promotions.value = (response.data.data as any[]) || []
@@ -149,6 +250,7 @@ const openCreateModal = () => {
   editingId.value = null
   resetForm()
   showModal.value = true
+  void loadProductOptions()
 }
 
 const openEditModal = (promo: any) => {
@@ -158,12 +260,14 @@ const openEditModal = (promo: any) => {
   form.name = promo.name || ''
   form.type = promo.type || 'percent'
   form.scope_ref_id = promo.scope_ref_id || 0
+  modalScopeValue.value = form.scope_ref_id > 0 ? String(form.scope_ref_id) : '__none__'
   form.value = promo.value || 0
   form.min_amount = promo.min_amount || 0
   form.starts_at = toLocalInput(promo.starts_at)
   form.ends_at = toLocalInput(promo.ends_at)
   form.is_active = Boolean(promo.is_active)
   showModal.value = true
+  void loadProductOptions()
 }
 
 const closeModal = () => {
@@ -174,10 +278,12 @@ const closeModal = () => {
 
 const handleSubmit = async () => {
   error.value = ''
-  if (!form.scope_ref_id) {
+  const scopeRefID = Number(modalScopeValue.value)
+  if (!Number.isFinite(scopeRefID) || scopeRefID <= 0) {
     error.value = t('admin.promotions.errors.scopeRequired')
     return
   }
+  form.scope_ref_id = Math.floor(scopeRefID)
   try {
     const payload = {
       name: form.name.trim(),
@@ -215,8 +321,24 @@ const handleDelete = async (promo: any) => {
   }
 }
 
-onMounted(() => {
+const handleScopeFilterChange = () => {
+  fetchPromotions(1)
+}
+
+const handleModalScopeChange = (value: unknown) => {
+  const normalized = String(value ?? '')
+  modalScopeValue.value = normalized
+  const parsed = Number(normalized)
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    form.scope_ref_id = 0
+    return
+  }
+  form.scope_ref_id = Math.floor(parsed)
+}
+
+onMounted(async () => {
   applyRouteFilter()
+  await loadProductOptions()
   fetchPromotions()
 })
 
@@ -251,8 +373,33 @@ watch(
 
     <div class="rounded-xl border border-border bg-card p-4 shadow-sm">
       <div class="flex flex-wrap items-center gap-3">
-        <div class="w-full md:w-48">
-          <Input v-model="filters.scopeRefId" :placeholder="t('admin.promotions.filterScope')" @update:modelValue="handleSearch" />
+        <div class="w-full md:w-72 flex items-center gap-2">
+          <Input
+            v-model="productKeyword"
+            :placeholder="t('admin.promotions.filterScopeSearchPlaceholder')"
+            @keyup.enter="handleSearchProducts"
+          />
+          <Button
+            size="sm"
+            variant="outline"
+            :disabled="productOptionsLoading"
+            @click="handleSearchProducts"
+          >
+            {{ productOptionsLoading ? t('admin.common.loading') : t('admin.promotions.filterScopeSearchAction') }}
+          </Button>
+        </div>
+        <div class="w-full md:w-60">
+          <Select v-model="filters.scopeRefId" @update:modelValue="handleScopeFilterChange">
+            <SelectTrigger class="h-9 w-full">
+              <SelectValue :placeholder="t('admin.promotions.filterScope')" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">{{ t('admin.promotions.filterScopeAll') }}</SelectItem>
+              <SelectItem v-for="product in productOptions" :key="`promotion-filter-product-${product.id}`" :value="String(product.id)">
+                {{ buildProductLabel(product) }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div class="w-full md:w-48">
           <Select v-model="filters.isActive" @update:modelValue="handleSearch">
@@ -300,7 +447,7 @@ watch(
             <TableCell class="px-6 py-4 text-foreground font-medium">{{ promo.name }}</TableCell>
             <TableCell class="px-6 py-4 text-xs text-muted-foreground">{{ discountTypeLabel(promo.type) }}</TableCell>
             <TableCell class="px-6 py-4 text-foreground font-mono">{{ promo.value }}</TableCell>
-            <TableCell class="px-6 py-4 text-xs text-muted-foreground">{{ promo.scope_ref_id }}</TableCell>
+            <TableCell class="px-6 py-4 text-xs text-muted-foreground">{{ formatPromotionScope(promo.scope_ref_id) }}</TableCell>
             <TableCell class="px-6 py-4 text-xs text-muted-foreground">{{ promo.min_amount || '-' }}</TableCell>
             <TableCell class="px-6 py-4 text-xs text-muted-foreground">
               <div>{{ t('admin.promotions.period.startsAt') }}：{{ formatDate(promo.starts_at) || '-' }}</div>
@@ -392,9 +539,37 @@ watch(
               <label class="mb-1.5 block text-xs font-medium text-muted-foreground">{{ t('admin.promotions.modal.value') }} *</label>
               <Input v-model.number="form.value" type="number" step="0.01" required placeholder="10" />
             </div>
-            <div>
+            <div class="md:col-span-2">
               <label class="mb-1.5 block text-xs font-medium text-muted-foreground">{{ t('admin.promotions.modal.scope') }} *</label>
-              <Input v-model.number="form.scope_ref_id" type="number" required placeholder="10" />
+              <div class="space-y-2">
+                <div class="flex items-center gap-2">
+                  <Input
+                    v-model="productKeyword"
+                    :placeholder="t('admin.promotions.modal.scopeSearchPlaceholder')"
+                    @keyup.enter="handleSearchProducts"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    :disabled="productOptionsLoading"
+                    @click="handleSearchProducts"
+                  >
+                    {{ productOptionsLoading ? t('admin.common.loading') : t('admin.promotions.modal.scopeSearchAction') }}
+                  </Button>
+                </div>
+                <Select v-model="modalScopeValue" @update:modelValue="handleModalScopeChange">
+                  <SelectTrigger class="h-9 w-full">
+                    <SelectValue :placeholder="t('admin.promotions.modal.scopePlaceholder')" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">{{ t('admin.promotions.modal.scopePlaceholder') }}</SelectItem>
+                    <SelectItem v-for="product in productOptions" :key="`promotion-modal-product-${product.id}`" :value="String(product.id)">
+                      {{ buildProductLabel(product) }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div>
               <label class="mb-1.5 block text-xs font-medium text-muted-foreground">{{ t('admin.promotions.modal.minAmount') }}</label>
