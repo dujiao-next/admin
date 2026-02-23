@@ -153,6 +153,10 @@ const form = reactive({
     privacy: createLocalizedField(),
   },
   scripts: [] as SiteScriptItem[],
+  user_registration: {
+    enabled: true,
+    require_email_verify: true,
+  },
 })
 
 const smtpForm = reactive({
@@ -321,6 +325,11 @@ const fetchSettings = async () => {
 
       const scripts = normalizeSiteScripts(data.scripts)
       form.scripts.splice(0, form.scripts.length, ...scripts)
+
+      if (data.user_registration) {
+        form.user_registration.enabled = data.user_registration.enabled !== false
+        form.user_registration.require_email_verify = data.user_registration.require_email_verify !== false
+      }
     }
 
     if (smtpRes.data && smtpRes.data.data) {
@@ -402,6 +411,7 @@ const saveSiteSettings = async () => {
       about: form.about,
       legal: form.legal,
       scripts: form.scripts,
+      user_registration: form.user_registration,
     },
   }
   await adminAPI.updateSettings(payload)
@@ -710,6 +720,28 @@ onMounted(() => {
           <div class="space-y-2">
             <label class="text-xs font-medium text-muted-foreground">{{ t('admin.settings.contact.whatsapp') }}</label>
             <Input v-model="form.contact.whatsapp" :placeholder="t('admin.settings.contact.whatsappPlaceholder')" />
+          </div>
+        </div>
+      </div>
+      <div class="rounded-xl border border-border bg-card">
+        <div class="border-b border-border bg-muted/40 px-6 py-4">
+          <h2 class="text-lg font-semibold">{{ t('admin.settings.userRegistration.title') }}</h2>
+          <p class="mt-1 text-xs text-muted-foreground">{{ t('admin.settings.userRegistration.subtitle') }}</p>
+        </div>
+        <div class="space-y-4 p-6">
+          <div class="flex items-center gap-3 rounded-lg border border-border bg-muted/20 px-4 py-3">
+            <input id="user-reg-enabled" v-model="form.user_registration.enabled" type="checkbox" class="h-4 w-4 accent-primary" />
+            <div>
+              <label for="user-reg-enabled" class="text-sm font-medium">{{ t('admin.settings.userRegistration.enabled') }}</label>
+              <p class="text-xs text-muted-foreground">{{ t('admin.settings.userRegistration.enabledHint') }}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 rounded-lg border border-border bg-muted/20 px-4 py-3">
+            <input id="user-reg-email-verify" v-model="form.user_registration.require_email_verify" type="checkbox" class="h-4 w-4 accent-primary" />
+            <div>
+              <label for="user-reg-email-verify" class="text-sm font-medium">{{ t('admin.settings.userRegistration.requireEmailVerify') }}</label>
+              <p class="text-xs text-muted-foreground">{{ t('admin.settings.userRegistration.requireEmailVerifyHint') }}</p>
+            </div>
           </div>
         </div>
       </div>

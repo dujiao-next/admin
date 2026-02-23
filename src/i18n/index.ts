@@ -1437,6 +1437,14 @@ const messages = {
             topChannelsLimitHint: '范围 1-20，控制榜单返回条数',
           },
         },
+        userRegistration: {
+          title: '用户注册配置',
+          subtitle: '控制前台用户注册行为',
+          enabled: '允许用户注册',
+          enabledHint: '关闭后前台将隐藏注册入口',
+          requireEmailVerify: '注册需要邮箱验证码',
+          requireEmailVerifyHint: '关闭后用户注册时无需输入邮箱验证码',
+        },
         alerts: {
           saveSuccess: '设置已保存',
           saveFailed: '保存失败',
@@ -2885,6 +2893,14 @@ const messages = {
             topChannelsLimitHint: '範圍 1-20，控制榜單回傳筆數',
           },
         },
+        userRegistration: {
+          title: '使用者註冊配置',
+          subtitle: '控制前台使用者註冊行為',
+          enabled: '允許使用者註冊',
+          enabledHint: '關閉後前台將隱藏註冊入口',
+          requireEmailVerify: '註冊需要郵箱驗證碼',
+          requireEmailVerifyHint: '關閉後使用者註冊時無需輸入郵箱驗證碼',
+        },
         alerts: {
           saveSuccess: '設定已保存',
           saveFailed: '保存失敗',
@@ -4332,6 +4348,14 @@ const messages = {
             topChannelsLimit: 'Top channels limit',
             topChannelsLimitHint: 'Range 1-20, controls list size',
           },
+        },
+        userRegistration: {
+          title: 'User Registration',
+          subtitle: 'Control user registration behavior on the storefront',
+          enabled: 'Allow user registration',
+          enabledHint: 'When disabled, the registration entry will be hidden',
+          requireEmailVerify: 'Require email verification code',
+          requireEmailVerifyHint: 'When disabled, users can register without email verification',
         },
         alerts: {
           saveSuccess: 'Settings saved',
