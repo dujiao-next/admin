@@ -113,6 +113,20 @@ export interface AdminRefundToWalletPayload {
   remark?: string
 }
 
+export interface AdminBatchCardSecretStatusPayload {
+  ids: number[]
+  status: 'available' | 'reserved' | 'used'
+}
+
+export interface AdminBatchCardSecretDeletePayload {
+  ids: number[]
+}
+
+export interface AdminExportCardSecretsPayload {
+  ids: number[]
+  format: 'txt' | 'csv'
+}
+
 export const adminAPI = {
   login: (data: AdminLoginRequest) => api.post<ApiResponse<AdminLoginResponse>>('/admin/login', data),
   getAuthzMe: () => api.get<ApiResponse<AdminAuthzMeResponse>>('/admin/authz/me'),
@@ -218,6 +232,12 @@ export const adminAPI = {
     }),
   getCardSecrets: (params?: any) => api.get<ApiResponse>('/admin/card-secrets', { params }),
   updateCardSecret: (id: number, data: any) => api.put<ApiResponse>(`/admin/card-secrets/${id}`, data),
+  batchUpdateCardSecretStatus: (data: AdminBatchCardSecretStatusPayload) =>
+    api.patch<ApiResponse<{ affected: number }>>('/admin/card-secrets/batch-status', data),
+  batchDeleteCardSecrets: (data: AdminBatchCardSecretDeletePayload) =>
+    api.post<ApiResponse<{ affected: number }>>('/admin/card-secrets/batch-delete', data),
+  exportCardSecrets: (data: AdminExportCardSecretsPayload) =>
+    api.post('/admin/card-secrets/export', data, { responseType: 'blob' }),
   getCardSecretStats: (params?: any) => api.get<ApiResponse>('/admin/card-secrets/stats', { params }),
   getCardSecretBatches: (params?: any) => api.get<ApiResponse>('/admin/card-secrets/batches', { params }),
   getCardSecretTemplate: () => api.get<ApiResponse>('/admin/card-secrets/template'),

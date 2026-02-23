@@ -2,6 +2,7 @@
 import { onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { Package } from 'lucide-vue-next'
 import { adminAPI } from '@/api/admin'
 import IdCell from '@/components/IdCell.vue'
 import { Button } from '@/components/ui/button'
@@ -22,6 +23,7 @@ import {
   fulfillmentTypeLabel as fulfillmentTypeLabelMap,
 } from '@/utils/fulfillment'
 import { formatDate, formatMoney, getLocalizedText, hasPositiveAmount, toRFC3339 } from '@/utils/format'
+import { resolveSkuCodeFromSnapshot, resolveSkuSpecFromSnapshot } from '@/utils/sku'
 
 const loading = ref(true)
 const orders = ref<any[]>([])
@@ -64,7 +66,7 @@ const fulfillmentForm = reactive({
   entries: [] as Array<{ key: string; value: string }>,
 })
 const adminPath = import.meta.env.VITE_ADMIN_PATH || ''
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const userDetailLink = (userId: number) => `${adminPath}/users/${userId}`
 const productLink = (productId: number) => `${adminPath}/products?product_id=${productId}`
@@ -304,6 +306,29 @@ const manualSubmissionRows = (submission: any) => {
       key: String(key),
       value: formatManualValue(value),
     }))
+}
+
+const parseOrderItemSkuId = (item: any) => {
+  const value = Number(item?.sku_id || item?.sku_snapshot?.sku_id || 0)
+  if (!Number.isFinite(value)) return 0
+  const normalized = Math.trunc(value)
+  return normalized > 0 ? normalized : 0
+}
+
+const orderItemSkuCodeText = (item: any) => {
+  const code = resolveSkuCodeFromSnapshot(item?.sku_snapshot, {
+    defaultLabel: t('admin.orders.itemSkuDefaultCode'),
+  })
+  if (code) return code
+  const skuId = parseOrderItemSkuId(item)
+  if (skuId > 0) return `#${skuId}`
+  return t('admin.orders.itemSkuUnknown')
+}
+
+const orderItemSkuSpecText = (item: any) => {
+  const specText = resolveSkuSpecFromSnapshot(item?.sku_snapshot, locale.value)
+  if (specText) return specText
+  return t('admin.orders.itemSkuSpecEmpty')
 }
 
 const fulfillmentDeliveryLines = (fulfillment: any) => {
@@ -799,6 +824,16 @@ watch(
                       </a>
                       <div class="text-xs text-muted-foreground mt-1">#{{ item.product_id }}</div>
                       <div class="text-xs text-muted-foreground">{{ t('orderDetail.quantityLabel') }}：{{ item.quantity }}</div>
+                      <div class="mt-2 rounded-lg border border-border/70 bg-background/90 px-3 py-2">
+                        <div class="flex flex-wrap items-center gap-2">
+                          <span class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                            <Package class="h-3.5 w-3.5" />
+                            {{ t('admin.orders.itemSkuLabel') }}
+                          </span>
+                          <span class="font-mono text-xs text-foreground">{{ orderItemSkuCodeText(item) }}</span>
+                        </div>
+                        <div class="mt-1 text-xs text-muted-foreground">{{ t('admin.orders.itemSkuSpec') }}：{{ orderItemSkuSpecText(item) }}</div>
+                      </div>
                       <div class="text-xs text-muted-foreground mt-1">
                         {{ t('admin.orders.itemCouponCode') }}：
                         <a v-if="selectedOrder.coupon_code" :href="couponCodeLink(selectedOrder.coupon_code)" target="_blank" rel="noopener" class="text-primary underline-offset-4 hover:underline">
@@ -875,6 +910,16 @@ watch(
                           </a>
                           <div class="text-xs text-muted-foreground mt-1">#{{ item.product_id }}</div>
                           <div class="text-xs text-muted-foreground">{{ t('orderDetail.quantityLabel') }}：{{ item.quantity }}</div>
+                          <div class="mt-2 rounded-lg border border-border/70 bg-muted/20 px-3 py-2">
+                            <div class="flex flex-wrap items-center gap-2">
+                              <span class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                                <Package class="h-3.5 w-3.5" />
+                                {{ t('admin.orders.itemSkuLabel') }}
+                              </span>
+                              <span class="font-mono text-xs text-foreground">{{ orderItemSkuCodeText(item) }}</span>
+                            </div>
+                            <div class="mt-1 text-xs text-muted-foreground">{{ t('admin.orders.itemSkuSpec') }}：{{ orderItemSkuSpecText(item) }}</div>
+                          </div>
                           <div v-if="manualSubmissionRows(item.manual_form_submission).length" class="mt-3 rounded-lg border border-border bg-muted/20 p-3">
                             <div class="text-xs font-semibold text-muted-foreground mb-2">{{ t('admin.orders.manualSubmissionTitle') }}</div>
                             <div class="space-y-1 text-xs text-muted-foreground">
