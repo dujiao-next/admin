@@ -387,8 +387,14 @@ const parseMoneyValue = (value?: string) => {
   return parsed
 }
 
+const isPaidOrder = (order: any) => {
+  if (!order) return false
+  return Boolean(order.paid_at)
+}
+
 const refundableAmountValue = (order: any) => {
   if (!order) return 0
+  if (!isPaidOrder(order)) return 0
   const total = parseMoneyValue(order.total_amount)
   const refunded = parseMoneyValue(order.refunded_amount)
   const value = total - refunded
@@ -401,6 +407,7 @@ const refundableAmountDisplay = (order: any) => formatMoney(refundableAmountValu
 const canRefundToWallet = (order: any) => {
   if (!order) return false
   if (!order.user_id) return false
+  if (!isPaidOrder(order)) return false
   return refundableAmountValue(order) > 0
 }
 
