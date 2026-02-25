@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Dialog, DialogScrollContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { getLocalizedText } from '@/utils/format'
+import { getImageUrl } from '@/utils/image'
 import { notifyError } from '@/utils/notify'
 import { confirmAction } from '@/utils/confirm'
 
@@ -19,6 +20,8 @@ const isEditing = ref(false)
 const categories = ref<any[]>([])
 const currentLang = ref('zh-CN')
 const route = useRoute()
+const uploading = ref(false)
+const iconFileInput = ref<HTMLInputElement | null>(null)
 
 const languages = computed(() => [
   { code: 'zh-CN', name: t('admin.common.lang.zhCN') },
@@ -30,6 +33,7 @@ const form = reactive({
   id: 0,
   name: { 'zh-CN': '', 'zh-TW': '', 'en-US': '' } as any,
   slug: '',
+  icon: '',
   sort_order: 0,
 })
 
@@ -56,6 +60,7 @@ const openCreateModal = () => {
     id: 0,
     name: { 'zh-CN': '', 'zh-TW': '', 'en-US': '' },
     slug: '',
+    icon: '',
     sort_order: 0,
   })
   showModal.value = true
@@ -72,6 +77,7 @@ const openEditModal = (category: any) => {
     id: category.id,
     name,
     slug: category.slug,
+    icon: category.icon || '',
     sort_order: category.sort_order,
   })
   showModal.value = true
@@ -105,6 +111,36 @@ const handleDelete = async (category: any) => {
   } catch (err: any) {
     notifyError(t('admin.categories.errors.deleteFailed', { message: err?.message || '' }))
   }
+}
+
+const triggerIconInput = () => iconFileInput.value?.click()
+
+const handleIconFileChange = (e: Event) => {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (file) uploadIcon(file)
+}
+
+const handleIconDrop = (e: DragEvent) => {
+  const file = e.dataTransfer?.files[0]
+  if (file && file.type.startsWith('image/')) uploadIcon(file)
+}
+
+const uploadIcon = async (file: File) => {
+  uploading.value = true
+  const formData = new FormData()
+  formData.append('file', file)
+  try {
+    const res = await adminAPI.upload(formData, 'category')
+    form.icon = (res.data.data as any)?.url || ''
+  } catch (err: any) {
+    notifyError(t('admin.categories.errors.operationFailed', { message: err?.message || '' }))
+  } finally {
+    uploading.value = false
+  }
+}
+
+const removeIcon = () => {
+  form.icon = ''
 }
 
 const openEditById = async (rawId: unknown) => {
@@ -148,6 +184,7 @@ watch(
         <TableHeader class="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground">
           <TableRow>
             <TableHead class="px-6 py-3">{{ t('admin.categories.table.id') }}</TableHead>
+            <TableHead class="px-6 py-3">{{ t('admin.categories.table.icon') }}</TableHead>
             <TableHead class="px-6 py-3">{{ t('admin.categories.table.name') }}</TableHead>
             <TableHead class="px-6 py-3">{{ t('admin.categories.table.slug') }}</TableHead>
             <TableHead class="px-6 py-3">{{ t('admin.categories.table.sort') }}</TableHead>
@@ -156,14 +193,18 @@ watch(
         </TableHeader>
         <TableBody class="divide-y divide-border">
           <TableRow v-if="loading">
-            <TableCell colspan="5" class="px-6 py-8 text-center text-muted-foreground">{{ t('admin.common.loading') }}</TableCell>
+            <TableCell colspan="6" class="px-6 py-8 text-center text-muted-foreground">{{ t('admin.common.loading') }}</TableCell>
           </TableRow>
           <TableRow v-else-if="categories.length === 0">
-            <TableCell colspan="5" class="px-6 py-8 text-center text-muted-foreground">{{ t('admin.categories.empty') }}</TableCell>
+            <TableCell colspan="6" class="px-6 py-8 text-center text-muted-foreground">{{ t('admin.categories.empty') }}</TableCell>
           </TableRow>
           <TableRow v-for="category in categories" :key="category.id" class="hover:bg-muted/30">
             <TableCell class="px-6 py-4">
               <IdCell :value="category.id" />
+            </TableCell>
+            <TableCell class="px-6 py-4">
+              <img v-if="category.icon" :src="getImageUrl(category.icon)" class="h-8 w-8 rounded object-cover" :alt="getLocalizedText(category.name)" />
+              <span v-else class="text-xs text-muted-foreground">-</span>
             </TableCell>
             <TableCell class="px-6 py-4 font-medium text-foreground">{{ getLocalizedText(category.name) }}</TableCell>
             <TableCell class="px-6 py-4 font-mono text-muted-foreground">{{ category.slug }}</TableCell>
@@ -209,6 +250,29 @@ watch(
           <div>
             <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.categories.form.slug') }}</label>
             <Input v-model="form.slug" required :placeholder="t('admin.categories.form.slugPlaceholder')" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.categories.form.icon') }}</label>
+            <div
+              class="border border-dashed border-border rounded-xl p-4 text-center cursor-pointer relative"
+              @click="triggerIconInput"
+              @drop.prevent="handleIconDrop"
+              @dragover.prevent
+            >
+              <input ref="iconFileInput" type="file" class="hidden" accept="image/*" @change="handleIconFileChange" />
+              <div v-if="form.icon" class="space-y-2">
+                <img :src="getImageUrl(form.icon)" class="h-20 mx-auto rounded-lg object-cover" />
+                <div class="text-xs text-muted-foreground">{{ t('admin.categories.form.iconReplaceTip') }}</div>
+                <button type="button" class="text-xs text-destructive hover:underline" @click.stop="removeIcon">{{ t('admin.categories.form.iconRemove') }}</button>
+              </div>
+              <div v-else class="text-muted-foreground">
+                <span class="text-sm">{{ t('admin.categories.form.iconUploadHint') }}</span>
+              </div>
+              <div v-if="uploading" class="absolute inset-0 bg-black/40 flex items-center justify-center rounded-xl">
+                <div class="animate-spin h-6 w-6 border-b-2 border-white rounded-full"></div>
+              </div>
+            </div>
           </div>
 
           <div>
