@@ -127,6 +127,31 @@ export interface AdminExportCardSecretsPayload {
   format: 'txt' | 'csv'
 }
 
+export type AdminGiftCardStatus = 'active' | 'redeemed' | 'disabled'
+
+export interface AdminGenerateGiftCardsPayload {
+  name: string
+  quantity: number
+  amount: string
+  expires_at?: string
+}
+
+export interface AdminUpdateGiftCardPayload {
+  name?: string
+  status?: Exclude<AdminGiftCardStatus, 'redeemed'>
+  expires_at?: string
+}
+
+export interface AdminBatchGiftCardStatusPayload {
+  ids: number[]
+  status: 'active' | 'disabled'
+}
+
+export interface AdminExportGiftCardsPayload {
+  ids: number[]
+  format: 'txt' | 'csv'
+}
+
 export const adminAPI = {
   login: (data: AdminLoginRequest) => api.post<ApiResponse<AdminLoginResponse>>('/admin/login', data),
   getAuthzMe: () => api.get<ApiResponse<AdminAuthzMeResponse>>('/admin/authz/me'),
@@ -219,6 +244,15 @@ export const adminAPI = {
   getCoupons: (params?: any) => api.get<ApiResponse>('/admin/coupons', { params }),
   updateCoupon: (id: number, data: any) => api.put<ApiResponse>(`/admin/coupons/${id}`, data),
   deleteCoupon: (id: number) => api.delete<ApiResponse>(`/admin/coupons/${id}`),
+  generateGiftCards: (data: AdminGenerateGiftCardsPayload) =>
+    api.post<ApiResponse<{ batch: any; created: number }>>('/admin/gift-cards/generate', data),
+  getGiftCards: (params?: any) => api.get<ApiResponse<any[]>>('/admin/gift-cards', { params }),
+  updateGiftCard: (id: number, data: AdminUpdateGiftCardPayload) => api.put<ApiResponse>(`/admin/gift-cards/${id}`, data),
+  deleteGiftCard: (id: number) => api.delete<ApiResponse>(`/admin/gift-cards/${id}`),
+  batchUpdateGiftCardStatus: (data: AdminBatchGiftCardStatusPayload) =>
+    api.patch<ApiResponse<{ affected: number }>>('/admin/gift-cards/batch-status', data),
+  exportGiftCards: (data: AdminExportGiftCardsPayload) =>
+    api.post('/admin/gift-cards/export', data, { responseType: 'blob' }),
   createPromotion: (data: any) => api.post<ApiResponse>('/admin/promotions', data),
   getPromotions: (params?: any) => api.get<ApiResponse>('/admin/promotions', { params }),
   updatePromotion: (id: number, data: any) => api.put<ApiResponse>(`/admin/promotions/${id}`, data),

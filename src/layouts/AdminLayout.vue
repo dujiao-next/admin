@@ -10,6 +10,7 @@ import {
   Package,
   Folder,
   KeyRound,
+  Gift,
   Users,
   History,
   FileText,
@@ -75,6 +76,12 @@ const navItems = computed<NavItem[]>(() => {
       icon: KeyRound,
       to: '/card-secrets',
       permission: 'GET:/admin/card-secrets',
+    },
+    {
+      label: t('admin.nav.giftCards'),
+      icon: Gift,
+      to: '/gift-cards',
+      permission: 'GET:/admin/gift-cards',
     },
     {
       label: t('admin.nav.orders'),

@@ -182,6 +182,7 @@ const captchaForm = reactive({
     register_send_code: false,
     reset_send_code: false,
     guest_create_order: false,
+    gift_card_redeem: false,
   },
   image: {
     length: 5,
@@ -349,6 +350,7 @@ const fetchSettings = async () => {
       captchaForm.scenes.register_send_code = !!captcha.scenes?.register_send_code
       captchaForm.scenes.reset_send_code = !!captcha.scenes?.reset_send_code
       captchaForm.scenes.guest_create_order = !!captcha.scenes?.guest_create_order
+      captchaForm.scenes.gift_card_redeem = !!captcha.scenes?.gift_card_redeem
 
       captchaForm.image.length = normalizeNumber(captcha.image?.length, 5)
       captchaForm.image.width = normalizeNumber(captcha.image?.width, 240)
@@ -464,6 +466,7 @@ const saveCaptchaSettings = async () => {
       register_send_code: captchaForm.scenes.register_send_code,
       reset_send_code: captchaForm.scenes.reset_send_code,
       guest_create_order: captchaForm.scenes.guest_create_order,
+      gift_card_redeem: captchaForm.scenes.gift_card_redeem,
     },
     image: {
       length: Number(captchaForm.image.length),
@@ -1014,6 +1017,10 @@ onMounted(() => {
               <label class="flex items-center gap-2 text-sm">
                 <input v-model="captchaForm.scenes.guest_create_order" type="checkbox" class="h-4 w-4 accent-primary" />
                 {{ t('admin.settings.captcha.scenes.guestCreateOrder') }}
+              </label>
+              <label class="flex items-center gap-2 text-sm">
+                <input v-model="captchaForm.scenes.gift_card_redeem" type="checkbox" class="h-4 w-4 accent-primary" />
+                {{ t('admin.settings.captcha.scenes.giftCardRedeem') }}
               </label>
             </div>
           </div>
