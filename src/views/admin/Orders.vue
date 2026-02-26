@@ -209,6 +209,8 @@ const providerTypeLabel = (value?: string) => {
   const map: Record<string, string> = {
     official: t('admin.paymentChannels.providerTypes.official'),
     epay: t('admin.paymentChannels.providerTypes.epay'),
+    epusdt: t('admin.paymentChannels.providerTypes.epusdt'),
+    wallet: t('admin.paymentChannels.providerTypes.wallet'),
   }
   if (!value) return '-'
   return map[value] || value
@@ -220,6 +222,11 @@ const channelTypeLabel = (value?: string) => {
     alipay: t('admin.paymentChannels.channelTypes.alipay'),
     qqpay: t('admin.paymentChannels.channelTypes.qqpay'),
     paypal: t('admin.paymentChannels.channelTypes.paypal'),
+    stripe: t('admin.paymentChannels.channelTypes.stripe'),
+    'usdt-trc20': t('admin.paymentChannels.channelTypes.usdtTrc20'),
+    'usdc-trc20': t('admin.paymentChannels.channelTypes.usdcTrc20'),
+    trx: t('admin.paymentChannels.channelTypes.trx'),
+    balance: t('admin.paymentChannels.channelTypes.balance'),
   }
   if (!value) return '-'
   return map[value] || value

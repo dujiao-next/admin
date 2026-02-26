@@ -27,6 +27,7 @@ const filters = reactive({
   userId: '',
   orderId: '',
   channelId: '',
+  providerType: '__all__',
   createdFrom: '',
   createdTo: '',
   status: '__all__',
@@ -51,6 +52,7 @@ const fetchPayments = async (page = 1) => {
       user_id: filters.userId || undefined,
       order_id: filters.orderId || undefined,
       channel_id: filters.channelId || undefined,
+      provider_type: normalizeFilterValue(filters.providerType) || undefined,
       created_from: toRFC3339(filters.createdFrom),
       created_to: toRFC3339(filters.createdTo),
     })
@@ -96,6 +98,7 @@ const handleExport = async () => {
       user_id: filters.userId || undefined,
       order_id: filters.orderId || undefined,
       channel_id: filters.channelId || undefined,
+      provider_type: normalizeFilterValue(filters.providerType) || undefined,
       created_from: toRFC3339(filters.createdFrom),
       created_to: toRFC3339(filters.createdTo),
       status: normalizeFilterValue(filters.status) || undefined,
@@ -151,6 +154,8 @@ const providerTypeLabel = (value?: string) => {
   const map: Record<string, string> = {
     official: t('admin.paymentChannels.providerTypes.official'),
     epay: t('admin.paymentChannels.providerTypes.epay'),
+    epusdt: t('admin.paymentChannels.providerTypes.epusdt'),
+    wallet: t('admin.paymentChannels.providerTypes.wallet'),
   }
   if (!value) return '-'
   return map[value] || value
@@ -162,6 +167,11 @@ const channelTypeLabel = (value?: string) => {
     alipay: t('admin.paymentChannels.channelTypes.alipay'),
     qqpay: t('admin.paymentChannels.channelTypes.qqpay'),
     paypal: t('admin.paymentChannels.channelTypes.paypal'),
+    stripe: t('admin.paymentChannels.channelTypes.stripe'),
+    'usdt-trc20': t('admin.paymentChannels.channelTypes.usdtTrc20'),
+    'usdc-trc20': t('admin.paymentChannels.channelTypes.usdcTrc20'),
+    trx: t('admin.paymentChannels.channelTypes.trx'),
+    balance: t('admin.paymentChannels.channelTypes.balance'),
   }
   if (!value) return '-'
   return map[value] || value
@@ -171,6 +181,9 @@ const interactionModeLabel = (value?: string) => {
   const map: Record<string, string> = {
     qr: t('admin.paymentChannels.interactionModes.qr'),
     redirect: t('admin.paymentChannels.interactionModes.redirect'),
+    wap: t('admin.paymentChannels.interactionModes.wap'),
+    page: t('admin.paymentChannels.interactionModes.page'),
+    balance: t('admin.paymentChannels.interactionModes.balance'),
   }
   if (!value) return '-'
   return map[value] || value
@@ -246,6 +259,20 @@ watch(
         </div>
         <div class="w-full md:w-48">
           <Input v-model="filters.channelId" :placeholder="t('admin.payments.filterChannelId')" @update:modelValue="handleSearch" />
+        </div>
+        <div class="w-full md:w-40">
+          <Select v-model="filters.providerType" @update:modelValue="handleSearch">
+            <SelectTrigger class="h-9 w-full">
+              <SelectValue :placeholder="t('admin.payments.filterProviderAll')" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">{{ t('admin.payments.filterProviderAll') }}</SelectItem>
+              <SelectItem value="wallet">{{ t('admin.paymentChannels.providerTypes.wallet') }}</SelectItem>
+              <SelectItem value="official">{{ t('admin.paymentChannels.providerTypes.official') }}</SelectItem>
+              <SelectItem value="epay">{{ t('admin.paymentChannels.providerTypes.epay') }}</SelectItem>
+              <SelectItem value="epusdt">{{ t('admin.paymentChannels.providerTypes.epusdt') }}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <span class="text-xs text-muted-foreground whitespace-nowrap">{{ t('admin.payments.filterCreatedRange') }}</span>

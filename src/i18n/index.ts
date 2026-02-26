@@ -318,6 +318,7 @@ const messages = {
         filterUserId: '用户ID',
         filterOrderId: '订单ID',
         filterChannelId: '渠道ID',
+        filterProviderAll: '全部提供方',
         filterCreatedRange: '创建时间',
         filterCreatedFrom: '开始时间',
         filterCreatedTo: '结束时间',
@@ -366,6 +367,7 @@ const messages = {
           official: '官方',
           epay: '易支付',
           epusdt: 'BEpusdt',
+          wallet: '钱包余额',
         },
         channelTypes: {
           wechat: '微信',
@@ -376,12 +378,14 @@ const messages = {
           usdtTrc20: 'USDT (TRC20)',
           usdcTrc20: 'USDC (TRC20)',
           trx: 'TRX',
+          balance: '余额',
         },
         interactionModes: {
           qr: '二维码',
           redirect: '跳转',
           wap: '手机网站',
           page: '电脑网站',
+          balance: '余额扣款',
         },
         table: {
           id: 'ID',
@@ -1902,6 +1906,7 @@ const messages = {
         filterUserId: '用戶ID',
         filterOrderId: '訂單ID',
         filterChannelId: '渠道ID',
+        filterProviderAll: '全部提供方',
         filterCreatedRange: '建立時間',
         filterCreatedFrom: '開始時間',
         filterCreatedTo: '結束時間',
@@ -1950,6 +1955,7 @@ const messages = {
           official: '官方',
           epay: '易支付',
           epusdt: 'BEpusdt',
+          wallet: '錢包餘額',
         },
         channelTypes: {
           wechat: '微信',
@@ -1960,12 +1966,14 @@ const messages = {
           usdtTrc20: 'USDT (TRC20)',
           usdcTrc20: 'USDC (TRC20)',
           trx: 'TRX',
+          balance: '餘額',
         },
         interactionModes: {
           qr: 'QRCode',
           redirect: '跳轉',
           wap: '手機網站',
           page: '電腦網站',
+          balance: '餘額扣款',
         },
         table: {
           id: 'ID',
@@ -3486,6 +3494,7 @@ const messages = {
         filterUserId: 'User ID',
         filterOrderId: 'Order ID',
         filterChannelId: 'Channel ID',
+        filterProviderAll: 'All Providers',
         filterCreatedRange: 'Created Range',
         filterCreatedFrom: 'From',
         filterCreatedTo: 'To',
@@ -3534,6 +3543,7 @@ const messages = {
           official: 'Official',
           epay: 'Epay',
           epusdt: 'BEpusdt',
+          wallet: 'Wallet Balance',
         },
         channelTypes: {
           wechat: 'WeChat',
@@ -3544,12 +3554,14 @@ const messages = {
           usdtTrc20: 'USDT (TRC20)',
           usdcTrc20: 'USDC (TRC20)',
           trx: 'TRX',
+          balance: 'Balance',
         },
         interactionModes: {
           qr: 'QR',
           redirect: 'Redirect',
           wap: 'Mobile Web',
           page: 'Desktop Web',
+          balance: 'Balance Deduction',
         },
         table: {
           id: 'ID',
