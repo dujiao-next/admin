@@ -532,7 +532,13 @@ watch(
               >
                 #{{ payment.order_id }}
               </router-link>
+              <span v-else-if="payment.recharge_no">{{ payment.recharge_no }}</span>
               <span v-else>-</span>
+              <div v-if="payment.recharge_no" class="mt-1 text-xs text-muted-foreground">
+                {{ t('admin.payments.rechargeStatus') }}:
+                <span v-if="payment.recharge_status">{{ paymentStatusLabel(payment.recharge_status) }}</span>
+                <span v-else>-</span>
+              </div>
             </TableCell>
             <TableCell class="px-6 py-4 text-xs">
               <span class="inline-flex rounded-full border px-2.5 py-1 text-xs" :class="paymentStatusClass(payment.status)">

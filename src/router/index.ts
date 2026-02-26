@@ -60,6 +60,12 @@ const routes = [
         meta: { permission: 'GET:/admin/payments' },
       },
       {
+        path: 'wallet-recharges',
+        name: 'wallet-recharges',
+        component: () => import('@/views/admin/WalletRecharges.vue'),
+        meta: { permission: 'GET:/admin/wallet/recharges' },
+      },
+      {
         path: 'payment-channels',
         name: 'payment-channels',
         component: () => import('@/views/admin/PaymentChannels.vue'),

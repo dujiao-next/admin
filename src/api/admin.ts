@@ -101,6 +101,36 @@ export interface AdminWalletTransaction {
   updated_at: string
 }
 
+export interface AdminWalletRechargeUser {
+  id: number
+  email: string
+  display_name: string
+}
+
+export interface AdminWalletRecharge {
+  id: number
+  recharge_no: string
+  user_id: number
+  payment_id: number
+  channel_id: number
+  provider_type: string
+  channel_type: string
+  interaction_mode: string
+  amount: string
+  payable_amount: string
+  fee_rate: string
+  fee_amount: string
+  currency: string
+  status: string
+  remark?: string
+  paid_at?: string
+  created_at: string
+  updated_at: string
+  channel_name?: string
+  payment_status?: string
+  user?: AdminWalletRechargeUser
+}
+
 export interface AdminAdjustWalletPayload {
   amount: string
   operation?: 'add' | 'subtract'
@@ -236,6 +266,8 @@ export const adminAPI = {
   getUserWallet: (id: number) => api.get<ApiResponse<{ user: any; account: AdminWalletAccount }>>(`/admin/users/${id}/wallet`),
   getUserWalletTransactions: (id: number, params?: any) =>
     api.get<ApiResponse<AdminWalletTransaction[]>>(`/admin/users/${id}/wallet/transactions`, { params }),
+  getWalletRecharges: (params?: any) =>
+    api.get<ApiResponse<AdminWalletRecharge[]>>('/admin/wallet/recharges', { params }),
   adjustUserWallet: (id: number, data: AdminAdjustWalletPayload) =>
     api.post<ApiResponse<{ account: AdminWalletAccount; transaction: AdminWalletTransaction }>>(`/admin/users/${id}/wallet/adjust`, data),
   updateUser: (id: number, data: any) => api.put<ApiResponse>(`/admin/users/${id}`, data),

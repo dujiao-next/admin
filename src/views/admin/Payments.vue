@@ -349,7 +349,18 @@ watch(
               <a v-if="payment.order_id" :href="orderLink(payment.order_id)" target="_blank" rel="noopener" class="text-primary underline-offset-4 hover:underline">
                 #{{ payment.order_id }}
               </a>
+              <div v-else-if="payment.recharge_no" class="text-foreground font-mono">
+                {{ payment.recharge_no }}
+              </div>
               <span v-else>-</span>
+              <div v-if="payment.recharge_no" class="text-xs text-muted-foreground mt-1">
+                {{ t('admin.payments.rechargeUser') }}:
+                <span v-if="payment.recharge_user_id" class="font-mono">#{{ payment.recharge_user_id }}</span>
+                <span v-else>-</span>
+              </div>
+              <div v-if="payment.recharge_no && payment.recharge_status" class="text-xs text-muted-foreground mt-0.5">
+                {{ t('admin.payments.rechargeStatus') }}: {{ statusLabel(payment.recharge_status) }}
+              </div>
             </TableCell>
             <TableCell class="px-6 py-4 text-xs text-muted-foreground">
               <div class="text-foreground">{{ payment.channel_name || '-' }}</div>
@@ -448,7 +459,18 @@ watch(
                     <a v-if="detailPayment.order_id" :href="orderLink(detailPayment.order_id)" target="_blank" rel="noopener" class="text-primary underline-offset-4 hover:underline">
                       #{{ detailPayment.order_id }}
                     </a>
+                    <span v-else-if="detailPayment.recharge_no">{{ detailPayment.recharge_no }}</span>
                     <span v-else>-</span>
+                    <div v-if="detailPayment.recharge_no" class="mt-2 space-y-1 text-xs text-muted-foreground">
+                      <div>
+                        {{ t('admin.payments.rechargeUser') }}:
+                        <span v-if="detailPayment.recharge_user_id" class="font-mono">#{{ detailPayment.recharge_user_id }}</span>
+                        <span v-else>-</span>
+                      </div>
+                      <div v-if="detailPayment.recharge_status">
+                        {{ t('admin.payments.rechargeStatus') }}: {{ statusLabel(detailPayment.recharge_status) }}
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

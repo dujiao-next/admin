@@ -6,6 +6,7 @@ import {
   LogOut,
   ShoppingBag,
   CreditCard,
+  Wallet,
   WalletCards,
   Package,
   Folder,
@@ -94,6 +95,12 @@ const navItems = computed<NavItem[]>(() => {
       icon: CreditCard,
       to: '/payments',
       permission: 'GET:/admin/payments',
+    },
+    {
+      label: t('admin.nav.walletRecharges'),
+      icon: Wallet,
+      to: '/wallet-recharges',
+      permission: 'GET:/admin/wallet/recharges',
     },
     {
       label: t('admin.nav.paymentChannels'),
