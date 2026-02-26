@@ -229,6 +229,23 @@ const paymentStatusLabel = (status: string) => paymentStatusLabelMap(t, status)
 
 const paymentStatusClass = (status: string) => paymentStatusClassMap(status)
 
+const hasWalletPayment = (order: any) => hasPositiveAmount(order?.wallet_paid_amount)
+
+const hasOnlinePayment = (order: any) => hasPositiveAmount(order?.online_paid_amount)
+
+const orderPaymentMethodLabel = (order: any) => {
+  if (hasWalletPayment(order) && hasOnlinePayment(order)) {
+    return t('admin.orders.paymentMethodMixed')
+  }
+  if (hasWalletPayment(order)) {
+    return t('admin.orders.paymentMethodWalletOnly')
+  }
+  if (hasOnlinePayment(order)) {
+    return t('admin.orders.paymentMethodOnlineOnly')
+  }
+  return t('admin.orders.paymentMethodUnknown')
+}
+
 const canCreateFulfillment = (order: any) => {
   if (!order) return false
   if (order.fulfillment) return false
@@ -799,6 +816,12 @@ watch(
                     <div class="text-foreground font-mono mt-1">{{ formatMoney(selectedOrder.refunded_amount, selectedOrder.currency) }}</div>
                   </CardContent>
                 </Card>
+                <Card class="rounded-lg border-border bg-background shadow-none">
+                  <CardContent class="p-3">
+                    <div class="text-xs text-muted-foreground">{{ t('admin.orders.detailPaymentMethod') }}</div>
+                    <div class="text-foreground mt-1">{{ orderPaymentMethodLabel(selectedOrder) }}</div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
 
@@ -982,6 +1005,12 @@ watch(
 
             <div class="rounded-xl border border-border bg-muted/20 p-4">
               <h3 class="text-sm font-semibold text-foreground mb-3">{{ t('admin.orders.detailPayments') }}</h3>
+              <div
+                v-if="hasWalletPayment(selectedOrder) && (!selectedOrder.payments || selectedOrder.payments.length === 0)"
+                class="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700"
+              >
+                {{ t('admin.orders.detailWalletOnlyNoOnlinePayments') }}
+              </div>
               <div v-if="selectedOrder.payments && selectedOrder.payments.length">
                 <Table>
                   <TableHeader class="bg-muted/40 text-xs uppercase text-muted-foreground">

@@ -40,6 +40,7 @@ const tabs = computed(() => [
   { label: t('admin.settings.tabs.smtp'), value: 'smtp' },
   { label: t('admin.settings.tabs.captcha'), value: 'captcha' },
   { label: t('admin.settings.tabs.telegram'), value: 'telegram' },
+  { label: t('admin.settings.tabs.notification'), value: 'notification' },
   { label: t('admin.settings.tabs.dashboard'), value: 'dashboard' },
   { label: t('admin.settings.tabs.security'), value: 'security' },
 ])
@@ -65,6 +66,12 @@ const currencyOptions = computed(() => {
 })
 
 const createLocalizedField = () => ({ 'zh-CN': '', 'zh-TW': '', 'en-US': '' } as Record<SupportedLanguage, string>)
+const createNotificationLocalizedTemplate = () => ({ title: '', body: '' })
+const createNotificationSceneTemplate = () => ({
+  'zh-CN': createNotificationLocalizedTemplate(),
+  'zh-TW': createNotificationLocalizedTemplate(),
+  'en-US': createNotificationLocalizedTemplate(),
+})
 const createSiteScriptItem = (): SiteScriptItem => ({
   name: '',
   enabled: true,
@@ -211,6 +218,33 @@ const telegramForm = reactive({
   replay_ttl_seconds: 300,
 })
 
+const notificationForm = reactive({
+  default_locale: 'zh-CN',
+  dedupe_ttl_seconds: 300,
+  channels: {
+    email: {
+      enabled: false,
+      recipients_text: '',
+    },
+    telegram: {
+      enabled: false,
+      recipients_text: '',
+    },
+  },
+  scenes: {
+    wallet_recharge_success: true,
+    order_paid_success: true,
+    manual_fulfillment_pending: true,
+    exception_alert: true,
+  },
+  templates: {
+    wallet_recharge_success: createNotificationSceneTemplate(),
+    order_paid_success: createNotificationSceneTemplate(),
+    manual_fulfillment_pending: createNotificationSceneTemplate(),
+    exception_alert: createNotificationSceneTemplate(),
+  },
+})
+
 const dashboardForm = reactive({
   alert: {
     low_stock_threshold: 5,
@@ -241,6 +275,33 @@ const normalizeNumber = (value: unknown, fallback: number) => {
   return parsed
 }
 
+const splitRecipients = (raw: string) => {
+  return raw
+    .split(/\r?\n|,/)
+    .map((item) => item.trim())
+    .filter((item) => item !== '')
+}
+
+const joinRecipients = (items: unknown) => {
+  if (!Array.isArray(items)) return ''
+  return items
+    .map((item) => String(item || '').trim())
+    .filter((item) => item !== '')
+    .join('\n')
+}
+
+const normalizeNotificationSceneTemplate = (raw: any) => {
+  const fallback = createNotificationSceneTemplate()
+  if (!raw || typeof raw !== 'object') return fallback
+  ;(['zh-CN', 'zh-TW', 'en-US'] as const).forEach((lang) => {
+    const item = raw[lang]
+    if (!item || typeof item !== 'object') return
+    fallback[lang].title = typeof item.title === 'string' ? item.title : ''
+    fallback[lang].body = typeof item.body === 'string' ? item.body : ''
+  })
+  return fallback
+}
+
 const clampNumber = (value: unknown, min: number, max: number, fallback: number) => {
   const parsed = normalizeNumber(value, fallback)
   if (parsed < min) return min
@@ -259,11 +320,12 @@ const notifyErrorIfNeeded = (err: unknown, fallback: string) => {
 const fetchSettings = async () => {
   loading.value = true
   try {
-    const [siteRes, smtpRes, captchaRes, telegramRes, dashboardRes] = await Promise.all([
+    const [siteRes, smtpRes, captchaRes, telegramRes, notificationRes, dashboardRes] = await Promise.all([
       adminAPI.getSettings({ key: 'site_config' }),
       adminAPI.getSMTPSettings(),
       adminAPI.getCaptchaSettings(),
       adminAPI.getTelegramAuthSettings(),
+      adminAPI.getNotificationCenterSettings(),
       adminAPI.getSettings({ key: 'dashboard_config' }),
     ])
 
@@ -375,6 +437,27 @@ const fetchSettings = async () => {
       telegramForm.has_bot_token = !!telegram.has_bot_token
       telegramForm.login_expire_seconds = normalizeNumber(telegram.login_expire_seconds, 300)
       telegramForm.replay_ttl_seconds = normalizeNumber(telegram.replay_ttl_seconds, 300)
+    }
+
+    if (notificationRes.data && notificationRes.data.data) {
+      const notification = notificationRes.data.data as any
+      notificationForm.default_locale = String(notification.default_locale || 'zh-CN')
+      notificationForm.dedupe_ttl_seconds = normalizeNumber(notification.dedupe_ttl_seconds, 300)
+
+      notificationForm.channels.email.enabled = !!notification.channels?.email?.enabled
+      notificationForm.channels.email.recipients_text = joinRecipients(notification.channels?.email?.recipients)
+      notificationForm.channels.telegram.enabled = !!notification.channels?.telegram?.enabled
+      notificationForm.channels.telegram.recipients_text = joinRecipients(notification.channels?.telegram?.recipients)
+
+      notificationForm.scenes.wallet_recharge_success = !!notification.scenes?.wallet_recharge_success
+      notificationForm.scenes.order_paid_success = !!notification.scenes?.order_paid_success
+      notificationForm.scenes.manual_fulfillment_pending = !!notification.scenes?.manual_fulfillment_pending
+      notificationForm.scenes.exception_alert = !!notification.scenes?.exception_alert
+
+      notificationForm.templates.wallet_recharge_success = normalizeNotificationSceneTemplate(notification.templates?.wallet_recharge_success)
+      notificationForm.templates.order_paid_success = normalizeNotificationSceneTemplate(notification.templates?.order_paid_success)
+      notificationForm.templates.manual_fulfillment_pending = normalizeNotificationSceneTemplate(notification.templates?.manual_fulfillment_pending)
+      notificationForm.templates.exception_alert = normalizeNotificationSceneTemplate(notification.templates?.exception_alert)
     }
 
     if (dashboardRes.data && dashboardRes.data.data) {
@@ -514,6 +597,31 @@ const saveTelegramAuthSettings = async () => {
   telegramForm.has_bot_token = !!data?.has_bot_token || telegramForm.has_bot_token
 }
 
+const saveNotificationCenterSettings = async () => {
+  const payload = {
+    default_locale: notificationForm.default_locale,
+    dedupe_ttl_seconds: Number(notificationForm.dedupe_ttl_seconds),
+    channels: {
+      email: {
+        enabled: notificationForm.channels.email.enabled,
+        recipients: splitRecipients(notificationForm.channels.email.recipients_text),
+      },
+      telegram: {
+        enabled: notificationForm.channels.telegram.enabled,
+        recipients: splitRecipients(notificationForm.channels.telegram.recipients_text),
+      },
+    },
+    scenes: {
+      wallet_recharge_success: notificationForm.scenes.wallet_recharge_success,
+      order_paid_success: notificationForm.scenes.order_paid_success,
+      manual_fulfillment_pending: notificationForm.scenes.manual_fulfillment_pending,
+      exception_alert: notificationForm.scenes.exception_alert,
+    },
+    templates: notificationForm.templates,
+  }
+  await adminAPI.updateNotificationCenterSettings(payload)
+}
+
 const saveDashboardSettings = async () => {
   const normalized = {
     alert: {
@@ -551,6 +659,8 @@ const saveSettings = async () => {
       await saveCaptchaSettings()
     } else if (currentTab.value === 'telegram') {
       await saveTelegramAuthSettings()
+    } else if (currentTab.value === 'notification') {
+      await saveNotificationCenterSettings()
     } else if (currentTab.value === 'dashboard') {
       await saveDashboardSettings()
     } else {
@@ -1124,6 +1234,139 @@ onMounted(() => {
             <div class="space-y-2">
               <label class="text-xs font-medium text-muted-foreground">{{ t('admin.settings.telegram.replayTTLSeconds') }}</label>
               <Input v-model.number="telegramForm.replay_ttl_seconds" type="number" min="60" max="86400" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div v-show="currentTab === 'notification'" class="space-y-6">
+      <div class="rounded-xl border border-border bg-card">
+        <div class="border-b border-border bg-muted/40 px-6 py-4">
+          <h2 class="text-lg font-semibold">{{ t('admin.settings.notification.title') }}</h2>
+          <p class="mt-1 text-xs text-muted-foreground">{{ t('admin.settings.notification.subtitle') }}</p>
+        </div>
+
+        <div class="space-y-6 p-6">
+          <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div class="space-y-2">
+              <label class="text-xs font-medium text-muted-foreground">{{ t('admin.settings.notification.defaultLocale') }}</label>
+              <select v-model="notificationForm.default_locale" class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+                <option value="zh-CN">zh-CN</option>
+                <option value="zh-TW">zh-TW</option>
+                <option value="en-US">en-US</option>
+              </select>
+            </div>
+            <div class="space-y-2">
+              <label class="text-xs font-medium text-muted-foreground">{{ t('admin.settings.notification.dedupeTTLSeconds') }}</label>
+              <Input v-model.number="notificationForm.dedupe_ttl_seconds" type="number" min="30" max="86400" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div class="rounded-xl border border-border">
+              <div class="border-b border-border bg-muted/30 px-4 py-3">
+                <h3 class="text-sm font-semibold">{{ t('admin.settings.notification.channels.email.title') }}</h3>
+              </div>
+              <div class="space-y-3 p-4">
+                <label class="flex items-center gap-2 text-sm">
+                  <input v-model="notificationForm.channels.email.enabled" type="checkbox" class="h-4 w-4 accent-primary" />
+                  {{ t('admin.settings.notification.channels.email.enabled') }}
+                </label>
+                <div class="space-y-2">
+                  <label class="text-xs font-medium text-muted-foreground">{{ t('admin.settings.notification.channels.email.recipients') }}</label>
+                  <Textarea
+                    v-model="notificationForm.channels.email.recipients_text"
+                    rows="5"
+                    :placeholder="t('admin.settings.notification.channels.email.recipientsPlaceholder')"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-xl border border-border">
+              <div class="border-b border-border bg-muted/30 px-4 py-3">
+                <h3 class="text-sm font-semibold">{{ t('admin.settings.notification.channels.telegram.title') }}</h3>
+              </div>
+              <div class="space-y-3 p-4">
+                <label class="flex items-center gap-2 text-sm">
+                  <input v-model="notificationForm.channels.telegram.enabled" type="checkbox" class="h-4 w-4 accent-primary" />
+                  {{ t('admin.settings.notification.channels.telegram.enabled') }}
+                </label>
+                <div class="space-y-2">
+                  <label class="text-xs font-medium text-muted-foreground">{{ t('admin.settings.notification.channels.telegram.recipients') }}</label>
+                  <Textarea
+                    v-model="notificationForm.channels.telegram.recipients_text"
+                    rows="5"
+                    :placeholder="t('admin.settings.notification.channels.telegram.recipientsPlaceholder')"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-border bg-muted/20 p-4">
+            <h3 class="text-sm font-semibold">{{ t('admin.settings.notification.scenes.title') }}</h3>
+            <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+              <label class="flex items-center gap-2 text-sm">
+                <input v-model="notificationForm.scenes.wallet_recharge_success" type="checkbox" class="h-4 w-4 accent-primary" />
+                {{ t('admin.settings.notification.scenes.walletRechargeSuccess') }}
+              </label>
+              <label class="flex items-center gap-2 text-sm">
+                <input v-model="notificationForm.scenes.order_paid_success" type="checkbox" class="h-4 w-4 accent-primary" />
+                {{ t('admin.settings.notification.scenes.orderPaidSuccess') }}
+              </label>
+              <label class="flex items-center gap-2 text-sm">
+                <input v-model="notificationForm.scenes.manual_fulfillment_pending" type="checkbox" class="h-4 w-4 accent-primary" />
+                {{ t('admin.settings.notification.scenes.manualFulfillmentPending') }}
+              </label>
+              <label class="flex items-center gap-2 text-sm">
+                <input v-model="notificationForm.scenes.exception_alert" type="checkbox" class="h-4 w-4 accent-primary" />
+                {{ t('admin.settings.notification.scenes.exceptionAlert') }}
+              </label>
+            </div>
+            <p class="mt-3 text-xs text-muted-foreground">{{ t('admin.settings.notification.scenes.exceptionThresholdHint') }}</p>
+          </div>
+
+          <div class="rounded-xl border border-border">
+            <div class="flex items-center justify-between border-b border-border bg-muted/30 px-4 py-3">
+              <h3 class="text-sm font-semibold">{{ t('admin.settings.notification.templates.title') }}</h3>
+              <span class="rounded bg-muted px-2 py-1 text-xs text-muted-foreground">{{ currentLang }}</span>
+            </div>
+            <div class="space-y-4 p-4">
+              <div class="rounded-lg border border-border bg-muted/10 p-4">
+                <h4 class="text-sm font-medium">{{ t('admin.settings.notification.scenes.walletRechargeSuccess') }}</h4>
+                <div class="mt-3 space-y-2">
+                  <Input v-model="notificationForm.templates.wallet_recharge_success[currentLang].title" :placeholder="t('admin.settings.notification.templates.titlePlaceholder')" />
+                  <Textarea v-model="notificationForm.templates.wallet_recharge_success[currentLang].body" rows="4" :placeholder="t('admin.settings.notification.templates.bodyPlaceholder')" />
+                </div>
+              </div>
+
+              <div class="rounded-lg border border-border bg-muted/10 p-4">
+                <h4 class="text-sm font-medium">{{ t('admin.settings.notification.scenes.orderPaidSuccess') }}</h4>
+                <div class="mt-3 space-y-2">
+                  <Input v-model="notificationForm.templates.order_paid_success[currentLang].title" :placeholder="t('admin.settings.notification.templates.titlePlaceholder')" />
+                  <Textarea v-model="notificationForm.templates.order_paid_success[currentLang].body" rows="4" :placeholder="t('admin.settings.notification.templates.bodyPlaceholder')" />
+                </div>
+              </div>
+
+              <div class="rounded-lg border border-border bg-muted/10 p-4">
+                <h4 class="text-sm font-medium">{{ t('admin.settings.notification.scenes.manualFulfillmentPending') }}</h4>
+                <div class="mt-3 space-y-2">
+                  <Input v-model="notificationForm.templates.manual_fulfillment_pending[currentLang].title" :placeholder="t('admin.settings.notification.templates.titlePlaceholder')" />
+                  <Textarea v-model="notificationForm.templates.manual_fulfillment_pending[currentLang].body" rows="4" :placeholder="t('admin.settings.notification.templates.bodyPlaceholder')" />
+                </div>
+              </div>
+
+              <div class="rounded-lg border border-border bg-muted/10 p-4">
+                <h4 class="text-sm font-medium">{{ t('admin.settings.notification.scenes.exceptionAlert') }}</h4>
+                <div class="mt-3 space-y-2">
+                  <Input v-model="notificationForm.templates.exception_alert[currentLang].title" :placeholder="t('admin.settings.notification.templates.titlePlaceholder')" />
+                  <Textarea v-model="notificationForm.templates.exception_alert[currentLang].body" rows="4" :placeholder="t('admin.settings.notification.templates.bodyPlaceholder')" />
+                </div>
+                <p class="mt-2 text-xs text-muted-foreground">{{ t('admin.settings.notification.templates.variableHint') }}</p>
+              </div>
             </div>
           </div>
         </div>
