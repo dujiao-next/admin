@@ -110,6 +110,15 @@ const epusdtConfig = reactive({
   return_url: '',
 })
 
+const tokenpayConfig = reactive({
+  gateway_url: '',
+  notify_secret: '',
+  currency: '',
+  notify_url: '',
+  redirect_url: '',
+  base_currency: 'CNY',
+})
+
 const epayChannelOptions = [
   { value: 'wechat', label: 'admin.paymentChannels.channelTypes.wechat' },
   { value: 'alipay', label: 'admin.paymentChannels.channelTypes.alipay' },
@@ -156,6 +165,12 @@ const interactionModeOptions = computed(() => {
   }
   if (form.provider_type === 'epusdt') {
     return [
+      { value: 'redirect', label: 'admin.paymentChannels.interactionModes.redirect' },
+    ]
+  }
+  if (form.provider_type === 'tokenpay') {
+    return [
+      { value: 'qr', label: 'admin.paymentChannels.interactionModes.qr' },
       { value: 'redirect', label: 'admin.paymentChannels.interactionModes.redirect' },
     ]
   }
@@ -229,6 +244,7 @@ const providerTypeLabel = (value?: string) => {
     official: t('admin.paymentChannels.providerTypes.official'),
     epay: t('admin.paymentChannels.providerTypes.epay'),
     epusdt: t('admin.paymentChannels.providerTypes.epusdt'),
+    tokenpay: t('admin.paymentChannels.providerTypes.tokenpay'),
   }
   return map[value || ''] || value || '-'
 }
@@ -240,6 +256,7 @@ const channelTypeLabel = (value?: string) => {
     qqpay: t('admin.paymentChannels.channelTypes.qqpay'),
     paypal: t('admin.paymentChannels.channelTypes.paypal'),
     stripe: t('admin.paymentChannels.channelTypes.stripe'),
+    usdt: t('admin.paymentChannels.channelTypes.usdt'),
     'usdt-trc20': t('admin.paymentChannels.channelTypes.usdtTrc20'),
     'usdc-trc20': t('admin.paymentChannels.channelTypes.usdcTrc20'),
     trx: t('admin.paymentChannels.channelTypes.trx'),
@@ -283,6 +300,7 @@ const openCreateModal = () => {
   resetAlipayConfig()
   resetWechatConfig()
   resetEpusdtConfig()
+  resetTokenpayConfig()
   showModal.value = true
 }
 
@@ -306,6 +324,7 @@ const openEditModal = (channel: any) => {
     applyAlipayConfig(channel.config_json)
     applyWechatConfig(channel.config_json)
     applyEpusdtConfig(channel.config_json)
+    applyTokenpayConfig(channel.config_json)
   } else {
     resetEpayConfig()
     resetPaypalConfig()
@@ -313,6 +332,7 @@ const openEditModal = (channel: any) => {
     resetAlipayConfig()
     resetWechatConfig()
     resetEpusdtConfig()
+    resetTokenpayConfig()
   }
   showModal.value = true
 }
@@ -372,12 +392,22 @@ const handleSubmit = async () => {
       ...configJson,
       ...buildEpusdtConfig(),
     }
+  } else if (form.provider_type === 'tokenpay') {
+    configJson = {
+      ...configJson,
+      ...buildTokenpayConfig(),
+    }
   }
 
   const payload = {
     name: form.name,
     provider_type: form.provider_type,
-    channel_type: form.channel_type,
+    channel_type:
+      form.provider_type === 'tokenpay'
+        ? 'usdt'
+        : form.provider_type === 'epusdt'
+          ? 'usdt-trc20'
+          : form.channel_type,
     interaction_mode: form.interaction_mode,
     fee_rate: String(form.fee_rate || '0').trim(),
     config_json: configJson,
@@ -441,6 +471,8 @@ watch(
       if (!allowed.includes(form.channel_type)) {
         form.channel_type = allowed[0] || 'usdt-trc20'
       }
+    } else if (value === 'tokenpay') {
+      form.channel_type = 'usdt'
     }
     form.interaction_mode = pickDefaultInteractionMode()
   }
@@ -454,18 +486,6 @@ watch(
       form.interaction_mode = pickDefaultInteractionMode()
     }
     
-    // 自动填充 epusdt 的 trade_type
-    if (form.provider_type === 'epusdt') {
-      const tradeTypeMap: Record<string, string> = {
-        'usdt-trc20': 'usdt.trc20',
-        'usdc-trc20': 'usdc.trc20',
-        'trx': 'tron.trx',
-      }
-      const tradeType = tradeTypeMap[form.channel_type]
-      if (tradeType) {
-        epusdtConfig.trade_type = tradeType
-      }
-    }
   }
 )
 
@@ -738,6 +758,41 @@ const buildEpusdtConfig = () => {
   return config
 }
 
+const resetTokenpayConfig = () => {
+  tokenpayConfig.gateway_url = ''
+  tokenpayConfig.notify_secret = ''
+  tokenpayConfig.currency = 'USDT'
+  tokenpayConfig.notify_url = 'https://api.yourdomain.com/api/v1/payments/callback'
+  tokenpayConfig.redirect_url = 'https://yourdomain.com/pay'
+  tokenpayConfig.base_currency = 'CNY'
+}
+
+const applyTokenpayConfig = (raw: Record<string, any>) => {
+  tokenpayConfig.gateway_url = String(raw.gateway_url || '')
+  tokenpayConfig.notify_secret = String(raw.notify_secret || '')
+  tokenpayConfig.currency = String(raw.currency || 'USDT')
+  tokenpayConfig.notify_url = String(raw.notify_url || '')
+  tokenpayConfig.redirect_url = String(raw.redirect_url || '')
+  tokenpayConfig.base_currency = String(raw.base_currency || 'CNY')
+}
+
+const buildTokenpayConfig = () => {
+  const config: Record<string, any> = {}
+  const setIfNotEmpty = (key: string, value: string) => {
+    const trimmed = String(value || '').trim()
+    if (trimmed !== '') {
+      config[key] = trimmed
+    }
+  }
+  setIfNotEmpty('gateway_url', tokenpayConfig.gateway_url)
+  setIfNotEmpty('notify_secret', tokenpayConfig.notify_secret)
+  setIfNotEmpty('currency', tokenpayConfig.currency)
+  setIfNotEmpty('notify_url', tokenpayConfig.notify_url)
+  setIfNotEmpty('redirect_url', tokenpayConfig.redirect_url)
+  setIfNotEmpty('base_currency', tokenpayConfig.base_currency)
+  return config
+}
+
 const openEditById = async (rawId: unknown) => {
   const id = Number(rawId)
   if (!Number.isFinite(id) || id <= 0) return
@@ -772,6 +827,7 @@ const openEditById = async (rawId: unknown) => {
               <SelectItem value="official">{{ t('admin.paymentChannels.providerTypes.official') }}</SelectItem>
               <SelectItem value="epay">{{ t('admin.paymentChannels.providerTypes.epay') }}</SelectItem>
               <SelectItem value="epusdt">{{ t('admin.paymentChannels.providerTypes.epusdt') }}</SelectItem>
+              <SelectItem value="tokenpay">{{ t('admin.paymentChannels.providerTypes.tokenpay') }}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -787,6 +843,10 @@ const openEditById = async (rawId: unknown) => {
               <SelectItem value="qqpay">{{ t('admin.paymentChannels.channelTypes.qqpay') }}</SelectItem>
               <SelectItem value="paypal">{{ t('admin.paymentChannels.channelTypes.paypal') }}</SelectItem>
               <SelectItem value="stripe">{{ t('admin.paymentChannels.channelTypes.stripe') }}</SelectItem>
+              <SelectItem value="usdt">{{ t('admin.paymentChannels.channelTypes.usdt') }}</SelectItem>
+              <SelectItem value="usdt-trc20">{{ t('admin.paymentChannels.channelTypes.usdtTrc20') }}</SelectItem>
+              <SelectItem value="usdc-trc20">{{ t('admin.paymentChannels.channelTypes.usdcTrc20') }}</SelectItem>
+              <SelectItem value="trx">{{ t('admin.paymentChannels.channelTypes.trx') }}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -911,10 +971,11 @@ const openEditById = async (rawId: unknown) => {
                   <SelectItem value="official">{{ t('admin.paymentChannels.providerTypes.official') }}</SelectItem>
                   <SelectItem value="epay">{{ t('admin.paymentChannels.providerTypes.epay') }}</SelectItem>
                   <SelectItem value="epusdt">{{ t('admin.paymentChannels.providerTypes.epusdt') }}</SelectItem>
+                  <SelectItem value="tokenpay">{{ t('admin.paymentChannels.providerTypes.tokenpay') }}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div>
+            <div v-if="form.provider_type !== 'tokenpay' && form.provider_type !== 'epusdt'">
               <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.paymentChannels.modal.channelType') }}</label>
               <Select v-model="form.channel_type">
                 <SelectTrigger class="h-9 w-full">
@@ -1195,6 +1256,37 @@ const openEditById = async (rawId: unknown) => {
               </div>
             </div>
             <div class="mt-3 text-xs text-muted-foreground">{{ t('admin.paymentChannels.modal.epusdtHint') }}</div>
+          </div>
+
+          <div v-if="form.provider_type === 'tokenpay'" class="rounded-xl border border-border bg-muted/20 p-4">
+            <div class="text-sm font-semibold text-foreground mb-3">{{ t('admin.paymentChannels.modal.tokenpaySection') }}</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="md:col-span-2">
+                <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.paymentChannels.modal.tokenpayGatewayUrl') }}</label>
+                <Input v-model="tokenpayConfig.gateway_url" :placeholder="t('admin.paymentChannels.modal.tokenpayGatewayUrlPlaceholder')" />
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.paymentChannels.modal.tokenpayNotifySecret') }}</label>
+                <Input v-model="tokenpayConfig.notify_secret" :placeholder="t('admin.paymentChannels.modal.tokenpayNotifySecretPlaceholder')" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.paymentChannels.modal.tokenpayCurrency') }}</label>
+                <Input v-model="tokenpayConfig.currency" :placeholder="t('admin.paymentChannels.modal.tokenpayCurrencyPlaceholder')" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.paymentChannels.modal.tokenpayBaseCurrency') }}</label>
+                <Input v-model="tokenpayConfig.base_currency" :placeholder="t('admin.paymentChannels.modal.tokenpayBaseCurrencyPlaceholder')" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.paymentChannels.modal.tokenpayNotifyUrl') }}</label>
+                <Input v-model="tokenpayConfig.notify_url" :placeholder="t('admin.paymentChannels.modal.tokenpayNotifyUrlPlaceholder')" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.paymentChannels.modal.tokenpayRedirectUrl') }}</label>
+                <Input v-model="tokenpayConfig.redirect_url" :placeholder="t('admin.paymentChannels.modal.tokenpayRedirectUrlPlaceholder')" />
+              </div>
+            </div>
+            <div class="mt-3 text-xs text-muted-foreground">{{ t('admin.paymentChannels.modal.tokenpayHint') }}</div>
           </div>
 
           <div>

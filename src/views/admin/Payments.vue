@@ -155,6 +155,7 @@ const providerTypeLabel = (value?: string) => {
     official: t('admin.paymentChannels.providerTypes.official'),
     epay: t('admin.paymentChannels.providerTypes.epay'),
     epusdt: t('admin.paymentChannels.providerTypes.epusdt'),
+    tokenpay: t('admin.paymentChannels.providerTypes.tokenpay'),
     wallet: t('admin.paymentChannels.providerTypes.wallet'),
   }
   if (!value) return '-'
@@ -168,6 +169,7 @@ const channelTypeLabel = (value?: string) => {
     qqpay: t('admin.paymentChannels.channelTypes.qqpay'),
     paypal: t('admin.paymentChannels.channelTypes.paypal'),
     stripe: t('admin.paymentChannels.channelTypes.stripe'),
+    usdt: t('admin.paymentChannels.channelTypes.usdt'),
     'usdt-trc20': t('admin.paymentChannels.channelTypes.usdtTrc20'),
     'usdc-trc20': t('admin.paymentChannels.channelTypes.usdcTrc20'),
     trx: t('admin.paymentChannels.channelTypes.trx'),
@@ -271,6 +273,7 @@ watch(
               <SelectItem value="official">{{ t('admin.paymentChannels.providerTypes.official') }}</SelectItem>
               <SelectItem value="epay">{{ t('admin.paymentChannels.providerTypes.epay') }}</SelectItem>
               <SelectItem value="epusdt">{{ t('admin.paymentChannels.providerTypes.epusdt') }}</SelectItem>
+              <SelectItem value="tokenpay">{{ t('admin.paymentChannels.providerTypes.tokenpay') }}</SelectItem>
             </SelectContent>
           </Select>
         </div>
