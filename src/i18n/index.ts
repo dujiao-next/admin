@@ -1621,7 +1621,7 @@ const messages = {
             title: '模板配置（按当前语言编辑）',
             titlePlaceholder: '通知标题，支持变量',
             bodyPlaceholder: '通知正文，支持多行与变量',
-            variableHint: '可用变量示例：{{user_id}} {{order_no}} {{amount}} {{currency}} {{provider_type}} {{channel_type}} {{alert_type}} {{alert_threshold}}',
+            variableHint: '可用变量示例：{\'{{user_id}}\'} {\'{{order_no}}\'} {\'{{amount}}\'} {\'{{currency}}\'} {\'{{provider_type}}\'} {\'{{channel_type}}\'} {\'{{alert_type}}\'} {\'{{alert_threshold}}\'}',
           },
         },
         dashboard: {
@@ -3278,7 +3278,7 @@ const messages = {
             title: '模板配置（依目前語言編輯）',
             titlePlaceholder: '通知標題，支援變數',
             bodyPlaceholder: '通知內容，支援多行與變數',
-            variableHint: '可用變數示例：{{user_id}} {{order_no}} {{amount}} {{currency}} {{provider_type}} {{channel_type}} {{alert_type}} {{alert_threshold}}',
+            variableHint: '可用變數示例：{\'{{user_id}}\'} {\'{{order_no}}\'} {\'{{amount}}\'} {\'{{currency}}\'} {\'{{provider_type}}\'} {\'{{channel_type}}\'} {\'{{alert_type}}\'} {\'{{alert_threshold}}\'}',
           },
         },
         dashboard: {
@@ -4935,7 +4935,7 @@ const messages = {
             title: 'Templates (edit in current language)',
             titlePlaceholder: 'Notification title, variables supported',
             bodyPlaceholder: 'Notification body, multiline and variables supported',
-            variableHint: 'Example variables: {{user_id}} {{order_no}} {{amount}} {{currency}} {{provider_type}} {{channel_type}} {{alert_type}} {{alert_threshold}}',
+            variableHint: 'Example variables: {\'{{user_id}}\'} {\'{{order_no}}\'} {\'{{amount}}\'} {\'{{currency}}\'} {\'{{provider_type}}\'} {\'{{channel_type}}\'} {\'{{alert_type}}\'} {\'{{alert_threshold}}\'}',
           },
         },
         dashboard: {
