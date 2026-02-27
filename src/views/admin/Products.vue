@@ -76,7 +76,7 @@ const createSKUFormItem = (raw?: any): SKUFormItem => ({
     }, {}),
   },
   price_amount: Number(raw?.price_amount || 0),
-  manual_stock_total: toSafeInt(raw?.manual_stock_total),
+  manual_stock_total: toSafeStockTotal(raw?.manual_stock_total),
   is_active: raw?.is_active ?? true,
   sort_order: Number(raw?.sort_order || 0),
 })
@@ -116,19 +116,48 @@ const toSafeInt = (value: any) => {
   return Math.max(Math.floor(num), 0)
 }
 
+const toSafeStockTotal = (value: any) => {
+  const num = Number(value)
+  if (!Number.isFinite(num)) return 0
+  const integer = Math.floor(num)
+  if (integer === -1) return -1
+  return Math.max(integer, 0)
+}
+
 const isNotifiedError = (error: unknown) => {
   return Boolean((error as { __notified?: boolean } | null)?.__notified)
 }
 
+const resolveManualStockMetrics = (product: any) => {
+  const skuRows = Array.isArray(product?.skus) ? product.skus : []
+  const activeRows = skuRows.filter((item: any) => Boolean(item?.is_active))
+  if (!activeRows.length) {
+    return {
+      total: toSafeStockTotal(product?.manual_stock_total),
+      locked: toSafeInt(product?.manual_stock_locked),
+      sold: toSafeInt(product?.manual_stock_sold),
+    }
+  }
+
+  const locked = activeRows.reduce((sum: number, item: any) => sum + toSafeInt(item?.manual_stock_locked), 0)
+  const sold = activeRows.reduce((sum: number, item: any) => sum + toSafeInt(item?.manual_stock_sold), 0)
+  if (activeRows.some((item: any) => toSafeStockTotal(item?.manual_stock_total) === -1)) {
+    return { total: -1, locked, sold }
+  }
+  const total = activeRows.reduce((sum: number, item: any) => sum + toSafeStockTotal(item?.manual_stock_total), 0)
+  return { total, locked, sold }
+}
+
 const formatManualStockSummary = (product: any) => {
-  const total = toSafeInt(product?.manual_stock_total)
-  if (total <= 0) {
+  const metrics = resolveManualStockMetrics(product)
+  const total = metrics.total
+  if (total === -1) {
     return t('admin.products.stock.unlimited')
   }
-  const locked = toSafeInt(product?.manual_stock_locked)
-  const sold = toSafeInt(product?.manual_stock_sold)
-  const available = Math.max(total - locked - sold, 0)
-  return t('admin.products.stock.summary', { total, locked, sold, available })
+  const locked = metrics.locked
+  const sold = metrics.sold
+  const remaining = Math.max(total, 0)
+  return t('admin.products.stock.manualSummary', { remaining, locked, sold })
 }
 
 const formatAutoStockSummary = (product: any) => {
@@ -152,14 +181,11 @@ const fulfillmentTypeBadgeClass = (product: any) => {
 }
 
 const manualStockBadgeClass = (product: any) => {
-  const total = toSafeInt(product?.manual_stock_total)
-  if (total <= 0) {
+  const total = resolveManualStockMetrics(product).total
+  if (total === -1) {
     return 'border-zinc-200 bg-zinc-50 text-zinc-700'
   }
-  const locked = toSafeInt(product?.manual_stock_locked)
-  const sold = toSafeInt(product?.manual_stock_sold)
-  const available = Math.max(total - locked - sold, 0)
-  if (available <= 0) {
+  if (total <= 0) {
     return 'border-rose-200 bg-rose-50 text-rose-700'
   }
   return 'border-emerald-200 bg-emerald-50 text-emerald-700'
@@ -324,7 +350,7 @@ const addSKU = () => {
     createSKUFormItem({
       sku_code: `SKU-${form.skus.length + 1}`,
       price_amount: Number(form.price_amount || 0),
-      manual_stock_total: toSafeInt(form.manual_stock_total),
+      manual_stock_total: toSafeStockTotal(form.manual_stock_total),
       is_active: true,
       sort_order: form.skus.length,
     })
@@ -358,7 +384,7 @@ const normalizeSKUsForSubmit = () => {
     }
 
     const isActive = Boolean(item.is_active)
-    const manualStockTotal = form.fulfillment_type === 'manual' ? toSafeInt(item.manual_stock_total) : 0
+    const manualStockTotal = form.fulfillment_type === 'manual' ? toSafeStockTotal(item.manual_stock_total) : 0
     const specValues = normalizeSpecValues(item.spec_values)
 
     return {
@@ -493,7 +519,7 @@ const openEditModal = (product: any) => {
     tags: tagsList,
     purchase_type: product.purchase_type || 'member',
     fulfillment_type: product.fulfillment_type || 'manual',
-    manual_stock_total: Number(product.manual_stock_total || 0),
+    manual_stock_total: resolveManualStockMetrics(product).total,
     skus: Array.isArray(product.skus) ? product.skus.map((item: any) => createSKUFormItem(item)) : [],
     category_id: Number(product.category_id || 0) || null,
     is_active: product.is_active ?? true,
@@ -540,10 +566,14 @@ const handleSubmit = async () => {
       effectivePrice = Number(priceSource.price_amount)
     }
     const effectiveManualStockTotal = normalizedSKUs.length
-      ? normalizedSKUs
-          .filter((item) => item.is_active)
-          .reduce((sum, item) => sum + toSafeInt(item.manual_stock_total), 0)
-      : toSafeInt(form.manual_stock_total)
+      ? (() => {
+          const activeRows = normalizedSKUs.filter((item) => item.is_active)
+          if (activeRows.some((item) => toSafeStockTotal(item.manual_stock_total) === -1)) {
+            return -1
+          }
+          return activeRows.reduce((sum, item) => sum + toSafeStockTotal(item.manual_stock_total), 0)
+        })()
+      : toSafeStockTotal(form.manual_stock_total)
 
     const payload = {
       slug: String(form.slug || '').trim(),
@@ -938,7 +968,7 @@ watch(
               <Input
                 v-model.number="form.manual_stock_total"
                 type="number"
-                min="0"
+                min="-1"
                 :placeholder="t('admin.products.form.manualStockTotalPlaceholder')"
                 :disabled="form.skus.length > 0"
               />
@@ -1069,7 +1099,7 @@ watch(
                   </div>
                   <div v-if="form.fulfillment_type === 'manual'" class="md:col-span-1">
                     <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.products.form.skuManualStock') }}</label>
-                    <Input v-model.number="sku.manual_stock_total" type="number" min="0" :placeholder="t('admin.products.form.skuManualStockPlaceholder')" />
+                    <Input v-model.number="sku.manual_stock_total" type="number" min="-1" :placeholder="t('admin.products.form.skuManualStockPlaceholder')" />
                   </div>
                   <div :class="form.fulfillment_type === 'manual' ? 'md:col-span-1' : 'md:col-span-2'" class="grid grid-cols-2 gap-3">
                     <div>
