@@ -1,0 +1,11 @@
+export const AFFILIATE_PROFILE_STATUS_ACTIVE = 'active'
+export const AFFILIATE_PROFILE_STATUS_DISABLED = 'disabled'
+
+export const AFFILIATE_COMMISSION_STATUS_PENDING_CONFIRM = 'pending_confirm'
+export const AFFILIATE_COMMISSION_STATUS_AVAILABLE = 'available'
+export const AFFILIATE_COMMISSION_STATUS_REJECTED = 'rejected'
+export const AFFILIATE_COMMISSION_STATUS_WITHDRAWN = 'withdrawn'
+
+export const AFFILIATE_WITHDRAW_STATUS_PENDING_REVIEW = 'pending_review'
+export const AFFILIATE_WITHDRAW_STATUS_REJECTED = 'rejected'
+export const AFFILIATE_WITHDRAW_STATUS_PAID = 'paid'

@@ -215,6 +215,31 @@ const navGroups = computed<NavGroup[]>(() => {
       ],
     },
     {
+      id: 'affiliate',
+      label: t('admin.navGroups.affiliateManagement'),
+      icon: BadgePercent,
+      items: [
+        {
+          label: t('admin.navItems.affiliatesUsers'),
+          to: '/affiliates/users',
+          icon: Users,
+          permission: 'GET:/admin/affiliates/users',
+        },
+        {
+          label: t('admin.navItems.affiliatesCommissions'),
+          to: '/affiliates/commissions',
+          icon: ReceiptText,
+          permission: 'GET:/admin/affiliates/commissions',
+        },
+        {
+          label: t('admin.navItems.affiliatesWithdraws'),
+          to: '/affiliates/withdraws',
+          icon: WalletCards,
+          permission: 'GET:/admin/affiliates/withdraws',
+        },
+      ],
+    },
+    {
       id: 'system',
       label: t('admin.navGroups.systemSettings'),
       icon: Settings,

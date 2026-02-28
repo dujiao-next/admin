@@ -120,6 +120,24 @@ const routes = [
         meta: { permission: 'GET:/admin/settings' },
       },
       {
+        path: 'affiliates/users',
+        name: 'affiliates-users',
+        component: () => import('@/views/admin/AffiliateUsers.vue'),
+        meta: { permission: 'GET:/admin/affiliates/users' },
+      },
+      {
+        path: 'affiliates/commissions',
+        name: 'affiliates-commissions',
+        component: () => import('@/views/admin/AffiliateCommissions.vue'),
+        meta: { permission: 'GET:/admin/affiliates/commissions' },
+      },
+      {
+        path: 'affiliates/withdraws',
+        name: 'affiliates-withdraws',
+        component: () => import('@/views/admin/AffiliateWithdraws.vue'),
+        meta: { permission: 'GET:/admin/affiliates/withdraws' },
+      },
+      {
         path: 'authz',
         name: 'authz',
         component: () => import('@/views/admin/Authz.vue'),

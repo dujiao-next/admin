@@ -42,6 +42,7 @@ const tabs = computed(() => [
   { label: t('admin.settings.tabs.telegram'), value: 'telegram' },
   { label: t('admin.settings.tabs.notification'), value: 'notification' },
   { label: t('admin.settings.tabs.dashboard'), value: 'dashboard' },
+  { label: t('admin.settings.tabs.affiliate'), value: 'affiliate' },
   { label: t('admin.settings.tabs.security'), value: 'security' },
 ])
 
@@ -258,6 +259,14 @@ const dashboardForm = reactive({
   },
 })
 
+const affiliateForm = reactive({
+  enabled: false,
+  commission_rate: 0,
+  confirm_days: 0,
+  min_withdraw_amount: 0,
+  withdraw_channels_text: '',
+})
+
 const passwordForm = reactive({
   old: '',
   new: '',
@@ -283,6 +292,21 @@ const splitRecipients = (raw: string) => {
 }
 
 const joinRecipients = (items: unknown) => {
+  if (!Array.isArray(items)) return ''
+  return items
+    .map((item) => String(item || '').trim())
+    .filter((item) => item !== '')
+    .join('\n')
+}
+
+const splitChannels = (raw: string) => {
+  return raw
+    .split(/\r?\n|,/)
+    .map((item) => item.trim())
+    .filter((item) => item !== '')
+}
+
+const joinChannels = (items: unknown) => {
   if (!Array.isArray(items)) return ''
   return items
     .map((item) => String(item || '').trim())
@@ -320,13 +344,14 @@ const notifyErrorIfNeeded = (err: unknown, fallback: string) => {
 const fetchSettings = async () => {
   loading.value = true
   try {
-    const [siteRes, smtpRes, captchaRes, telegramRes, notificationRes, dashboardRes] = await Promise.all([
+    const [siteRes, smtpRes, captchaRes, telegramRes, notificationRes, dashboardRes, affiliateRes] = await Promise.all([
       adminAPI.getSettings({ key: 'site_config' }),
       adminAPI.getSMTPSettings(),
       adminAPI.getCaptchaSettings(),
       adminAPI.getTelegramAuthSettings(),
       adminAPI.getNotificationCenterSettings(),
       adminAPI.getSettings({ key: 'dashboard_config' }),
+      adminAPI.getAffiliateSettings(),
     ])
 
     if (siteRes.data && siteRes.data.data) {
@@ -468,6 +493,15 @@ const fetchSettings = async () => {
       dashboardForm.alert.payments_failed_threshold = clampNumber(dashboard.alert?.payments_failed_threshold, 1, 100000, 10)
       dashboardForm.ranking.top_products_limit = clampNumber(dashboard.ranking?.top_products_limit, 1, 20, 5)
       dashboardForm.ranking.top_channels_limit = clampNumber(dashboard.ranking?.top_channels_limit, 1, 20, 5)
+    }
+
+    if (affiliateRes.data && affiliateRes.data.data) {
+      const affiliate = affiliateRes.data.data as any
+      affiliateForm.enabled = Boolean(affiliate.enabled)
+      affiliateForm.commission_rate = clampNumber(affiliate.commission_rate, 0, 100, 0)
+      affiliateForm.confirm_days = clampNumber(affiliate.confirm_days, 0, 3650, 0)
+      affiliateForm.min_withdraw_amount = Math.max(normalizeNumber(affiliate.min_withdraw_amount, 0), 0)
+      affiliateForm.withdraw_channels_text = joinChannels(affiliate.withdraw_channels)
     }
   } catch (err) {
     notifyErrorIfNeeded(err, t('admin.settings.alerts.saveFailed'))
@@ -650,6 +684,25 @@ const saveDashboardSettings = async () => {
   await adminAPI.updateSettings(payload)
 }
 
+const saveAffiliateSettings = async () => {
+  const payload = {
+    enabled: affiliateForm.enabled,
+    commission_rate: clampNumber(affiliateForm.commission_rate, 0, 100, 0),
+    confirm_days: clampNumber(affiliateForm.confirm_days, 0, 3650, 0),
+    min_withdraw_amount: Math.max(normalizeNumber(affiliateForm.min_withdraw_amount, 0), 0),
+    withdraw_channels: splitChannels(affiliateForm.withdraw_channels_text),
+  }
+  const response = await adminAPI.updateAffiliateSettings(payload)
+  const data = response.data?.data as any
+  if (data) {
+    affiliateForm.enabled = Boolean(data.enabled)
+    affiliateForm.commission_rate = clampNumber(data.commission_rate, 0, 100, payload.commission_rate)
+    affiliateForm.confirm_days = clampNumber(data.confirm_days, 0, 3650, payload.confirm_days)
+    affiliateForm.min_withdraw_amount = Math.max(normalizeNumber(data.min_withdraw_amount, payload.min_withdraw_amount), 0)
+    affiliateForm.withdraw_channels_text = joinChannels(data.withdraw_channels)
+  }
+}
+
 const saveSettings = async () => {
   loading.value = true
   try {
@@ -663,6 +716,8 @@ const saveSettings = async () => {
       await saveNotificationCenterSettings()
     } else if (currentTab.value === 'dashboard') {
       await saveDashboardSettings()
+    } else if (currentTab.value === 'affiliate') {
+      await saveAffiliateSettings()
     } else {
       await saveSiteSettings()
     }
@@ -1426,6 +1481,49 @@ onMounted(() => {
                 <p class="text-xs text-muted-foreground">{{ t('admin.settings.dashboard.ranking.topChannelsLimitHint') }}</p>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-show="currentTab === 'affiliate'" class="space-y-6">
+      <div class="rounded-xl border border-border bg-card">
+        <div class="border-b border-border bg-muted/40 px-6 py-4">
+          <h2 class="text-lg font-semibold">{{ t('admin.settings.affiliate.title') }}</h2>
+          <p class="mt-1 text-xs text-muted-foreground">{{ t('admin.settings.affiliate.subtitle') }}</p>
+        </div>
+        <div class="space-y-6 p-6">
+          <div class="flex items-center gap-3 rounded-lg border border-border bg-muted/20 px-4 py-3">
+            <input id="affiliate-enabled" v-model="affiliateForm.enabled" type="checkbox" class="h-4 w-4 accent-primary" />
+            <label for="affiliate-enabled" class="text-sm font-medium">{{ t('admin.settings.affiliate.enabled') }}</label>
+          </div>
+
+          <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div class="space-y-2">
+              <label class="text-xs font-medium text-muted-foreground">{{ t('admin.settings.affiliate.commissionRate') }}</label>
+              <Input v-model.number="affiliateForm.commission_rate" type="number" min="0" max="100" step="0.01" />
+              <p class="text-xs text-muted-foreground">{{ t('admin.settings.affiliate.commissionRateHint') }}</p>
+            </div>
+            <div class="space-y-2">
+              <label class="text-xs font-medium text-muted-foreground">{{ t('admin.settings.affiliate.confirmDays') }}</label>
+              <Input v-model.number="affiliateForm.confirm_days" type="number" min="0" max="3650" step="1" />
+              <p class="text-xs text-muted-foreground">{{ t('admin.settings.affiliate.confirmDaysHint') }}</p>
+            </div>
+            <div class="space-y-2">
+              <label class="text-xs font-medium text-muted-foreground">{{ t('admin.settings.affiliate.minWithdrawAmount') }}</label>
+              <Input v-model.number="affiliateForm.min_withdraw_amount" type="number" min="0" step="0.01" />
+              <p class="text-xs text-muted-foreground">{{ t('admin.settings.affiliate.minWithdrawAmountHint') }}</p>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-xs font-medium text-muted-foreground">{{ t('admin.settings.affiliate.withdrawChannels') }}</label>
+            <Textarea
+              v-model="affiliateForm.withdraw_channels_text"
+              rows="5"
+              :placeholder="t('admin.settings.affiliate.withdrawChannelsPlaceholder')"
+            />
+            <p class="text-xs text-muted-foreground">{{ t('admin.settings.affiliate.withdrawChannelsHint') }}</p>
           </div>
         </div>
       </div>

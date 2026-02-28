@@ -182,6 +182,14 @@ export interface AdminExportGiftCardsPayload {
   format: 'txt' | 'csv'
 }
 
+export interface AdminAffiliateSetting {
+  enabled: boolean
+  commission_rate: number
+  confirm_days: number
+  min_withdraw_amount: number
+  withdraw_channels: string[]
+}
+
 export const adminAPI = {
   login: (data: AdminLoginRequest) => api.post<ApiResponse<AdminLoginResponse>>('/admin/login', data),
   getAuthzMe: () => api.get<ApiResponse<AdminAuthzMeResponse>>('/admin/authz/me'),
@@ -242,6 +250,8 @@ export const adminAPI = {
   getNotificationCenterSettings: () => api.get<ApiResponse>('/admin/settings/notification-center'),
   updateNotificationCenterSettings: (data: any) => api.put<ApiResponse>('/admin/settings/notification-center', data),
   testNotificationCenterSettings: (data: any) => api.post<ApiResponse>('/admin/settings/notification-center/test', data),
+  getAffiliateSettings: () => api.get<ApiResponse<AdminAffiliateSetting>>('/admin/settings/affiliate'),
+  updateAffiliateSettings: (data: AdminAffiliateSetting) => api.put<ApiResponse<AdminAffiliateSetting>>('/admin/settings/affiliate', data),
   getPublicConfig: () => api.get<ApiResponse>('/public/config'),
   getImageCaptcha: () => api.get<ApiResponse>('/public/captcha/image'),
   getDashboardOverview: (params?: any) => api.get<ApiResponse>('/admin/dashboard/overview', { params }),
@@ -273,6 +283,15 @@ export const adminAPI = {
   updateUser: (id: number, data: any) => api.put<ApiResponse>(`/admin/users/${id}`, data),
   batchUpdateUserStatus: (data: any) => api.put<ApiResponse>('/admin/users/batch-status', data),
   getUserCouponUsages: (id: number, params?: any) => api.get<ApiResponse>(`/admin/users/${id}/coupon-usages`, { params }),
+  getAffiliateUsers: (params?: any) => api.get<ApiResponse>('/admin/affiliates/users', { params }),
+  updateAffiliateUserStatus: (id: number, data: { status: string }) =>
+    api.patch<ApiResponse>(`/admin/affiliates/users/${id}/status`, data),
+  batchUpdateAffiliateUserStatus: (data: { profile_ids: number[]; status: string }) =>
+    api.patch<ApiResponse>('/admin/affiliates/users/batch-status', data),
+  getAffiliateCommissions: (params?: any) => api.get<ApiResponse>('/admin/affiliates/commissions', { params }),
+  getAffiliateWithdraws: (params?: any) => api.get<ApiResponse>('/admin/affiliates/withdraws', { params }),
+  rejectAffiliateWithdraw: (id: number, data: { reason?: string }) => api.post<ApiResponse>(`/admin/affiliates/withdraws/${id}/reject`, data),
+  payAffiliateWithdraw: (id: number) => api.post<ApiResponse>(`/admin/affiliates/withdraws/${id}/pay`, {}),
   refundOrderToWallet: (id: number, data: AdminRefundToWalletPayload) =>
     api.post<ApiResponse<{ order: any; transaction: AdminWalletTransaction }>>(`/admin/orders/${id}/refund-to-wallet`, data),
   createCoupon: (data: any) => api.post<ApiResponse>('/admin/coupons', data),

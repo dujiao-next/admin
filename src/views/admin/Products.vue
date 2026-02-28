@@ -96,6 +96,7 @@ const form = reactive({
   manual_stock_total: 0,
   skus: [] as SKUFormItem[],
   category_id: null as number | null,
+  is_affiliate_enabled: false,
   is_active: true,
   sort_order: 0,
   manual_form_schema: { fields: [] as any[] },
@@ -522,6 +523,7 @@ const openEditModal = (product: any) => {
     manual_stock_total: resolveManualStockMetrics(product).total,
     skus: Array.isArray(product.skus) ? product.skus.map((item: any) => createSKUFormItem(item)) : [],
     category_id: Number(product.category_id || 0) || null,
+    is_affiliate_enabled: Boolean(product.is_affiliate_enabled),
     is_active: product.is_active ?? true,
     sort_order: Number(product.sort_order || 0),
     manual_form_schema: parseManualFormSchemaForEdit(product.manual_form_schema),
@@ -549,6 +551,7 @@ const resetForm = () => {
     manual_stock_total: 0,
     skus: [],
     category_id: null,
+    is_affiliate_enabled: false,
     is_active: true,
     sort_order: 0,
     manual_form_schema: { fields: [] },
@@ -589,6 +592,7 @@ const handleSubmit = async () => {
       fulfillment_type: form.fulfillment_type,
       manual_stock_total: effectiveManualStockTotal,
       skus: normalizedSKUs,
+      is_affiliate_enabled: form.is_affiliate_enabled,
       is_active: form.is_active,
       sort_order: Number(form.sort_order) || 0,
       manual_form_schema: normalizeManualFormSchemaForSubmit(),
@@ -782,6 +786,12 @@ watch(
                     </span>
                     <span class="rounded-full border px-2 py-0.5 text-[11px]" :class="fulfillmentTypeBadgeClass(product)">
                       {{ product.fulfillment_type === 'auto' ? t('admin.products.fulfillmentType.auto') : t('admin.products.fulfillmentType.manual') }}
+                    </span>
+                    <span
+                      class="rounded-full border px-2 py-0.5 text-[11px]"
+                      :class="product.is_affiliate_enabled ? 'border-sky-200 bg-sky-50 text-sky-700' : 'border-border bg-muted/30 text-muted-foreground'"
+                    >
+                      {{ product.is_affiliate_enabled ? t('admin.products.affiliate.enabled') : t('admin.products.affiliate.disabled') }}
                     </span>
                     <span
                       v-if="product.fulfillment_type === 'manual'"
@@ -1188,7 +1198,11 @@ watch(
               </div>
             </div>
 
-            <div class="col-span-2 flex items-center gap-2 pt-4 border-t border-border">
+            <div class="col-span-2 flex flex-wrap items-center gap-6 pt-4 border-t border-border">
+              <label class="inline-flex items-center gap-2">
+                <input id="is_affiliate_enabled" v-model="form.is_affiliate_enabled" type="checkbox" class="h-4 w-4 accent-primary" />
+                <span class="text-sm text-muted-foreground select-none">{{ t('admin.products.form.affiliateEnabled') }}</span>
+              </label>
               <input id="is_active" v-model="form.is_active" type="checkbox" class="h-4 w-4 accent-primary" />
               <label for="is_active" class="text-sm text-muted-foreground select-none">{{ t('admin.products.form.activeNow') }}</label>
             </div>
