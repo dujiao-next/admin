@@ -34,6 +34,7 @@ const error = ref('')
 const editingId = ref<number | null>(null)
 const showAdvanced = ref(false)
 const { t } = useI18n()
+const configJsonPlaceholder = '{ "key": "value" }'
 const form = reactive({
   name: '',
   provider_type: 'epay',
@@ -1296,7 +1297,7 @@ const openEditById = async (rawId: unknown) => {
                 {{ showAdvanced ? t('admin.paymentChannels.modal.advancedHide') : t('admin.paymentChannels.modal.advancedShow') }}
               </button>
             </div>
-            <Textarea v-if="showAdvanced" v-model="form.config_json" rows="8" class="font-mono text-xs" :placeholder="t('admin.paymentChannels.modal.configPlaceholder')" />
+            <Textarea v-if="showAdvanced" v-model="form.config_json" rows="8" class="font-mono text-xs" :placeholder="configJsonPlaceholder" />
           </div>
 
           <div v-if="error" class="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
