@@ -362,6 +362,7 @@ const messages = {
           official: '官方',
           epay: '易支付',
           epusdt: 'BEpusdt',
+          alimpay: '支付宝码支付',
         },
         channelTypes: {
           wechat: '微信',
@@ -509,11 +510,13 @@ const messages = {
           epusdtReturnUrl: '同步回跳地址',
           epusdtReturnUrlPlaceholder: '默认: https://dujiao.ymd.cc/payment',
           epusdtHint: '支持 USDT-TRC20、USDC-TRC20、TRX 三种 TRON 链代币。',
+          alimpaySection: '支付宝码支付配置',
+          alimpayGatewayUrl: '支付网关',
+          alimpayGatewayUrlPlaceholder: 'https://alimpay.example.com',
+          alimpayHint: '支付宝码支付依赖第三方聚合码网关，请填写正确的网关地址与商户信息。',
         },
         confirmDelete: '确定要删除渠道 "{name}" 吗？',
         errors: {
-          invalidConfig: '配置 JSON 无效',
-          fetchFailed: '获取渠道失败',
         },
       },
       products: {
@@ -1855,6 +1858,7 @@ const messages = {
           official: '官方',
           epay: '易支付',
           epusdt: 'BEpusdt',
+          alimpay: '支付寶碼支付',
         },
         channelTypes: {
           wechat: '微信',
@@ -2002,11 +2006,13 @@ const messages = {
           epusdtReturnUrl: '同步回跳地址',
           epusdtReturnUrlPlaceholder: '默認: https://dujiao.ymd.cc/payment',
           epusdtHint: '支持 USDT-TRC20、USDC-TRC20、TRX 三種 TRON 鏈代幣。',
+          alimpaySection: '支付寶碼支付配置',
+          alimpayGatewayUrl: '支付網關',
+          alimpayGatewayUrlPlaceholder: 'https://alimpay.example.com',
+          alimpayHint: '支付寶碼支付依賴第三方聚合碼網關，請填寫正確的網關位址與商戶資訊。',
         },
         confirmDelete: '確定要刪除渠道 "{name}" 嗎？',
         errors: {
-          invalidConfig: 'JSON 設定無效',
-          fetchFailed: '取得渠道失敗',
         },
       },
       products: {
@@ -3348,6 +3354,7 @@ const messages = {
           official: 'Official',
           epay: 'Epay',
           epusdt: 'BEpusdt',
+          alimpay: 'Alimpay',
         },
         channelTypes: {
           wechat: 'WeChat',
@@ -3495,11 +3502,13 @@ const messages = {
           epusdtReturnUrl: 'Return URL',
           epusdtReturnUrlPlaceholder: 'Default: https://dujiao.ymd.cc/payment',
           epusdtHint: 'Supports USDT-TRC20, USDC-TRC20, and TRX on TRON network.',
+          alimpaySection: 'Alimpay Config',
+          alimpayGatewayUrl: 'Gateway URL',
+          alimpayGatewayUrlPlaceholder: 'https://alimpay.example.com',
+          alimpayHint: 'Alimpay relies on a third-party aggregated QR gateway. Please provide the correct gateway URL and merchant credentials.',
         },
-        confirmDelete: 'Delete channel \"{name}\"?',
+        confirmDelete: 'Delete channel "{name}"?',
         errors: {
-          invalidConfig: 'Invalid JSON config',
-          fetchFailed: 'Failed to fetch channel',
         },
       },
       products: {

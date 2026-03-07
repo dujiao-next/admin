@@ -110,6 +110,14 @@ const epusdtConfig = reactive({
   return_url: '',
 })
 
+const alimpayConfig = reactive({
+  gateway_url: '',
+  merchant_id: '',
+  merchant_key: '',
+  notify_url: '',
+  return_url: '',
+})
+
 const epayChannelOptions = [
   { value: 'wechat', label: 'admin.paymentChannels.channelTypes.wechat' },
   { value: 'alipay', label: 'admin.paymentChannels.channelTypes.alipay' },
@@ -129,6 +137,10 @@ const epusdtChannelOptions = [
   { value: 'trx', label: 'admin.paymentChannels.channelTypes.trx' },
 ]
 
+const alimpayChannelOptions = [
+  { value: 'alipay', label: 'admin.paymentChannels.channelTypes.alipay' },
+]
+
 const channelOptions = [
   ...epayChannelOptions,
   ...officialChannelOptions,
@@ -144,6 +156,9 @@ const formChannelOptions = computed(() => {
   if (form.provider_type === 'epusdt') {
     return epusdtChannelOptions
   }
+  if (form.provider_type === 'alimpay') {
+    return alimpayChannelOptions
+  }
   return channelOptions
 })
 
@@ -157,6 +172,11 @@ const interactionModeOptions = computed(() => {
   if (form.provider_type === 'epusdt') {
     return [
       { value: 'redirect', label: 'admin.paymentChannels.interactionModes.redirect' },
+    ]
+  }
+  if (form.provider_type === 'alimpay') {
+    return [
+      { value: 'qr', label: 'admin.paymentChannels.interactionModes.qr' },
     ]
   }
   if (form.provider_type === 'official' && form.channel_type === 'paypal') {
@@ -229,6 +249,7 @@ const providerTypeLabel = (value?: string) => {
     official: t('admin.paymentChannels.providerTypes.official'),
     epay: t('admin.paymentChannels.providerTypes.epay'),
     epusdt: t('admin.paymentChannels.providerTypes.epusdt'),
+    alimpay: t('admin.paymentChannels.providerTypes.alimpay'),
   }
   return map[value || ''] || value || '-'
 }
@@ -283,6 +304,7 @@ const openCreateModal = () => {
   resetAlipayConfig()
   resetWechatConfig()
   resetEpusdtConfig()
+  resetAlimpayConfig()
   showModal.value = true
 }
 
@@ -306,6 +328,7 @@ const openEditModal = (channel: any) => {
     applyAlipayConfig(channel.config_json)
     applyWechatConfig(channel.config_json)
     applyEpusdtConfig(channel.config_json)
+    applyAlimpayConfig(channel.config_json)
   } else {
     resetEpayConfig()
     resetPaypalConfig()
@@ -313,6 +336,7 @@ const openEditModal = (channel: any) => {
     resetAlipayConfig()
     resetWechatConfig()
     resetEpusdtConfig()
+    resetAlimpayConfig()
   }
   showModal.value = true
 }
@@ -371,6 +395,11 @@ const handleSubmit = async () => {
     configJson = {
       ...configJson,
       ...buildEpusdtConfig(),
+    }
+  } else if (form.provider_type === 'alimpay') {
+    configJson = {
+      ...configJson,
+      ...buildAlimpayConfig(),
     }
   }
 
@@ -440,6 +469,11 @@ watch(
       const allowed = epusdtChannelOptions.map((option) => option.value)
       if (!allowed.includes(form.channel_type)) {
         form.channel_type = allowed[0] || 'usdt-trc20'
+      }
+    } else if (value === 'alimpay') {
+      const allowed = alimpayChannelOptions.map((option) => option.value)
+      if (!allowed.includes(form.channel_type)) {
+        form.channel_type = allowed[0] || 'alipay'
       }
     }
     form.interaction_mode = pickDefaultInteractionMode()
@@ -738,6 +772,38 @@ const buildEpusdtConfig = () => {
   return config
 }
 
+const resetAlimpayConfig = () => {
+  alimpayConfig.gateway_url = ''
+  alimpayConfig.merchant_id = ''
+  alimpayConfig.merchant_key = ''
+  alimpayConfig.notify_url = ''
+  alimpayConfig.return_url = ''
+}
+
+const applyAlimpayConfig = (raw: Record<string, any>) => {
+  alimpayConfig.gateway_url = String(raw.gateway_url || '')
+  alimpayConfig.merchant_id = String(raw.merchant_id || '')
+  alimpayConfig.merchant_key = String(raw.merchant_key || '')
+  alimpayConfig.notify_url = String(raw.notify_url || '')
+  alimpayConfig.return_url = String(raw.return_url || '')
+}
+
+const buildAlimpayConfig = () => {
+  const config: Record<string, any> = {}
+  const setIfNotEmpty = (key: string, value: string) => {
+    const trimmed = String(value || '').trim()
+    if (trimmed !== '') {
+      config[key] = trimmed
+    }
+  }
+  setIfNotEmpty('gateway_url', alimpayConfig.gateway_url)
+  setIfNotEmpty('merchant_id', alimpayConfig.merchant_id)
+  setIfNotEmpty('merchant_key', alimpayConfig.merchant_key)
+  setIfNotEmpty('notify_url', alimpayConfig.notify_url)
+  setIfNotEmpty('return_url', alimpayConfig.return_url)
+  return config
+}
+
 const openEditById = async (rawId: unknown) => {
   const id = Number(rawId)
   if (!Number.isFinite(id) || id <= 0) return
@@ -772,6 +838,7 @@ const openEditById = async (rawId: unknown) => {
               <SelectItem value="official">{{ t('admin.paymentChannels.providerTypes.official') }}</SelectItem>
               <SelectItem value="epay">{{ t('admin.paymentChannels.providerTypes.epay') }}</SelectItem>
               <SelectItem value="epusdt">{{ t('admin.paymentChannels.providerTypes.epusdt') }}</SelectItem>
+              <SelectItem value="alimpay">{{ t('admin.paymentChannels.providerTypes.alimpay') }}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -911,6 +978,7 @@ const openEditById = async (rawId: unknown) => {
                   <SelectItem value="official">{{ t('admin.paymentChannels.providerTypes.official') }}</SelectItem>
                   <SelectItem value="epay">{{ t('admin.paymentChannels.providerTypes.epay') }}</SelectItem>
                   <SelectItem value="epusdt">{{ t('admin.paymentChannels.providerTypes.epusdt') }}</SelectItem>
+                  <SelectItem value="alimpay">{{ t('admin.paymentChannels.providerTypes.alimpay') }}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1195,6 +1263,33 @@ const openEditById = async (rawId: unknown) => {
               </div>
             </div>
             <div class="mt-3 text-xs text-muted-foreground">{{ t('admin.paymentChannels.modal.epusdtHint') }}</div>
+          </div>
+
+          <div v-if="form.provider_type === 'alimpay'" class="rounded-xl border border-border bg-muted/20 p-4">
+            <div class="text-sm font-semibold text-foreground mb-3">{{ t('admin.paymentChannels.modal.alimpaySection') }}</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="md:col-span-2">
+                <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.paymentChannels.modal.alimpayGatewayUrl') }}</label>
+                <Input v-model="alimpayConfig.gateway_url" :placeholder="t('admin.paymentChannels.modal.alimpayGatewayUrlPlaceholder')" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.paymentChannels.modal.merchantId') }}</label>
+                <Input v-model="alimpayConfig.merchant_id" :placeholder="t('admin.paymentChannels.modal.merchantIdPlaceholder')" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.paymentChannels.modal.merchantKey') }}</label>
+                <Input v-model="alimpayConfig.merchant_key" :placeholder="t('admin.paymentChannels.modal.merchantKeyPlaceholder')" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.paymentChannels.modal.notifyUrl') }}</label>
+                <Input v-model="alimpayConfig.notify_url" :placeholder="t('admin.paymentChannels.modal.notifyUrlPlaceholder')" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.paymentChannels.modal.returnUrl') }}</label>
+                <Input v-model="alimpayConfig.return_url" :placeholder="t('admin.paymentChannels.modal.returnUrlPlaceholder')" />
+              </div>
+            </div>
+            <div class="mt-3 text-xs text-muted-foreground">{{ t('admin.paymentChannels.modal.alimpayHint') }}</div>
           </div>
 
           <div>
