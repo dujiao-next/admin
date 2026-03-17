@@ -33,6 +33,7 @@ const submitting = ref(false)
 const isEditing = ref(false)
 const editingIsMapped = ref(false)
 const initialCategoryID = ref<number | null>(null)
+const productLoadVersion = ref(0)
 const fileInput = ref<HTMLInputElement | null>(null)
 const newTag = ref('')
 const currentLang = ref('zh-CN')
@@ -500,6 +501,29 @@ const closeModal = () => {
   emit('update:modelValue', false)
 }
 
+const loadProductForEdit = async (productID: number) => {
+  const currentLoadVersion = ++productLoadVersion.value
+  try {
+    const res = await adminAPI.getProduct(productID)
+    if (
+      currentLoadVersion !== productLoadVersion.value
+      || !props.modelValue
+      || props.productId !== productID
+    ) {
+      return
+    }
+
+    const product = res.data.data
+    editingIsMapped.value = Boolean(product.is_mapped)
+    populateForm(product)
+  } catch (err: any) {
+    if (currentLoadVersion !== productLoadVersion.value) return
+    if (isNotifiedError(err)) return
+    notifyError(t('admin.products.errors.operationFailed', { message: err?.message || '' }))
+    closeModal()
+  }
+}
+
 const handleSubmit = async () => {
   submitting.value = true
   try {
@@ -611,57 +635,23 @@ const uploadImage = async (file: File) => {
   }
 }
 
-// Watch productId to determine create vs edit mode and fetch product details
 watch(
-  () => props.productId,
-  async (newId) => {
-    if (!props.modelValue) return
-    currentLang.value = 'zh-CN'
-    if (newId != null && newId > 0) {
-      // Edit mode
-      isEditing.value = true
-      try {
-        const res = await adminAPI.getProduct(newId)
-        const product = res.data.data
-        editingIsMapped.value = Boolean(product.is_mapped)
-        populateForm(product)
-      } catch (err: any) {
-        if (isNotifiedError(err)) return
-        notifyError(t('admin.products.errors.operationFailed', { message: err?.message || '' }))
-        closeModal()
-      }
-    } else {
-      // Create mode
-      isEditing.value = false
-      editingIsMapped.value = false
-      resetForm()
-    }
-  }
-)
+  [() => props.modelValue, () => props.productId],
+  ([isOpen, productID]) => {
+    productLoadVersion.value += 1
+    if (!isOpen) return
 
-// Also handle when modal opens
-watch(
-  () => props.modelValue,
-  (newVal) => {
-    if (!newVal) return
     currentLang.value = 'zh-CN'
-    if (props.productId != null && props.productId > 0) {
+    if (productID != null && productID > 0) {
       isEditing.value = true
-      adminAPI.getProduct(props.productId).then((res) => {
-        const product = res.data.data
-        editingIsMapped.value = Boolean(product.is_mapped)
-        populateForm(product)
-      }).catch((err: any) => {
-        if (isNotifiedError(err)) return
-        notifyError(t('admin.products.errors.operationFailed', { message: err?.message || '' }))
-        closeModal()
-      })
-    } else {
-      isEditing.value = false
-      editingIsMapped.value = false
-      resetForm()
+      void loadProductForEdit(productID)
+      return
     }
-  }
+
+    isEditing.value = false
+    editingIsMapped.value = false
+    resetForm()
+  },
 )
 </script>
 
