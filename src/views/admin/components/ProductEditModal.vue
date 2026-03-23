@@ -543,7 +543,7 @@ const handleSubmit = async () => {
       max_purchase_quantity: Number.isFinite(normalizedMaxPurchaseQuantity) && normalizedMaxPurchaseQuantity > 0
         ? Math.floor(normalizedMaxPurchaseQuantity)
         : 0,
-      fulfillment_type: form.fulfillment_type,
+      fulfillment_type: editingIsMapped.value ? undefined : form.fulfillment_type,
       manual_stock_total: effectiveManualStockTotal,
       skus: normalizedSKUs,
       is_affiliate_enabled: form.is_affiliate_enabled,
