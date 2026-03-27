@@ -149,6 +149,8 @@ const form = reactive({
   purchase_type: 'member',
   max_purchase_quantity: '' as number | '',
   fulfillment_type: 'manual',
+  enable_secret_selection: false,
+  secret_selection_markup_amount: 0,
   manual_stock_total: 0,
   skus: [] as SKUFormItem[],
   category_id: null as number | null,
@@ -447,6 +449,8 @@ const resetForm = () => {
     purchase_type: 'member',
     max_purchase_quantity: '',
     fulfillment_type: 'manual',
+    enable_secret_selection: false,
+    secret_selection_markup_amount: 0,
     manual_stock_total: 0,
     skus: [],
     category_id: null,
@@ -491,6 +495,8 @@ const populateForm = (product: AdminProduct) => {
     purchase_type: product.purchase_type || 'member',
     max_purchase_quantity: Number(product.max_purchase_quantity || 0) > 0 ? Math.floor(Number(product.max_purchase_quantity || 0)) : '',
     fulfillment_type: product.fulfillment_type || 'manual',
+    enable_secret_selection: Boolean(product.enable_secret_selection),
+    secret_selection_markup_amount: Math.max(Number(product.secret_selection_markup_amount || 0), 0),
     manual_stock_total: resolveManualStockMetrics(product).total,
     skus: Array.isArray(product.skus) ? product.skus.map((item: AdminProductSKU) => createSKUFormItem(item)) : [],
     category_id: Number(product.category_id || 0) || null,
@@ -537,6 +543,10 @@ const handleSubmit = async () => {
       : toSafeStockTotal(form.manual_stock_total)
 
     const payload = {
+      enable_secret_selection: form.fulfillment_type === 'auto' ? Boolean(form.enable_secret_selection) : false,
+      secret_selection_markup_amount: form.fulfillment_type === 'auto'
+        ? Math.max(Number(form.secret_selection_markup_amount || 0), 0)
+        : 0,
       slug: String(form.slug || '').trim(),
       category_id: Math.floor(normalizedCategoryID),
       seo_meta: form.seo_meta,
@@ -780,6 +790,36 @@ watch(
               </SelectContent>
             </Select>
             <p v-if="editingIsMapped" class="mt-1 text-xs text-indigo-600">{{ t('admin.products.mappedFulfillmentLocked') }}</p>
+          </div>
+
+          <div v-if="form.fulfillment_type === 'auto' && !editingIsMapped" class="col-span-1">
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5">自选卡密</label>
+            <Select
+              :model-value="form.enable_secret_selection ? 'true' : 'false'"
+              @update:modelValue="(value) => { form.enable_secret_selection = value === 'true' }"
+            >
+              <SelectTrigger class="h-9 w-full">
+                <SelectValue placeholder="关闭" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="false">关闭</SelectItem>
+                <SelectItem value="true">开启</SelectItem>
+              </SelectContent>
+            </Select>
+            <p class="mt-1 text-xs text-muted-foreground">开启后，前台只显示 `TXXXXX` 这段前缀供用户自选，实际自动发货仍发送完整卡密。同一商品不能混用自选卡密和普通卡密库存。</p>
+          </div>
+
+          <div v-if="form.fulfillment_type === 'auto' && !editingIsMapped" class="col-span-1">
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5">自选加价</label>
+            <Input
+              v-model.number="form.secret_selection_markup_amount"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              :disabled="!form.enable_secret_selection"
+            />
+            <p class="mt-1 text-xs text-muted-foreground">按每个已选卡密加价。用户不选卡密时不加价。</p>
           </div>
 
           <div class="col-span-1">

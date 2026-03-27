@@ -1067,13 +1067,15 @@ onMounted(async () => {
         </div>
 
         <div class="mt-4 overflow-x-auto">
-          <Table class="min-w-[1320px]">
+          <Table class="min-w-[1480px]">
             <TableHeader class="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground">
               <TableRow>
                 <TableHead class="px-4 py-3">
                   <input type="checkbox" class="h-4 w-4 accent-primary" :checked="allCurrentPageSelected" @change="toggleSelectAllSecrets" />
                 </TableHead>
                 <TableHead class="px-4 py-3">{{ t('admin.cardSecrets.listTable.id') }}</TableHead>
+                <TableHead class="min-w-[180px] px-4 py-3">展示前缀</TableHead>
+                <TableHead class="min-w-[120px] px-4 py-3">前台可选</TableHead>
                 <TableHead class="min-w-[260px] px-4 py-3">{{ t('admin.cardSecrets.listTable.secret') }}</TableHead>
                 <TableHead class="min-w-[260px] px-4 py-3">{{ t('admin.cardSecrets.listTable.product') }}</TableHead>
                 <TableHead class="min-w-[180px] px-4 py-3">{{ t('admin.cardSecrets.listTable.sku') }}</TableHead>
@@ -1086,12 +1088,12 @@ onMounted(async () => {
             </TableHeader>
             <TableBody class="divide-y divide-border">
               <TableRow v-if="cardSecretsLoading">
-                <TableCell :colspan="10" class="p-0">
-                  <TableSkeleton :columns="10" :rows="5" />
+                <TableCell :colspan="12" class="p-0">
+                  <TableSkeleton :columns="12" :rows="5" />
                 </TableCell>
               </TableRow>
               <TableRow v-else-if="cardSecrets.length === 0">
-                <TableCell colspan="10" class="px-4 py-6 text-center text-muted-foreground">{{ t('admin.cardSecrets.emptyList') }}</TableCell>
+                <TableCell colspan="12" class="px-4 py-6 text-center text-muted-foreground">{{ t('admin.cardSecrets.emptyList') }}</TableCell>
               </TableRow>
               <TableRow v-for="secret in cardSecrets" :key="secret.id" class="hover:bg-muted/30">
                 <TableCell class="px-4 py-3">
@@ -1099,6 +1101,17 @@ onMounted(async () => {
                 </TableCell>
                 <TableCell class="px-4 py-3">
                   <IdCell :value="secret.id" />
+                </TableCell>
+                <TableCell class="min-w-[180px] break-all px-4 py-3 font-mono text-xs text-muted-foreground">
+                  {{ secret.display_secret || '-' }}
+                </TableCell>
+                <TableCell class="min-w-[120px] px-4 py-3 text-xs">
+                  <span
+                    class="inline-flex rounded-full border px-2.5 py-1 text-xs"
+                    :class="secret.is_selectable ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-slate-50 text-slate-600'"
+                  >
+                    {{ secret.is_selectable ? '可选' : '关闭' }}
+                  </span>
                 </TableCell>
                 <TableCell class="min-w-[260px] break-all px-4 py-3 font-mono text-xs text-muted-foreground">{{ secret.secret }}</TableCell>
                 <TableCell class="min-w-[260px] px-4 py-3 text-xs text-muted-foreground">

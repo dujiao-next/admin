@@ -23,6 +23,7 @@ const { t } = useI18n()
 // --- Manual batch create ---
 const batchForm = ref({
   secrets: '',
+  is_selectable: false,
   batch_no: '',
   note: '',
 })
@@ -33,6 +34,7 @@ const batchSuccess = ref('')
 // --- CSV import ---
 const importForm = ref({
   file: null as File | null,
+  is_selectable: false,
   batch_no: '',
   note: '',
 })
@@ -44,6 +46,7 @@ const importFileLabel = computed(() => importForm.value.file?.name || t('admin.c
 
 const resetBatchForm = () => {
   batchForm.value.secrets = ''
+  batchForm.value.is_selectable = false
   batchForm.value.batch_no = ''
   batchForm.value.note = ''
   batchError.value = ''
@@ -76,6 +79,7 @@ const handleBatchCreate = async () => {
       product_id: props.productId,
       sku_id: props.skuId || undefined,
       secrets,
+      is_selectable: batchForm.value.is_selectable,
       batch_no: batchForm.value.batch_no.trim(),
       note: batchForm.value.note.trim(),
     })
@@ -106,6 +110,7 @@ const clearImportFile = () => {
 
 const resetImportForm = () => {
   clearImportFile()
+  importForm.value.is_selectable = false
   importForm.value.batch_no = ''
   importForm.value.note = ''
   importError.value = ''
@@ -136,6 +141,7 @@ const handleImport = async () => {
     if (props.skuId > 0) {
       formData.append('sku_id', String(props.skuId))
     }
+    formData.append('is_selectable', String(importForm.value.is_selectable))
     formData.append('batch_no', importForm.value.batch_no.trim())
     formData.append('note', importForm.value.note.trim())
     formData.append('file', importForm.value.file)
@@ -159,8 +165,19 @@ const handleImport = async () => {
       <form class="space-y-4" @submit.prevent="handleBatchCreate">
         <div>
           <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.cardSecrets.secretsLabel') }} *</label>
-          <Textarea v-model="batchForm.secrets" rows="6" :placeholder="t('admin.cardSecrets.secretsPlaceholder')" />
+          <Textarea
+            v-model="batchForm.secrets"
+            rows="6"
+            :placeholder="batchForm.is_selectable ? '一行一个，例如：T12345---12344' : t('admin.cardSecrets.secretsPlaceholder')"
+          />
         </div>
+        <label class="flex items-start gap-3 rounded-lg border border-border bg-muted/20 px-3 py-3 text-sm text-foreground">
+          <input v-model="batchForm.is_selectable" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-input" />
+          <span>
+            <span class="block font-medium">作为自选卡密导入</span>
+            <span class="block text-xs text-muted-foreground">格式必须是 `TXXXXX---12344`，系统只展示前缀 `TXXXXX`，实际自动发货仍发送完整卡密。</span>
+          </span>
+        </label>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.cardSecrets.batchNoLabel') }}</label>
@@ -200,6 +217,13 @@ const handleImport = async () => {
           <input ref="fileInput" type="file" accept=".csv" class="hidden" @change="handleFileChange" />
           <p class="mt-2 text-xs text-muted-foreground">{{ t('admin.cardSecrets.csvHint') }}</p>
         </div>
+        <label class="flex items-start gap-3 rounded-lg border border-border bg-muted/20 px-3 py-3 text-sm text-foreground">
+          <input v-model="importForm.is_selectable" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-input" />
+          <span>
+            <span class="block font-medium">CSV 作为自选卡密导入</span>
+            <span class="block text-xs text-muted-foreground">CSV 的 `secret` 列也必须是 `TXXXXX---12344` 格式，系统只展示前缀，自动发货发送完整卡密。</span>
+          </span>
+        </label>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.cardSecrets.batchNoLabel') }}</label>

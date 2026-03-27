@@ -58,6 +58,8 @@ export interface AdminProduct {
   purchase_type: string
   max_purchase_quantity: number
   fulfillment_type: string
+  enable_secret_selection: boolean
+  secret_selection_markup_amount: number | string
   manual_form_schema: Record<string, unknown> | null
   manual_stock_total: number
   manual_stock_locked: number
@@ -196,6 +198,8 @@ export interface AdminCardSecret {
   product_id: number
   sku_id: number
   batch_id?: number
+  display_secret: string
+  is_selectable: boolean
   secret: string
   status: string
   order_id?: number
