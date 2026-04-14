@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAdminAuthStore } from '@/stores/auth'
+import { hasMountedAdminPluginPage, loadMountedAdminPluginPages } from '@/utils/plugin-runtime-pages'
+import { syncMountedAdminPluginRoutes } from '@/utils/plugin-admin-pages'
 
 const routes = [
   {
@@ -274,6 +276,30 @@ const routes = [
         component: () => import('@/views/admin/TelegramBotBroadcastDetail.vue'),
         meta: { permission: 'GET:/admin/telegram-bot/broadcasts' },
       },
+      {
+        path: 'plugins',
+        name: 'plugins',
+        component: () => import('@/views/admin/Plugins.vue'),
+        meta: { permission: 'GET:/admin/plugins' },
+      },
+      {
+        path: 'plugin-market',
+        name: 'plugin-market',
+        component: () => import('@/views/admin/PluginMarket.vue'),
+        meta: { permission: 'GET:/admin/plugin-market/registries' },
+      },
+      {
+        path: 'plugin-market-center',
+        name: 'plugin-market-center',
+        component: () => import('@/views/admin/PluginMarketCenter.vue'),
+        meta: { permission: 'GET:/admin/plugin-market-center/publishers' },
+      },
+      {
+        path: 'plugin-license-center',
+        name: 'plugin-license-center',
+        component: () => import('@/views/admin/PluginLicenseCenter.vue'),
+        meta: { permission: 'GET:/admin/plugin-license-center/licenses' },
+      },
     ],
   },
 ]
@@ -285,8 +311,9 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
   const authStore = useAdminAuthStore()
+  const requiresAuth = to.path !== '/login'
 
-  if (to.meta.requiresAuth && !authStore.token) {
+  if (requiresAuth && !authStore.token) {
     return { path: '/login' }
   }
 
@@ -294,12 +321,32 @@ router.beforeEach(async (to) => {
     return { path: '/' }
   }
 
-  if (to.meta.requiresAuth && authStore.token && !authStore.permissionsLoaded) {
+  if (requiresAuth && authStore.token && !authStore.permissionsLoaded) {
     try {
       await authStore.loadAuthz()
     } catch {
       authStore.logout()
       return { path: '/login' }
+    }
+  }
+
+  let mountedPages = [] as Awaited<ReturnType<typeof loadMountedAdminPluginPages>>
+  if (requiresAuth && authStore.token) {
+    mountedPages = await syncMountedAdminPluginRoutes(router)
+    if (to.matched.length === 0) {
+      const resolved = router.resolve({
+        path: to.path,
+        query: to.query,
+        hash: to.hash,
+      })
+      if (resolved.matched.length > 0) {
+        return {
+          path: to.path,
+          query: to.query,
+          hash: to.hash,
+          replace: true,
+        }
+      }
     }
   }
 
@@ -311,6 +358,22 @@ router.beforeEach(async (to) => {
         query: {
           from: to.fullPath,
         },
+      }
+    }
+  }
+
+  const requiredPluginPage = typeof to.meta.pluginPagePath === 'string' ? to.meta.pluginPagePath : ''
+  if (requiredPluginPage) {
+    const currentMountedPages = mountedPages.length > 0 ? mountedPages : await loadMountedAdminPluginPages()
+    if (!hasMountedAdminPluginPage(requiredPluginPage, currentMountedPages)) {
+      if (to.path !== '/forbidden') {
+        return {
+          path: '/forbidden',
+          query: {
+            from: to.fullPath,
+            reason: 'plugin_page_unavailable',
+          },
+        }
       }
     }
   }

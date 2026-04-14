@@ -761,3 +761,308 @@ export interface AdminAffiliateWithdraw {
   user_email?: string
   affiliate_profile?: { id: number; user_id: number; code: string; user_email?: string; user_display_name?: string; user?: { id: number; email: string; display_name?: string } }
 }
+
+// --- Plugin Center ---
+export interface AdminPlugin {
+  id: string
+  name: string
+  type: string
+  author: string
+  summary: string
+  description: string
+  icon: string
+  cover: string
+  source: string
+  status: string
+  review_status: string
+  current_version: string
+  pending_version: string
+  host_api_version: string
+  go_version: string
+  build_target: string
+  entry_symbol: string
+  permissions: string[]
+  config_schema: Record<string, unknown>
+  meta: Record<string, unknown>
+  is_enabled: boolean
+  needs_restart: boolean
+  last_loaded_at?: string
+  last_error?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminPluginVersion {
+  id: number
+  plugin_id: string
+  version: string
+  status: string
+  package_path: string
+  install_path: string
+  checksum: string
+  manifest: Record<string, unknown>
+  meta: Record<string, unknown>
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminPluginRuntimeLog {
+  id: number
+  plugin_id: string
+  plugin_version: string
+  level: string
+  event_type: string
+  message: string
+  details: Record<string, unknown>
+  created_at: string
+}
+
+export interface AdminPluginRouteRegistry {
+  id: number
+  plugin_id: string
+  scope: string
+  path: string
+  methods: string[]
+  meta: Record<string, unknown>
+  created_at: string
+}
+
+export interface AdminPluginPageRegistry {
+  id: number
+  plugin_id: string
+  scope: string
+  route_path: string
+  title: string
+  sort_order: number
+  meta: Record<string, unknown>
+  created_at: string
+}
+
+export interface AdminPluginEventSubscription {
+  id: number
+  plugin_id: string
+  event_type: string
+  meta: Record<string, unknown>
+  created_at: string
+}
+
+export interface AdminPluginDetail {
+  plugin: AdminPlugin
+  versions: AdminPluginVersion[]
+  routes: AdminPluginRouteRegistry[]
+  pages: AdminPluginPageRegistry[]
+  events: AdminPluginEventSubscription[]
+  runtime_loaded: boolean
+  config: Record<string, unknown>
+}
+
+export interface AdminPluginRegistry {
+  id: string
+  name: string
+  description: string
+  source_type: string
+  index_url: string
+  is_built_in: boolean
+  is_enabled: boolean
+  sort_order: number
+  last_sync_at?: string
+  last_sync_status: string
+  last_sync_message: string
+  meta: Record<string, unknown>
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminPluginMarketItem {
+  id: number
+  registry_id: string
+  plugin_id: string
+  version: string
+  name: string
+  author: string
+  type: string
+  summary: string
+  description: string
+  icon: string
+  cover: string
+  host_api_version: string
+  go_version: string
+  build_target: string
+  permissions: string[]
+  download_url: string
+  checksum: string
+  review_status: string
+  changelog: string
+  config_schema: Record<string, unknown>
+  meta: Record<string, unknown>
+  synced_at: string
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminOnlinePluginPublisher {
+  id: number
+  publisher_code: string
+  name: string
+  contact_email: string
+  status: string
+  is_official: boolean
+  meta: Record<string, unknown>
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminOnlinePluginCatalogPlugin {
+  id: number
+  plugin_id: string
+  slug: string
+  publisher_id: number
+  name: string
+  summary: string
+  description: string
+  plugin_type: string
+  billing_mode: string
+  license_mode: string
+  status: string
+  is_official: boolean
+  is_public: boolean
+  icon_url: string
+  cover_url: string
+  homepage_url: string
+  source_url: string
+  tags: string[]
+  meta: Record<string, unknown>
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminOnlinePluginVersion {
+  id: number
+  plugin_id: string
+  version: string
+  release_channel: string
+  package_storage_key: string
+  package_download_url: string
+  checksum_sha256: string
+  package_size_bytes: number
+  host_api_version: string
+  build_target: string
+  go_version: string
+  permissions: string[]
+  config_schema: Record<string, unknown>
+  changelog_md: string
+  review_status: string
+  published_at?: string
+  meta: Record<string, unknown>
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminOnlinePluginPlan {
+  id: number
+  plugin_id: string
+  plan_code: string
+  plan_name: string
+  billing_mode: string
+  license_mode: string
+  price_amount: string
+  price_currency: string
+  duration_days?: number
+  max_sites: number
+  max_activations: number
+  feature_flags: Record<string, unknown>
+  status: string
+  sort_order: number
+  meta: Record<string, unknown>
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminOnlinePluginSummary {
+  plugin: AdminOnlinePluginCatalogPlugin
+  publisher?: AdminOnlinePluginPublisher
+  latest_version?: AdminOnlinePluginVersion
+}
+
+export interface AdminOnlinePluginDetail {
+  plugin: AdminOnlinePluginCatalogPlugin
+  publisher?: AdminOnlinePluginPublisher
+  versions: AdminOnlinePluginVersion[]
+  plans: AdminOnlinePluginPlan[]
+  latest_version?: AdminOnlinePluginVersion
+}
+
+export interface AdminPluginLicense {
+  id: number
+  license_id: string
+  plugin_id: string
+  plan_id: number
+  customer_id: number
+  order_id: number
+  license_key: string
+  license_mode: string
+  status: string
+  bound_domain: string
+  bound_server_ip: string
+  expire_at?: string
+  grace_deadline_at?: string
+  feature_flags: Record<string, unknown>
+  activation_secret_hash: string
+  issued_at: string
+  activated_at?: string
+  last_validated_at?: string
+  meta: Record<string, unknown>
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminPluginLicenseActivation {
+  id: number
+  license_id: string
+  site_id: string
+  install_id: string
+  host_fingerprint: string
+  reported_domain: string
+  reported_ip: string
+  validated_domain: string
+  validated_server_ip: string
+  activation_token: string
+  status: string
+  activated_at: string
+  last_heartbeat_at?: string
+  last_seen_at?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminPluginLicenseHeartbeat {
+  id: number
+  license_id: string
+  activation_id: number
+  reported_domain: string
+  reported_ip: string
+  reported_version: string
+  runtime_loaded: boolean
+  matched_domain: boolean
+  matched_server_ip: boolean
+  license_status: string
+  enforcement_action: string
+  message: string
+  created_at: string
+}
+
+export interface AdminPluginLicenseSummary {
+  license: AdminPluginLicense
+  plugin?: AdminOnlinePluginCatalogPlugin
+  plan?: AdminOnlinePluginPlan
+  active_activation?: AdminPluginLicenseActivation
+}
+
+export interface AdminPluginLicenseDetail {
+  license: AdminPluginLicense
+  plugin?: AdminOnlinePluginCatalogPlugin
+  plan?: AdminOnlinePluginPlan
+  activations: AdminPluginLicenseActivation[]
+  recent_heartbeats: AdminPluginLicenseHeartbeat[]
+}

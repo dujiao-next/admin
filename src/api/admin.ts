@@ -465,4 +465,51 @@ export const adminAPI = {
     api.get(`/admin/ads/render/${slotCode}`, { params }),
   reportAdImpression: (data: { tenant: string; client: string; slot_code: string; items: { ad_id: number; impression_token: string }[] }) =>
     api.post('/admin/ads/impression', data),
+
+  // 插件中心
+  getPlugins: (params?: Record<string, unknown>) => api.get('/admin/plugins', { params }),
+  getPluginRuntimePages: (params?: Record<string, unknown>) => api.get('/admin/plugins/runtime-pages', { params }),
+  uploadPlugin: (formData: FormData) => api.post('/admin/plugins/upload', formData),
+  getPlugin: (id: string) => api.get(`/admin/plugins/${encodeURIComponent(id)}`),
+  installPlugin: (id: string, data?: { version?: string }) => api.post(`/admin/plugins/${encodeURIComponent(id)}/install`, data || {}),
+  enablePlugin: (id: string, data?: { version?: string }) => api.post(`/admin/plugins/${encodeURIComponent(id)}/enable`, data || {}),
+  disablePlugin: (id: string) => api.post(`/admin/plugins/${encodeURIComponent(id)}/disable`),
+  applyPluginRuntimeChanges: () => api.post('/admin/plugins/restart-apply'),
+  reloadPluginRuntime: (id: string) => api.post(`/admin/plugins/${encodeURIComponent(id)}/restart-apply`),
+  rollbackPlugin: (id: string) => api.post(`/admin/plugins/${encodeURIComponent(id)}/rollback`),
+  deletePlugin: (id: string, params?: { purge?: boolean }) => api.delete(`/admin/plugins/${encodeURIComponent(id)}`, { params }),
+  getPluginLogs: (id: string, params?: Record<string, unknown>) => api.get(`/admin/plugins/${encodeURIComponent(id)}/logs`, { params }),
+  getPluginConfig: (id: string) => api.get(`/admin/plugins/${encodeURIComponent(id)}/config`),
+  updatePluginConfig: (id: string, data: Record<string, unknown>) => api.put(`/admin/plugins/${encodeURIComponent(id)}/config`, data),
+
+  // 在线插件库
+  getPluginRegistries: () => api.get('/admin/plugin-market/registries'),
+  refreshPluginMarket: () => api.post('/admin/plugin-market/refresh'),
+  getPluginMarketItems: (params?: Record<string, unknown>) => api.get('/admin/plugin-market/plugins', { params }),
+  getPluginMarketItem: (pluginID: string, params?: Record<string, unknown>) => api.get(`/admin/plugin-market/plugins/${encodeURIComponent(pluginID)}`, { params }),
+  getPluginMarketVersions: (pluginID: string, params?: Record<string, unknown>) => api.get(`/admin/plugin-market/plugins/${encodeURIComponent(pluginID)}/versions`, { params }),
+  installPluginMarketItem: (pluginID: string, data: { registry_id: string; version?: string }) => api.post(`/admin/plugin-market/plugins/${encodeURIComponent(pluginID)}/install`, data),
+
+  // 在线插件中心
+  getPluginMarketCenterPublishers: () => api.get('/admin/plugin-market-center/publishers'),
+  createPluginMarketCenterPublisher: (data: Record<string, unknown>) => api.post('/admin/plugin-market-center/publishers', data),
+  updatePluginMarketCenterPublisher: (id: number, data: Record<string, unknown>) => api.put(`/admin/plugin-market-center/publishers/${id}`, data),
+  deletePluginMarketCenterPublisher: (id: number) => api.delete(`/admin/plugin-market-center/publishers/${id}`),
+  getPluginMarketCenterPlugins: (params?: Record<string, unknown>) => api.get('/admin/plugin-market-center/plugins', { params }),
+  getPluginMarketCenterPlugin: (pluginID: string) => api.get(`/admin/plugin-market-center/plugins/${encodeURIComponent(pluginID)}`),
+  createPluginMarketCenterPlugin: (data: Record<string, unknown>) => api.post('/admin/plugin-market-center/plugins', data),
+  updatePluginMarketCenterPlugin: (pluginID: string, data: Record<string, unknown>) => api.put(`/admin/plugin-market-center/plugins/${encodeURIComponent(pluginID)}`, data),
+  deletePluginMarketCenterPlugin: (pluginID: string) => api.delete(`/admin/plugin-market-center/plugins/${encodeURIComponent(pluginID)}`),
+  createPluginMarketCenterVersion: (pluginID: string, data: Record<string, unknown>) => api.post(`/admin/plugin-market-center/plugins/${encodeURIComponent(pluginID)}/versions`, data),
+  updatePluginMarketCenterVersion: (id: number, data: Record<string, unknown>) => api.put(`/admin/plugin-market-center/versions/${id}`, data),
+  deletePluginMarketCenterVersion: (id: number) => api.delete(`/admin/plugin-market-center/versions/${id}`),
+  createPluginMarketCenterPlan: (pluginID: string, data: Record<string, unknown>) => api.post(`/admin/plugin-market-center/plugins/${encodeURIComponent(pluginID)}/plans`, data),
+  updatePluginMarketCenterPlan: (id: number, data: Record<string, unknown>) => api.put(`/admin/plugin-market-center/plans/${id}`, data),
+  deletePluginMarketCenterPlan: (id: number) => api.delete(`/admin/plugin-market-center/plans/${id}`),
+
+  // 在线授权中心
+  getPluginLicenseCenterLicenses: (params?: Record<string, unknown>) => api.get('/admin/plugin-license-center/licenses', { params }),
+  getPluginLicenseCenterLicense: (licenseID: string) => api.get(`/admin/plugin-license-center/licenses/${encodeURIComponent(licenseID)}`),
+  createPluginLicenseCenterLicense: (data: Record<string, unknown>) => api.post('/admin/plugin-license-center/licenses', data),
+  updatePluginLicenseCenterLicense: (licenseID: string, data: Record<string, unknown>) => api.put(`/admin/plugin-license-center/licenses/${encodeURIComponent(licenseID)}`, data),
 }

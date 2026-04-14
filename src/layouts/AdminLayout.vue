@@ -43,15 +43,19 @@ import {
   Crown,
   Bell,
   ImageIcon,
+  Layers3,
 } from 'lucide-vue-next'
 import { Menu } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
+import type { AdminPluginPageRegistry } from '@/api/types'
 import { useAdminAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 import { adminAPI } from '@/api/admin'
+import { loadMountedAdminPluginPages } from '@/utils/plugin-runtime-pages'
+import { buildPluginAdminNavGroups } from '@/utils/plugin-admin-pages'
 
 interface NavGroupItem {
   label: string
@@ -106,6 +110,7 @@ const expandedGroups = ref<Record<string, boolean>>(readExpandedGroups())
 const mobileNavOpen = ref(false)
 const sidebarCollapsed = ref(false)
 const sidebarUserToggled = ref(false) // tracks if user manually toggled
+const mountedAdminPages = ref<AdminPluginPageRegistry[]>([])
 
 // Close mobile nav on route change
 watch(() => route.path, () => {
@@ -382,6 +387,37 @@ const navGroups = computed<NavGroup[]>(() => {
       ],
     },
     {
+      id: 'plugins',
+      label: '插件中心',
+      icon: Layers3,
+      items: [
+        {
+          label: '已安装插件',
+          to: '/plugins',
+          icon: Layers3,
+          permission: 'GET:/admin/plugins',
+        },
+        {
+          label: '在线插件库',
+          to: '/plugin-market',
+          icon: Link,
+          permission: 'GET:/admin/plugin-market/registries',
+        },
+        {
+          label: '在线插件中心',
+          to: '/plugin-market-center',
+          icon: Link,
+          permission: 'GET:/admin/plugin-market-center/publishers',
+        },
+        {
+          label: '在线授权中心',
+          to: '/plugin-license-center',
+          icon: KeyRound,
+          permission: 'GET:/admin/plugin-license-center/licenses',
+        },
+      ],
+    },
+    {
       id: 'system',
       label: t('admin.navGroups.systemSettings'),
       icon: Settings,
@@ -419,6 +455,16 @@ const navGroups = computed<NavGroup[]>(() => {
     },
   ]
 
+  groups.splice(
+    Math.max(groups.length - 1, 0),
+    0,
+    ...buildPluginAdminNavGroups(
+      mountedAdminPages.value,
+      t,
+      (permission?: string) => authStore.hasPermission(permission),
+    ),
+  )
+
   return groups
     .map((group) => ({
       ...group,
@@ -426,6 +472,14 @@ const navGroups = computed<NavGroup[]>(() => {
     }))
     .filter((group) => group.items.length > 0)
 })
+
+const refreshMountedAdminPages = async (force = false) => {
+  mountedAdminPages.value = await loadMountedAdminPluginPages(force)
+}
+
+const handlePluginRuntimePagesChanged = () => {
+  refreshMountedAdminPages(true)
+}
 
 watch(
   navGroups,
@@ -579,10 +633,13 @@ onMounted(() => {
       appVersion.value = ver
     }
   }).catch(() => {})
+  refreshMountedAdminPages()
+  window.addEventListener('admin-plugin-runtime-pages-changed', handlePluginRuntimePagesChanged)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize)
+  window.removeEventListener('admin-plugin-runtime-pages-changed', handlePluginRuntimePagesChanged)
 })
 </script>
 
