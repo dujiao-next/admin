@@ -17,6 +17,7 @@ import { Dialog, DialogHeader, DialogScrollContent, DialogTitle } from '@/compon
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import TableSkeleton from '@/components/TableSkeleton.vue'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { notifyError } from '@/utils/notify'
 import { confirmAction } from '@/utils/confirm'
 import { useFormValidation, rules } from '@/composables/useFormValidation'
@@ -35,6 +36,11 @@ const isEditing = ref(false)
 const currentTab = ref('blog')
 const currentLang = ref('zh-CN')
 const submitting = ref(false)
+
+watch(currentTab, () => {
+  pagination.page = 1
+  fetchPosts()
+})
 const route = useRoute()
 
 const languages = computed(() => [
@@ -289,19 +295,12 @@ watch(
       </Button>
     </div>
 
-    <div class="overflow-x-auto">
-      <div class="flex w-max min-w-full gap-2 rounded-xl border border-border bg-card p-1">
-        <button
-          v-for="tab in ['blog', 'notice']"
-          :key="tab"
-          class="shrink-0 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-          :class="currentTab === tab ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground'"
-          @click="currentTab = tab; pagination.page = 1; fetchPosts()"
-        >
-          {{ tab === 'blog' ? t('admin.posts.tabs.blog') : t('admin.posts.tabs.notice') }}
-        </button>
-      </div>
-    </div>
+    <Tabs v-model="currentTab" class="w-full">
+      <TabsList>
+        <TabsTrigger value="blog">{{ t('admin.posts.tabs.blog') }}</TabsTrigger>
+        <TabsTrigger value="notice">{{ t('admin.posts.tabs.notice') }}</TabsTrigger>
+      </TabsList>
+    </Tabs>
 
     <div class="rounded-xl border border-border bg-card overflow-x-auto">
       <Table class="min-w-[980px]">

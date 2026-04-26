@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { notifyError, notifySuccess } from '@/utils/notify'
 import SettingsSMTPTab from './components/SettingsSMTPTab.vue'
 import SettingsCaptchaTab from './components/SettingsCaptchaTab.vue'
@@ -714,19 +715,12 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="flex gap-6 overflow-x-auto border-b border-border pb-1">
-      <button
-        v-for="tab in tabs"
-        :key="tab.value"
-        class="relative top-[1px] shrink-0 whitespace-nowrap border-b-2 pb-3 text-sm font-medium transition-colors"
-        :class="currentTab === tab.value ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'"
-        @click="currentTab = tab.value"
-      >
-        {{ tab.label }}
-      </button>
-    </div>
+    <Tabs v-model="currentTab" class="flex flex-col gap-6">
+      <TabsList class="h-auto flex-wrap gap-1">
+        <TabsTrigger v-for="tab in tabs" :key="tab.value" :value="tab.value">{{ tab.label }}</TabsTrigger>
+      </TabsList>
 
-    <div v-show="currentTab === 'basic'" class="space-y-6">
+      <TabsContent value="basic" :forceMount="true" v-show="currentTab === 'basic'" class="space-y-6 mt-0">
       <div class="rounded-xl border border-border bg-card">
         <div class="border-b border-border bg-muted/40 px-6 py-4">
           <h2 class="text-lg font-semibold">{{ t('admin.settings.registration.title') }}</h2>
@@ -946,10 +940,10 @@ onMounted(() => {
           </div>
         </div>
       </div>
-    </div>
+      </TabsContent>
 
-    <!-- Template Mode Tab -->
-    <div v-show="currentTab === 'template'" class="space-y-6">
+      <!-- Template Mode Tab -->
+      <TabsContent value="template" :forceMount="true" v-show="currentTab === 'template'" class="space-y-6 mt-0">
       <div class="rounded-xl border border-border bg-card">
         <div class="flex flex-col gap-3 border-b border-border bg-muted/40 px-6 py-4">
           <div>
@@ -1015,9 +1009,9 @@ onMounted(() => {
           </div>
         </div>
       </div>
-    </div>
+      </TabsContent>
 
-    <div v-show="currentTab === 'about'" class="space-y-6">
+      <TabsContent value="about" :forceMount="true" v-show="currentTab === 'about'" class="space-y-6 mt-0">
       <div class="rounded-xl border border-border bg-card">
         <div class="flex flex-col gap-3 border-b border-border bg-muted/40 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -1101,9 +1095,9 @@ onMounted(() => {
           </div>
         </div>
       </div>
-    </div>
+      </TabsContent>
 
-    <div v-show="currentTab === 'legal'" class="space-y-6">
+      <TabsContent value="legal" :forceMount="true" v-show="currentTab === 'legal'" class="space-y-6 mt-0">
       <div class="rounded-xl border border-border bg-card">
         <div class="flex flex-col gap-3 border-b border-border bg-muted/40 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -1129,26 +1123,25 @@ onMounted(() => {
           <RichEditor :key="`privacy-${currentLang}`" v-model="form.legal.privacy[currentLang]" :placeholder="t('admin.settings.legal.privacyPlaceholder')" />
         </div>
       </div>
-    </div>
+      </TabsContent>
 
-    <div v-show="currentTab === 'smtp'">
-      <SettingsSMTPTab ref="smtpTabRef" :data="smtpData" @saved="fetchSettings" />
-    </div>
+      <TabsContent value="smtp" :forceMount="true" v-show="currentTab === 'smtp'" class="mt-0">
+        <SettingsSMTPTab ref="smtpTabRef" :data="smtpData" @saved="fetchSettings" />
+      </TabsContent>
 
-    <div v-show="currentTab === 'order_email_template'">
-      <SettingsOrderEmailTemplateTab ref="orderEmailTemplateTabRef" :data="orderEmailTemplateData" :current-lang="currentLang" @saved="fetchSettings" />
-    </div>
+      <TabsContent value="order_email_template" :forceMount="true" v-show="currentTab === 'order_email_template'" class="mt-0">
+        <SettingsOrderEmailTemplateTab ref="orderEmailTemplateTabRef" :data="orderEmailTemplateData" :current-lang="currentLang" @saved="fetchSettings" />
+      </TabsContent>
 
-    <div v-show="currentTab === 'captcha'">
-      <SettingsCaptchaTab ref="captchaTabRef" :data="captchaData" @saved="fetchSettings" />
-    </div>
+      <TabsContent value="captcha" :forceMount="true" v-show="currentTab === 'captcha'" class="mt-0">
+        <SettingsCaptchaTab ref="captchaTabRef" :data="captchaData" @saved="fetchSettings" />
+      </TabsContent>
 
-    <div v-show="currentTab === 'navigation'">
-      <SettingsNavigationTab ref="navigationTabRef" :current-lang="currentLang" @saved="fetchSettings" />
-    </div>
+      <TabsContent value="navigation" :forceMount="true" v-show="currentTab === 'navigation'" class="mt-0">
+        <SettingsNavigationTab ref="navigationTabRef" :current-lang="currentLang" @saved="fetchSettings" />
+      </TabsContent>
 
-
-    <div v-show="currentTab === 'telegram'" class="space-y-6">
+      <TabsContent value="telegram" :forceMount="true" v-show="currentTab === 'telegram'" class="space-y-6 mt-0">
       <div class="rounded-xl border border-border bg-card">
         <div class="border-b border-border bg-muted/40 px-6 py-4">
           <h2 class="text-lg font-semibold">{{ t('admin.settings.telegram.title') }}</h2>
@@ -1191,9 +1184,9 @@ onMounted(() => {
           </div>
         </div>
       </div>
-    </div>
+      </TabsContent>
 
-    <div v-show="currentTab === 'dashboard'" class="space-y-6">
+      <TabsContent value="dashboard" :forceMount="true" v-show="currentTab === 'dashboard'" class="space-y-6 mt-0">
       <div class="rounded-xl border border-border bg-card">
         <div class="border-b border-border bg-muted/40 px-6 py-4">
           <h2 class="text-lg font-semibold">{{ t('admin.settings.dashboard.title') }}</h2>
@@ -1248,7 +1241,8 @@ onMounted(() => {
           </div>
         </div>
       </div>
-    </div>
+      </TabsContent>
 
+    </Tabs>
   </div>
 </template>
