@@ -361,6 +361,31 @@ const oauthIdentities = computed(() => {
   return Array.isArray(list) ? list : []
 })
 
+const twofaEnabled = computed(() => Boolean(user.value?.totp_enabled_at))
+const twofaEnabledAt = computed(() => (user.value?.totp_enabled_at as string | undefined) || '')
+const twofaResetting = ref(false)
+const twofaError = ref('')
+const twofaSuccess = ref('')
+
+const handleResetUser2FA = async () => {
+  if (!Number.isFinite(userId.value) || userId.value <= 0) return
+  if (!twofaEnabled.value) return
+  const email = user.value?.email || `#${userId.value}`
+  if (!confirm(t('admin.userDetail.twofa.confirmReset', { email }))) return
+  twofaError.value = ''
+  twofaSuccess.value = ''
+  twofaResetting.value = true
+  try {
+    await adminAPI.resetUser2FA(userId.value)
+    twofaSuccess.value = t('admin.userDetail.twofa.resetSuccess')
+    await fetchUser()
+  } catch (err: any) {
+    twofaError.value = err?.message || t('admin.userDetail.twofa.resetFailed')
+  } finally {
+    twofaResetting.value = false
+  }
+}
+
 const formatProviderLabel = (provider?: string) => {
   if (!provider) return '-'
   const normalized = provider.trim().toLowerCase()
@@ -499,6 +524,34 @@ watch(
         <CardContent class="p-3">
           <div class="text-xs text-muted-foreground">{{ t('admin.userDetail.fields.adminNote') }}</div>
           <div class="text-sm text-foreground whitespace-pre-wrap">{{ (user?.admin_note as string) || '-' }}</div>
+        </CardContent>
+      </Card>
+      <Card class="rounded-lg border-border bg-background shadow-none md:col-span-3">
+        <CardContent class="space-y-2 p-3">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="text-xs text-muted-foreground">{{ t('admin.userDetail.fields.twofa') }}</div>
+            <span
+              class="inline-flex rounded-full border px-2.5 py-1 text-xs"
+              :class="twofaEnabled ? 'theme-badge-success' : 'theme-badge-warning'"
+            >
+              {{ twofaEnabled ? t('admin.userDetail.twofa.enabled') : t('admin.userDetail.twofa.disabled') }}
+            </span>
+            <span v-if="twofaEnabled" class="text-xs text-muted-foreground">
+              {{ t('admin.userDetail.twofa.enabledAt') }}: {{ formatDate(twofaEnabledAt) }}
+            </span>
+            <Button
+              v-if="twofaEnabled"
+              size="sm"
+              variant="destructive"
+              :disabled="twofaResetting"
+              @click="handleResetUser2FA"
+            >
+              {{ twofaResetting ? t('admin.userDetail.twofa.resetting') : t('admin.userDetail.twofa.reset') }}
+            </Button>
+          </div>
+          <div class="text-xs text-muted-foreground">{{ t('admin.userDetail.twofa.hint') }}</div>
+          <div v-if="twofaError" class="text-xs text-destructive">{{ twofaError }}</div>
+          <div v-if="twofaSuccess" class="text-xs text-emerald-600">{{ twofaSuccess }}</div>
         </CardContent>
       </Card>
     </div>
