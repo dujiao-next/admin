@@ -27,6 +27,7 @@
     "@vueuse/core": "^14.2.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dompurify": "^3.4.2",
     "lucide-vue-next": "^0.563.0",
     "marked": "^18.0.2",
     "pinia": "^3.0.4",

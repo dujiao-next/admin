@@ -55,6 +55,7 @@ import { useAdminAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 import { adminAPI } from '@/api/admin'
 import { applySiteIcon } from '@/utils/favicon'
+import { sanitizeRichHtml } from '@/utils/sanitize'
 import { marked } from 'marked'
 
 marked.setOptions({ gfm: true, breaks: true })
@@ -127,7 +128,7 @@ const updateCheckError = ref<string>('')
 const renderedReleaseNotes = computed(() => {
   const raw = updateCheckResult.value?.release_notes
   if (!raw) return ''
-  return marked.parse(raw, { async: false }) as string
+  return sanitizeRichHtml(marked.parse(raw, { async: false }) as string)
 })
 
 const formatPublishedAt = (raw: string | null | undefined) => {
