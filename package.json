@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --port 5174",
     "build": "vue-tsc -b && vite build",
-    "build:fullstack": "vue-tsc -b && VITE_FULLSTACK=1 vite build",
+    "build:fullstack": "vue-tsc -b && node scripts/build-fullstack.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
