@@ -331,6 +331,10 @@ const messages = {
         active: '启用',
         inactive: '禁用',
       },
+      upstreamStatus: {
+        inactive: '上游已下架',
+        deleted: '上游已删除',
+      },
       actions: {
         sync: '同步',
         syncing: '同步中...',
@@ -3611,6 +3615,10 @@ const messages = {
         active: '啟用',
         inactive: '停用',
       },
+      upstreamStatus: {
+        inactive: '上游已下架',
+        deleted: '上游已刪除',
+      },
       actions: {
         sync: '同步',
         syncing: '同步中...',
@@ -6890,6 +6898,10 @@ const messages = {
       status: {
         active: 'Active',
         inactive: 'Inactive',
+      },
+      upstreamStatus: {
+        inactive: 'Delisted upstream',
+        deleted: 'Deleted upstream',
       },
       actions: {
         sync: 'Sync',

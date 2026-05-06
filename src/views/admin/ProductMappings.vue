@@ -736,6 +736,18 @@ onMounted(() => { fetchConnections(); fetchCategories(); fetchMappings() })
               >
                 {{ mapping.is_active ? t('productMappings.status.active') : t('productMappings.status.inactive') }}
               </span>
+              <span
+                v-if="mapping.upstream_status === 'inactive'"
+                class="shrink-0 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] text-amber-700"
+              >
+                {{ t('productMappings.upstreamStatus.inactive') }}
+              </span>
+              <span
+                v-else-if="mapping.upstream_status === 'deleted'"
+                class="shrink-0 inline-flex rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] text-red-700"
+              >
+                {{ t('productMappings.upstreamStatus.deleted') }}
+              </span>
             </div>
             <div class="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
               <span>{{ t('productMappings.columns.connection') }}: <span class="text-foreground">{{ getConnectionName(mapping.connection_id) }}</span></span>

@@ -530,6 +530,8 @@ export interface AdminSiteConnection {
 }
 
 // --- ProductMapping ---
+export type UpstreamProductStatus = 'active' | 'inactive' | 'deleted'
+
 export interface AdminProductMapping {
   id: number
   connection_id: number
@@ -541,6 +543,7 @@ export interface AdminProductMapping {
   upstream_price: number
   upstream_currency: string
   is_active: boolean
+  upstream_status?: UpstreamProductStatus
   last_sync_at?: string
   created_at: string
   updated_at: string
