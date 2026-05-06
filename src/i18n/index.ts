@@ -2693,6 +2693,13 @@ const messages = {
             productRequired: '请先选择商品',
             searchFailed: '商品搜索失败',
           },
+          paymentOrder: {
+            title: '支付订单告警设置',
+            checkIntervalSeconds: '待支付/支付失败检查区间（秒）',
+            checkIntervalHint: '通知巡检会按该区间向前统计待支付订单与支付失败笔数。',
+            intervalSeconds: '待支付/支付失败告警最小发送间隔（秒）',
+            intervalHint: '待支付订单和支付失败告警会按该频率独立限流，避免时间段内反复提醒。触发阈值跟随仪表盘告警规则设置。',
+          },
           test: {
             title: '场景测试发送',
             subtitle: '按真实通知场景自动生成测试变量，验证模板、渠道与语言效果。',
@@ -2767,7 +2774,7 @@ const messages = {
             orderPaidSuccess: '订单支付成功通知',
             manualFulfillmentPending: '待人工交付订单提醒',
             exceptionAlert: '异常告警通知',
-            exceptionThresholdHint: '异常告警阈值沿用“仪表盘规则”：低库存阈值、缺货商品阈值、待支付订单阈值、支付失败阈值。库存告警会按上方频率设置独立限流。',
+            exceptionThresholdHint: '异常告警阈值沿用“仪表盘规则”：低库存阈值、缺货商品阈值、待支付订单阈值、支付失败阈值。库存告警、通知巡检中的待支付和支付失败告警使用上方独立频率设置。',
           },
           templates: {
             title: '模板配置（按当前语言编辑）',
@@ -5966,6 +5973,13 @@ const messages = {
             productRequired: '請先選擇商品',
             searchFailed: '商品搜尋失敗',
           },
+          paymentOrder: {
+            title: '支付訂單告警設定',
+            checkIntervalSeconds: '待支付/支付失敗檢查區間（秒）',
+            checkIntervalHint: '通知巡檢會依此區間向前統計待支付訂單與支付失敗筆數。',
+            intervalSeconds: '待支付/支付失敗告警最小發送間隔（秒）',
+            intervalHint: '待支付訂單和支付失敗告警會依此頻率獨立限流，避免時間段內重複提醒。觸發門檻跟隨儀表板告警規則設定。',
+          },
           test: {
             title: '場景測試發送',
             subtitle: '依真實通知場景自動生成測試變數，驗證模板、渠道與語言效果。',
@@ -6040,7 +6054,7 @@ const messages = {
             orderPaidSuccess: '訂單支付成功通知',
             manualFulfillmentPending: '待人工交付訂單提醒',
             exceptionAlert: '異常告警通知',
-            exceptionThresholdHint: '異常告警閾值沿用「儀表板規則」：低庫存閾值、缺貨商品閾值、待支付訂單閾值、支付失敗閾值。庫存告警會依上方頻率設定獨立限流。',
+            exceptionThresholdHint: '異常告警閾值沿用「儀表板規則」：低庫存閾值、缺貨商品閾值、待支付訂單閾值、支付失敗閾值。庫存告警、通知巡檢中的待支付和支付失敗告警使用上方獨立頻率設定。',
           },
           templates: {
             title: '模板配置（依目前語言編輯）',
@@ -9239,6 +9253,13 @@ const messages = {
             productRequired: 'Select a product first',
             searchFailed: 'Failed to search products',
           },
+          paymentOrder: {
+            title: 'Payment Order Alert Settings',
+            checkIntervalSeconds: 'Pending/failed payment check window (seconds)',
+            checkIntervalHint: 'The notification scheduler counts pending payment orders and failed payments within this lookback window.',
+            intervalSeconds: 'Minimum pending/failed payment alert interval (seconds)',
+            intervalHint: 'Pending payment and payment failure alerts use this independent rate limit to avoid repeated reminders within the time window. Trigger thresholds follow Dashboard Alert Rules.',
+          },
           test: {
             title: 'Scenario Test Send',
             subtitle: 'Generate realistic sample variables by scene to verify templates, channels, and language output.',
@@ -9313,7 +9334,7 @@ const messages = {
             orderPaidSuccess: 'Order payment succeeded',
             manualFulfillmentPending: 'Manual fulfillment pending',
             exceptionAlert: 'Exception alerts',
-            exceptionThresholdHint: 'Exception alert thresholds reuse Dashboard Rules: low stock, out-of-stock products, pending orders, and payment failures. Inventory alerts are rate-limited by the interval above.',
+            exceptionThresholdHint: 'Exception alert thresholds reuse Dashboard Rules: low stock, out-of-stock products, pending orders, and payment failures. Inventory alerts, pending and failed payment alerts in the notification scheduler use the independent frequency setting above.',
           },
           templates: {
             title: 'Templates (edit in current language)',

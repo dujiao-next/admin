@@ -24,6 +24,8 @@ interface NotificationData {
   default_locale: string
   dedupe_ttl_seconds: number
   inventory_alert_interval_seconds: number
+  payment_order_alert_interval_seconds: number
+  payment_order_alert_check_interval_seconds: number
   ignored_product_ids_text: string
   channels: {
     email: {
@@ -85,6 +87,8 @@ const form = reactive({
   default_locale: 'zh-CN',
   dedupe_ttl_seconds: 300,
   inventory_alert_interval_seconds: 1800,
+  payment_order_alert_interval_seconds: 1800,
+  payment_order_alert_check_interval_seconds: 86400,
   ignored_product_ids_text: '',
   channels: {
     email: {
@@ -114,6 +118,8 @@ const syncFromProps = () => {
   form.default_locale = props.data.default_locale
   form.dedupe_ttl_seconds = props.data.dedupe_ttl_seconds
   form.inventory_alert_interval_seconds = props.data.inventory_alert_interval_seconds
+  form.payment_order_alert_interval_seconds = props.data.payment_order_alert_interval_seconds
+  form.payment_order_alert_check_interval_seconds = props.data.payment_order_alert_check_interval_seconds
   form.ignored_product_ids_text = props.data.ignored_product_ids_text
   form.channels.email.enabled = props.data.channels.email.enabled
   form.channels.email.recipients_text = props.data.channels.email.recipients_text
@@ -241,6 +247,8 @@ const save = async () => {
       default_locale: form.default_locale,
       dedupe_ttl_seconds: Number(form.dedupe_ttl_seconds),
       inventory_alert_interval_seconds: Number(form.inventory_alert_interval_seconds),
+      payment_order_alert_interval_seconds: Number(form.payment_order_alert_interval_seconds),
+      payment_order_alert_check_interval_seconds: Number(form.payment_order_alert_check_interval_seconds),
       ignored_product_ids: splitNumericIDs(form.ignored_product_ids_text),
       channels: {
         email: {
@@ -355,6 +363,22 @@ defineExpose({ save, submitting })
                 </div>
               </div>
               <p class="text-xs text-muted-foreground">{{ t('admin.settings.notification.inventory.ignoredProductIDsHint') }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-border bg-muted/20 p-4">
+          <h3 class="text-sm font-semibold">{{ t('admin.settings.notification.paymentOrder.title') }}</h3>
+          <div class="mt-4 grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div class="space-y-2">
+              <label class="text-xs font-medium text-muted-foreground">{{ t('admin.settings.notification.paymentOrder.checkIntervalSeconds') }}</label>
+              <Input v-model.number="form.payment_order_alert_check_interval_seconds" type="number" min="60" max="604800" />
+              <p class="text-xs text-muted-foreground">{{ t('admin.settings.notification.paymentOrder.checkIntervalHint') }}</p>
+            </div>
+            <div class="space-y-2">
+              <label class="text-xs font-medium text-muted-foreground">{{ t('admin.settings.notification.paymentOrder.intervalSeconds') }}</label>
+              <Input v-model.number="form.payment_order_alert_interval_seconds" type="number" min="60" max="604800" />
+              <p class="text-xs text-muted-foreground">{{ t('admin.settings.notification.paymentOrder.intervalHint') }}</p>
             </div>
           </div>
         </div>
