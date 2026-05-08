@@ -742,12 +742,6 @@ const messages = {
         quickActions: {
           title: '快捷入口',
         },
-        ad: {
-          label: '广告',
-          sponsored: '赞助',
-          showLess: '收起',
-          showAll: '显示全部 {count} 条赞助',
-        },
         errors: {
           customRangeRequired: '请选择完整的自定义时间范围',
           fetchFailed: '获取仪表盘数据失败',
@@ -4013,12 +4007,6 @@ const messages = {
         quickActions: {
           title: '快捷入口',
         },
-        ad: {
-          label: '廣告',
-          sponsored: '贊助',
-          showLess: '收起',
-          showAll: '顯示全部 {count} 條贊助',
-        },
         errors: {
           customRangeRequired: '請選擇完整的自定義時間範圍',
           fetchFailed: '獲取儀表板數據失敗',
@@ -7283,12 +7271,6 @@ const messages = {
         },
         quickActions: {
           title: 'Quick Actions',
-        },
-        ad: {
-          label: 'Ad',
-          sponsored: 'Sponsored',
-          showLess: 'Show less',
-          showAll: 'Show all {count} sponsors',
         },
         errors: {
           customRangeRequired: 'Please select a complete custom range',
