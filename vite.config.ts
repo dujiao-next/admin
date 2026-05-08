@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 
@@ -24,59 +24,63 @@ const adminBaseInjector = () => ({
   },
 })
 
-const isFullstack = process.env.VITE_FULLSTACK === '1'
-
 // https://vite.dev/config/
-export default defineConfig({
-  base: isFullstack ? './' : '/',
-  plugins: [
-    vue(),
-    cfAsyncModuleScriptPlugin(),
-    ...(isFullstack ? [adminBaseInjector()] : []),
-  ],
-  server: {
-    host: '0.0.0.0',
-    port: 5174,
-    strictPort: true,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      },
-      '/uploads': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      },
-    },
-  },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'vendor-vue': ['vue', 'vue-router', 'pinia', 'vue-i18n'],
-          'vendor-ui': ['reka-ui', 'class-variance-authority', 'clsx', 'tailwind-merge', 'lucide-vue-next'],
-          'vendor-tiptap': [
-            '@tiptap/vue-3',
-            '@tiptap/starter-kit',
-            '@tiptap/extension-image',
-            '@tiptap/extension-link',
-            '@tiptap/extension-placeholder',
-            '@tiptap/extension-text-align',
-            '@tiptap/extension-color',
-            '@tiptap/extension-text-style',
-            '@tiptap/extension-table',
-            '@tiptap/extension-table-cell',
-            '@tiptap/extension-table-header',
-            '@tiptap/extension-table-row',
-          ],
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  const isFullstack = env.VITE_FULLSTACK === '1' || process.env.VITE_FULLSTACK === '1'
+  const devApiTarget = env.VITE_DEV_API_TARGET || process.env.VITE_DEV_API_TARGET || 'http://localhost:8080'
+
+  return {
+    base: isFullstack ? './' : '/',
+    plugins: [
+      vue(),
+      cfAsyncModuleScriptPlugin(),
+      ...(isFullstack ? [adminBaseInjector()] : []),
+    ],
+    server: {
+      host: '0.0.0.0',
+      port: 5174,
+      strictPort: true,
+      proxy: {
+        '/api': {
+          target: devApiTarget,
+          changeOrigin: true,
+        },
+        '/uploads': {
+          target: devApiTarget,
+          changeOrigin: true,
         },
       },
     },
-    chunkSizeWarningLimit: 600,
-  },
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-vue': ['vue', 'vue-router', 'pinia', 'vue-i18n'],
+            'vendor-ui': ['reka-ui', 'class-variance-authority', 'clsx', 'tailwind-merge', 'lucide-vue-next'],
+            'vendor-tiptap': [
+              '@tiptap/vue-3',
+              '@tiptap/starter-kit',
+              '@tiptap/extension-image',
+              '@tiptap/extension-link',
+              '@tiptap/extension-placeholder',
+              '@tiptap/extension-text-align',
+              '@tiptap/extension-color',
+              '@tiptap/extension-text-style',
+              '@tiptap/extension-table',
+              '@tiptap/extension-table-cell',
+              '@tiptap/extension-table-header',
+              '@tiptap/extension-table-row',
+            ],
+          },
+        },
+      },
+      chunkSizeWarningLimit: 600,
     },
-  },
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+      },
+    },
+  }
 })
