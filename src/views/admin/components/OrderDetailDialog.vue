@@ -182,6 +182,37 @@ const orderProfit = (order: AdminOrder | null) => {
 
 const hasWalletPayment = (order: AdminOrder) => hasPositiveAmount(order?.wallet_paid_amount)
 const hasOnlinePayment = (order: AdminOrder) => hasPositiveAmount(order?.online_paid_amount)
+const formatDiscountMoney = (amount?: string | number, currency?: string) => {
+  return hasPositiveAmount(amount) ? `-${formatMoney(amount, currency)}` : formatMoney(amount, currency)
+}
+
+const positiveAmountValue = (amount?: string | number) => {
+  const value = Number(amount)
+  return Number.isFinite(value) && value > 0 ? value : 0
+}
+
+const itemDiscountTotal = (item: AdminOrderItem) => {
+  return Number((
+    positiveAmountValue(item.promotion_discount_amount)
+    + positiveAmountValue(item.member_discount_amount)
+    + positiveAmountValue(item.coupon_discount_amount)
+  ).toFixed(2))
+}
+
+const hasItemDiscount = (item: AdminOrderItem) => itemDiscountTotal(item) > 0
+
+const formatItemDiscountTotal = (item: AdminOrderItem, currency?: string) => {
+  return formatMoney(itemDiscountTotal(item).toFixed(2), currency)
+}
+
+const itemPaidAmount = (item: AdminOrderItem) => {
+  const paid = positiveAmountValue(item.total_price) - positiveAmountValue(item.coupon_discount_amount)
+  return Number(Math.max(0, paid).toFixed(2))
+}
+
+const formatItemPaidAmount = (item: AdminOrderItem, currency?: string) => {
+  return formatMoney(itemPaidAmount(item).toFixed(2), currency)
+}
 
 const orderPaymentMethodLabel = (order: AdminOrder) => {
   if (hasWalletPayment(order) && hasOnlinePayment(order)) {
@@ -702,7 +733,12 @@ watch(
               <Card class="min-w-0 rounded-lg border-border bg-background shadow-none">
                 <CardContent class="p-3">
                   <div class="text-xs text-muted-foreground">{{ t('orderDetail.amountDiscount') }}</div>
-                  <div class="text-foreground font-mono mt-1">{{ formatMoney(selectedOrder.discount_amount, selectedOrder.currency) }}</div>
+                  <div
+                    class="font-mono mt-1"
+                    :class="hasPositiveAmount(selectedOrder.discount_amount) ? 'text-red-600' : 'text-foreground'"
+                  >
+                    {{ formatDiscountMoney(selectedOrder.discount_amount, selectedOrder.currency) }}
+                  </div>
                 </CardContent>
               </Card>
               <Card class="min-w-0 rounded-lg border-border bg-background shadow-none">
@@ -744,19 +780,29 @@ watch(
               <Card class="min-w-0 rounded-lg border-border bg-background shadow-none">
                 <CardContent class="p-3">
                   <div class="text-xs text-muted-foreground">{{ t('admin.orders.detailCouponDiscount') }}</div>
-                  <div class="text-foreground font-mono mt-1">{{ formatMoney(selectedOrder.discount_amount, selectedOrder.currency) }}</div>
+                  <div
+                    class="font-mono mt-1"
+                    :class="hasPositiveAmount(selectedOrder.discount_amount) ? 'text-red-600' : 'text-foreground'"
+                  >
+                    {{ formatDiscountMoney(selectedOrder.discount_amount, selectedOrder.currency) }}
+                  </div>
                 </CardContent>
               </Card>
               <Card class="min-w-0 rounded-lg border-border bg-background shadow-none">
                 <CardContent class="p-3">
                   <div class="text-xs text-muted-foreground">{{ t('admin.orders.detailPromotionDiscount') }}</div>
-                  <div class="text-foreground font-mono mt-1">{{ formatMoney(selectedOrder.promotion_discount_amount, selectedOrder.currency) }}</div>
+                  <div
+                    class="font-mono mt-1"
+                    :class="hasPositiveAmount(selectedOrder.promotion_discount_amount) ? 'text-red-600' : 'text-foreground'"
+                  >
+                    {{ formatDiscountMoney(selectedOrder.promotion_discount_amount, selectedOrder.currency) }}
+                  </div>
                 </CardContent>
               </Card>
               <Card v-if="hasPositiveAmount(selectedOrder.member_discount_amount)" class="min-w-0 rounded-lg border-amber-200 bg-amber-50/50 shadow-none">
                 <CardContent class="p-3">
                   <div class="text-xs text-amber-700">{{ t('admin.orders.detailMemberDiscount') }}</div>
-                  <div class="text-amber-700 font-mono mt-1">{{ formatMoney(selectedOrder.member_discount_amount, selectedOrder.currency) }}</div>
+                  <div class="text-amber-700 font-mono mt-1">{{ formatDiscountMoney(selectedOrder.member_discount_amount, selectedOrder.currency) }}</div>
                 </CardContent>
               </Card>
             </div>
@@ -816,17 +862,23 @@ watch(
                     </div>
                   </div>
                   <div class="space-y-1 text-left md:text-right">
-                    <div>{{ t('orderDetail.unitPriceLabel') }}：{{ formatMoney(item.unit_price, selectedOrder.currency) }}</div>
+                    <div>{{ t('orderDetail.unitPriceLabel') }}：{{ formatMoney(item.original_unit_price, selectedOrder.currency) }}</div>
                     <div>{{ t('admin.orders.costPrice') }}：{{ formatMoney(item.cost_price, selectedOrder.currency) }}</div>
-                    <div>{{ t('orderDetail.totalPriceLabel') }}：{{ formatMoney(item.total_price, selectedOrder.currency) }}</div>
+                    <div>{{ t('orderDetail.totalPriceLabel') }}：{{ formatMoney(item.original_total_price, selectedOrder.currency) }}</div>
                     <div v-if="hasPositiveAmount(item.coupon_discount_amount)">
-                      {{ t('orderDetail.couponDiscountLabel') }}：{{ formatMoney(item.coupon_discount_amount, selectedOrder.currency) }}
+                      {{ t('orderDetail.couponDiscountLabel') }}：{{ formatDiscountMoney(item.coupon_discount_amount, selectedOrder.currency) }}
                     </div>
                     <div v-if="hasPositiveAmount(item.promotion_discount_amount)">
-                      {{ t('orderDetail.promotionDiscountLabel') }}：{{ formatMoney(item.promotion_discount_amount, selectedOrder.currency) }}
+                      {{ t('orderDetail.promotionDiscountLabel') }}：{{ formatDiscountMoney(item.promotion_discount_amount, selectedOrder.currency) }}
                     </div>
-                    <div v-if="hasPositiveAmount(item.member_discount_amount)" class="text-amber-700">
-                      {{ t('orderDetail.memberDiscountLabel') }}：{{ formatMoney(item.member_discount_amount, selectedOrder.currency) }}
+                    <div v-if="hasPositiveAmount(item.member_discount_amount)">
+                      {{ t('orderDetail.memberDiscountLabel') }}：{{ formatDiscountMoney(item.member_discount_amount, selectedOrder.currency) }}
+                    </div>
+                    <div v-if="hasItemDiscount(item)" class="font-medium text-red-600">
+                      {{ t('orderDetail.itemDiscountTotalLabel') }}：{{ formatItemDiscountTotal(item, selectedOrder.currency) }}
+                    </div>
+                    <div class="font-medium text-foreground">
+                      {{ t('orderDetail.itemPaidAmountLabel') }}：{{ formatItemPaidAmount(item, selectedOrder.currency) }}
                     </div>
                     <div v-if="hasPositiveAmount(itemRefundAmount(selectedOrder, item))" class="text-blue-700">
                       {{ t('admin.orders.itemRefund') }}：{{ formatMoney(itemRefundAmount(selectedOrder, item).toFixed(2), selectedOrder.currency) }}
@@ -897,17 +949,23 @@ watch(
                         </div>
                       </div>
                       <div class="space-y-1 text-left md:text-right">
-                        <div>{{ t('orderDetail.unitPriceLabel') }}：{{ formatMoney(item.unit_price, selectedOrder.currency) }}</div>
+                        <div>{{ t('orderDetail.unitPriceLabel') }}：{{ formatMoney(item.original_unit_price, selectedOrder.currency) }}</div>
                         <div>{{ t('admin.orders.costPrice') }}：{{ formatMoney(item.cost_price, selectedOrder.currency) }}</div>
-                        <div>{{ t('orderDetail.totalPriceLabel') }}：{{ formatMoney(item.total_price, selectedOrder.currency) }}</div>
+                        <div>{{ t('orderDetail.totalPriceLabel') }}：{{ formatMoney(item.original_total_price, selectedOrder.currency) }}</div>
                         <div v-if="hasPositiveAmount(item.coupon_discount_amount)">
-                          {{ t('orderDetail.couponDiscountLabel') }}：{{ formatMoney(item.coupon_discount_amount, selectedOrder.currency) }}
+                          {{ t('orderDetail.couponDiscountLabel') }}：{{ formatDiscountMoney(item.coupon_discount_amount, selectedOrder.currency) }}
                         </div>
                         <div v-if="hasPositiveAmount(item.promotion_discount_amount)">
-                          {{ t('orderDetail.promotionDiscountLabel') }}：{{ formatMoney(item.promotion_discount_amount, selectedOrder.currency) }}
+                          {{ t('orderDetail.promotionDiscountLabel') }}：{{ formatDiscountMoney(item.promotion_discount_amount, selectedOrder.currency) }}
                         </div>
-                        <div v-if="hasPositiveAmount(item.member_discount_amount)" class="text-amber-700">
-                          {{ t('orderDetail.memberDiscountLabel') }}：{{ formatMoney(item.member_discount_amount, selectedOrder.currency) }}
+                        <div v-if="hasPositiveAmount(item.member_discount_amount)">
+                          {{ t('orderDetail.memberDiscountLabel') }}：{{ formatDiscountMoney(item.member_discount_amount, selectedOrder.currency) }}
+                        </div>
+                        <div v-if="hasItemDiscount(item)" class="font-medium text-red-600">
+                          {{ t('orderDetail.itemDiscountTotalLabel') }}：{{ formatItemDiscountTotal(item, selectedOrder.currency) }}
+                        </div>
+                        <div class="font-medium text-foreground">
+                          {{ t('orderDetail.itemPaidAmountLabel') }}：{{ formatItemPaidAmount(item, selectedOrder.currency) }}
                         </div>
                         <div v-if="hasPositiveAmount(itemRefundAmount(child, item))" class="text-blue-700">
                           {{ t('admin.orders.itemRefund') }}：{{ formatMoney(itemRefundAmount(child, item).toFixed(2), selectedOrder.currency) }}
