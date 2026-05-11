@@ -111,8 +111,10 @@ export interface AdminOrderItem {
     [key: string]: unknown
   }
   quantity: number
+  original_unit_price: number
   unit_price: number
   cost_price: number
+  original_total_price: number
   total_price: number
   fulfillment_type: string
   created_at: string
