@@ -32,6 +32,7 @@ const pagination = ref({
   total_page: 1,
 })
 const filters = reactive({
+  userId: '',
   keyword: '',
   status: '__all__',
   createdFrom: '',
@@ -66,6 +67,7 @@ const fetchUsers = async (page = 1) => {
     const response = await adminAPI.getUsers({
       page,
       page_size: pagination.value.page_size,
+      user_id: filters.userId || undefined,
       keyword: filters.keyword || undefined,
       status: normalizeFilterValue(filters.status) || undefined,
       created_from: toRFC3339(filters.createdFrom),
@@ -127,6 +129,7 @@ const refresh = () => {
 }
 
 const resetFilters = () => {
+  filters.userId = ''
   filters.keyword = ''
   filters.status = '__all__'
   filters.createdFrom = ''
@@ -253,6 +256,9 @@ onMounted(() => {
 
     <div class="rounded-xl border border-border bg-card p-4 shadow-sm">
       <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <div class="w-full md:w-32">
+          <Input v-model="filters.userId" :placeholder="t('admin.users.filterUserId')" @update:modelValue="debouncedSearch" />
+        </div>
         <div class="w-full md:w-64">
           <Input v-model="filters.keyword" :placeholder="t('admin.users.filterKeyword')" @update:modelValue="debouncedSearch" />
         </div>

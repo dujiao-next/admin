@@ -30,6 +30,7 @@ const pagination = ref({
   total: 0,
   total_page: 1,
 })
+const adminPath = import.meta.env.VITE_ADMIN_PATH || ''
 
 const filters = reactive({
   keyword: '',
@@ -38,6 +39,8 @@ const filters = reactive({
 })
 
 const normalizeFilterValue = (value: string) => (value === '__all__' ? '' : value)
+const userDetailLink = (userId: number) => `${adminPath}/users/${userId}`
+const resolveAffiliateUserID = (item: AdminAffiliateWithdraw) => Number(item?.affiliate_profile?.user_id || item?.affiliate_profile?.user?.id || 0)
 
 const fetchRows = async (page = 1) => {
   loading.value = true
@@ -200,7 +203,19 @@ onMounted(() => {
                 <span class="break-words">{{ item?.affiliate_profile?.user?.display_name || '-' }}</span>
               </div>
               <div v-if="item?.affiliate_profile?.user?.email" class="mt-0.5 break-all">{{ item.affiliate_profile.user.email }}</div>
-              <div class="mt-0.5 break-all font-mono">#{{ item?.affiliate_profile?.id || '-' }} / {{ item?.affiliate_profile?.code || '-' }}</div>
+              <div class="mt-0.5 break-all">
+                <a
+                  v-if="resolveAffiliateUserID(item) > 0"
+                  :href="userDetailLink(resolveAffiliateUserID(item))"
+                  target="_blank"
+                  rel="noopener"
+                  class="font-mono text-primary underline-offset-4 hover:underline"
+                >
+                  #{{ resolveAffiliateUserID(item) }}
+                </a>
+                <span v-else class="font-mono text-foreground">-</span>
+                <span class="ml-1 font-mono text-muted-foreground">/ {{ item?.affiliate_profile?.code || '-' }}</span>
+              </div>
             </TableCell>
             <TableCell class="px-6 py-4 font-mono text-xs text-foreground">{{ item.amount || '0.00' }}</TableCell>
             <TableCell class="min-w-[100px] px-6 py-4 text-xs text-foreground break-words">{{ item.channel || '-' }}</TableCell>

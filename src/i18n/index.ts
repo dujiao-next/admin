@@ -986,7 +986,7 @@ const messages = {
         },
         detailTitle: '支付详情',
         detailPaymentId: '支付ID',
-        detailOrderId: '订单ID',
+        detailOrderId: '订单号',
         detailChannel: '渠道信息',
         detailStatus: '支付状态',
         detailAmount: '支付金额',
@@ -1933,6 +1933,7 @@ const messages = {
       },
       users: {
         title: '用户管理',
+        filterUserId: '用户ID',
         filterKeyword: '搜索邮箱 / 昵称 / 第三方账号...',
         filterStatusAll: '全部状态',
         filterCreatedRange: '注册时间范围',
@@ -2081,7 +2082,7 @@ const messages = {
         },
         payments: {
           id: '支付ID',
-          orderId: '订单ID',
+          orderId: '订单号',
           status: '状态',
           amount: '金额',
           createdAt: '创建时间',
@@ -4320,7 +4321,7 @@ const messages = {
         },
         detailTitle: '支付詳情',
         detailPaymentId: '支付ID',
-        detailOrderId: '訂單ID',
+        detailOrderId: '訂單號',
         detailChannel: '渠道資訊',
         detailStatus: '支付狀態',
         detailAmount: '支付金額',
@@ -5267,6 +5268,7 @@ const messages = {
       },
       users: {
         title: '用戶管理',
+        filterUserId: '用戶ID',
         filterKeyword: '搜尋信箱 / 暱稱 / 第三方帳號...',
         filterStatusAll: '全部狀態',
         filterCreatedRange: '註冊時間範圍',
@@ -5415,7 +5417,7 @@ const messages = {
         },
         payments: {
           id: '支付ID',
-          orderId: '訂單ID',
+          orderId: '訂單號',
           status: '狀態',
           amount: '金額',
           createdAt: '建立時間',
@@ -7654,7 +7656,7 @@ const messages = {
         },
         detailTitle: 'Payment Detail',
         detailPaymentId: 'Payment ID',
-        detailOrderId: 'Order ID',
+        detailOrderId: 'Order No',
         detailChannel: 'Channel',
         detailStatus: 'Status',
         detailAmount: 'Amount',
@@ -8601,6 +8603,7 @@ const messages = {
       },
       users: {
         title: 'Users',
+        filterUserId: 'User ID',
         filterKeyword: 'Search email / nickname / third-party account...',
         filterStatusAll: 'All status',
         filterCreatedRange: 'Registration range',
@@ -8749,7 +8752,7 @@ const messages = {
         },
         payments: {
           id: 'Payment ID',
-          orderId: 'Order ID',
+          orderId: 'Order No',
           status: 'Status',
           amount: 'Amount',
           createdAt: 'Created At',

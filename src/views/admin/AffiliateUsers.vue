@@ -36,6 +36,8 @@ const filters = reactive({
 })
 
 const normalizeFilterValue = (value: string) => (value === '__all__' ? '' : value)
+const adminPath = import.meta.env.VITE_ADMIN_PATH || ''
+const userDetailLink = (userId: number) => `${adminPath}/users/${userId}`
 
 const parseNumber = (value: unknown, fallback = 0) => {
   const parsed = Number(value)
@@ -120,6 +122,7 @@ const statusClass = (status?: string) => {
 }
 
 const resolveProfileID = (row: Record<string, unknown>) => Number((row?.profile as Record<string, unknown>)?.id || row?.id || 0)
+const resolveUserID = (row: Record<string, unknown>) => Number((row?.profile as Record<string, unknown>)?.user_id || row?.user_id || 0)
 const resolveProfileStatus = (row: Record<string, unknown>) => String((row?.profile as Record<string, unknown>)?.status || row?.status || '').trim()
 const canToggleStatus = (row: Record<string, unknown>) => resolveProfileID(row) > 0
 const allSelected = computed(() => {
@@ -305,7 +308,18 @@ onMounted(() => {
               <IdCell :value="item?.profile?.id || item?.id" />
             </TableCell>
             <TableCell class="min-w-[160px] px-6 py-4 text-xs text-muted-foreground">
-              <div class="text-foreground">#{{ item?.profile?.user_id || item?.user_id || '-' }}</div>
+              <div>
+                <a
+                  v-if="resolveUserID(item) > 0"
+                  :href="userDetailLink(resolveUserID(item))"
+                  target="_blank"
+                  rel="noopener"
+                  class="font-mono text-primary underline-offset-4 hover:underline"
+                >
+                  #{{ resolveUserID(item) }}
+                </a>
+                <span v-else class="text-foreground">-</span>
+              </div>
               <div v-if="item?.profile?.user?.display_name" class="mt-0.5 break-words text-foreground">{{ item.profile.user.display_name }}</div>
               <div v-if="item?.profile?.user?.email" class="mt-0.5 break-all">{{ item.profile.user.email }}</div>
             </TableCell>

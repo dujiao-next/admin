@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { adminAPI, type AdminWalletAccount, type AdminWalletTransaction } from '@/api/admin'
 import type { AdminUser, AdminOrder, AdminPayment, AdminMemberLevel } from '@/api/types'
 import IdCell from '@/components/IdCell.vue'
+import { Copy } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Card, CardContent } from '@/components/ui/card'
@@ -12,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import ListPagination from '@/components/ListPagination.vue'
 import type { AcceptableValue } from 'reka-ui'
+import { copyText } from '@/utils/clipboard'
 import {
   orderStatusClass as orderStatusClassMap,
   orderStatusLabel as orderStatusLabelMap,
@@ -224,6 +226,14 @@ const changeOrdersPageSize = (size: number) => {
   fetchOrders(1)
 }
 
+const handleCopyOrderNo = async (orderNo: string) => {
+  try { await copyText(orderNo) } catch {}
+}
+
+const handleCopyRechargeNo = async (rechargeNo: string) => {
+  try { await copyText(rechargeNo) } catch {}
+}
+
 const changePaymentsPage = (page: number) => {
   if (page < 1 || page > paymentsPagination.value.total_page) return
   fetchPayments(page)
@@ -273,6 +283,7 @@ const changeTab = (tab: 'orders' | 'payments' | 'coupons' | 'wallet') => {
 }
 
 const orderLink = (orderId: number) => `${adminPath}/orders?order_id=${orderId}`
+const paymentDetailLink = (paymentId: number) => `${adminPath}/payments?payment_id=${paymentId}`
 const orderListLink = computed(() => `${adminPath}/orders?user_id=${userId.value}`)
 const paymentListLink = computed(() => `${adminPath}/payments?user_id=${userId.value}`)
 
@@ -636,7 +647,24 @@ watch(
             <TableCell class="px-6 py-4">
               <IdCell :value="order.id" />
             </TableCell>
-            <TableCell class="min-w-[220px] px-6 py-4 text-foreground font-mono break-all">{{ order.order_no }}</TableCell>
+            <TableCell class="min-w-[220px] px-6 py-4 text-foreground font-mono">
+              <div class="flex items-center gap-1.5">
+                <router-link
+                  :to="orderLink(order.id)"
+                  class="break-all text-primary underline-offset-4 hover:underline"
+                >
+                  {{ order.order_no }}
+                </router-link>
+                <button
+                  type="button"
+                  class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-border/60 text-muted-foreground hover:text-foreground hover:border-border"
+                  :title="t('admin.common.copy')"
+                  @click="handleCopyOrderNo(order.order_no)"
+                >
+                  <Copy class="h-3 w-3" />
+                </button>
+              </div>
+            </TableCell>
             <TableCell class="px-6 py-4 text-xs">
               <span class="inline-flex rounded-full border px-2.5 py-1 text-xs" :class="orderStatusClass(order.status)">
                 {{ orderStatusLabel(order.status) }}
@@ -684,11 +712,35 @@ watch(
               <router-link
                 v-if="payment.order_id"
                 :to="orderLink(payment.order_id)"
-                class="text-primary underline-offset-4 hover:underline"
+                class="break-all text-primary underline-offset-4 hover:underline"
               >
-                #{{ payment.order_id }}
+                {{ payment.order_no }}
               </router-link>
-              <span v-else-if="payment.recharge_no" class="break-all">{{ payment.recharge_no }}</span>
+              <button
+                v-if="payment.order_id"
+                type="button"
+                class="ml-1.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-border/60 text-muted-foreground hover:text-foreground hover:border-border"
+                :title="t('admin.common.copy')"
+                @click="handleCopyOrderNo(payment.order_no)"
+              >
+                <Copy class="h-3 w-3" />
+              </button>
+              <div v-else-if="payment.recharge_no" class="flex items-center gap-1.5">
+                <router-link
+                  :to="paymentDetailLink(payment.id)"
+                  class="break-all text-primary underline-offset-4 hover:underline"
+                >
+                  {{ payment.recharge_no }}
+                </router-link>
+                <button
+                  type="button"
+                  class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-border/60 text-muted-foreground hover:text-foreground hover:border-border"
+                  :title="t('admin.common.copy')"
+                  @click="handleCopyRechargeNo(payment.recharge_no)"
+                >
+                  <Copy class="h-3 w-3" />
+                </button>
+              </div>
               <span v-else>-</span>
               <div v-if="payment.recharge_no" class="mt-1 text-xs text-muted-foreground">
                 {{ t('admin.payments.rechargeStatus') }}:
