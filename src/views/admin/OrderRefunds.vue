@@ -47,6 +47,7 @@ const orderLink = (orderId?: number) => {
   if (!orderId) return ''
   return `${adminPath}/orders?order_id=${orderId}`
 }
+const userDetailLink = (userId: number) => `${adminPath}/users/${userId}`
 
 const refundTypeLabel = (item: AdminOrderRefund | null) => {
   if (!item) return '-'
@@ -248,7 +249,16 @@ watch(
               <div v-else-if="item.user_id">
                 <div class="break-words text-foreground">{{ item.user_display_name || '-' }}</div>
                 <div class="break-all">{{ item.user_email || '-' }}</div>
-                <div class="mt-0.5 text-primary">#{{ item.user_id }}</div>
+                <div class="mt-0.5">
+                  <a
+                    :href="userDetailLink(item.user_id)"
+                    target="_blank"
+                    rel="noopener"
+                    class="text-primary underline-offset-4 hover:underline"
+                  >
+                    #{{ item.user_id }}
+                  </a>
+                </div>
               </div>
               <div v-else>-</div>
             </TableCell>

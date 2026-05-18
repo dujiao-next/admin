@@ -29,6 +29,8 @@ const jumpPage = ref('')
 
 const filterStatus = ref('__all__')
 const searchQuery = ref('')
+const adminPath = import.meta.env.VITE_ADMIN_PATH || ''
+const userDetailLink = (userId: number) => `${adminPath}/users/${userId}`
 
 const statusOptions = [
   { value: '__all__', key: 'apiCredentials.filters.allStatus' },
@@ -222,7 +224,17 @@ onMounted(() => fetchCredentials())
               <div class="text-sm">
                 <div class="break-words font-medium">{{ cred.user?.display_name || '-' }}</div>
                 <div class="break-all text-xs text-muted-foreground">{{ cred.user?.email || '-' }}</div>
-                <div class="text-xs text-muted-foreground">ID: {{ cred.user_id }}</div>
+                <div class="text-xs text-muted-foreground">
+                  ID:
+                  <a
+                    :href="userDetailLink(cred.user_id)"
+                    target="_blank"
+                    rel="noopener"
+                    class="font-mono text-primary underline-offset-4 hover:underline"
+                  >
+                    {{ cred.user_id }}
+                  </a>
+                </div>
               </div>
             </TableCell>
             <TableCell class="min-w-[100px] font-mono text-xs"><div class="break-all">{{ cred.api_key || '-' }}</div></TableCell>

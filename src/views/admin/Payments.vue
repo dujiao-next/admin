@@ -3,6 +3,7 @@ import { onMounted, reactive, ref, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { Copy } from 'lucide-vue-next'
 import { adminAPI } from '@/api/admin'
 import type { AdminPayment } from '@/api/types'
 import IdCell from '@/components/IdCell.vue'
@@ -15,6 +16,7 @@ import TableSkeleton from '@/components/TableSkeleton.vue'
 import ListPagination from '@/components/ListPagination.vue'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { paymentStatusClass, paymentStatusLabel } from '@/utils/status'
+import { copyText } from '@/utils/clipboard'
 import { formatDate, toRFC3339 } from '@/utils/format'
 
 const loading = ref(true)
@@ -91,6 +93,7 @@ const changePageSize = (size: number) => {
 }
 
 const orderLink = (orderId: number) => `${adminPath}/orders?order_id=${orderId}`
+const userDetailLink = (userId: number) => `${adminPath}/users/${userId}`
 const channelLink = (channelId: number) => `${adminPath}/payment-channels?channel_id=${channelId}`
 
 const handleExport = async () => {
@@ -180,6 +183,10 @@ const channelTypeLabel = (value?: string) => {
   }
   if (!value) return '-'
   return map[value] || value
+}
+
+const handleCopyOrderNo = async (orderNo: string) => {
+  try { await copyText(orderNo) } catch {}
 }
 
 const interactionModeLabel = (value?: string) => {
@@ -382,7 +389,15 @@ watch(
               <span v-else>-</span>
               <div v-if="payment.recharge_no" class="text-xs text-muted-foreground mt-1">
                 {{ t('admin.payments.rechargeUser') }}:
-                <span v-if="payment.recharge_user_id" class="font-mono">#{{ payment.recharge_user_id }}</span>
+                <a
+                  v-if="payment.recharge_user_id"
+                  :href="userDetailLink(payment.recharge_user_id)"
+                  target="_blank"
+                  rel="noopener"
+                  class="font-mono text-primary underline-offset-4 hover:underline"
+                >
+                  #{{ payment.recharge_user_id }}
+                </a>
                 <span v-else>-</span>
               </div>
               <div v-if="payment.recharge_no && payment.recharge_status" class="text-xs text-muted-foreground mt-0.5">
@@ -453,15 +468,33 @@ watch(
                 <CardContent class="p-4">
                   <div class="text-xs text-muted-foreground mb-2">{{ t('admin.payments.detailOrderId') }}</div>
                   <div class="text-foreground font-mono text-sm break-all">
-                    <a v-if="detailPayment.order_id" :href="orderLink(detailPayment.order_id)" target="_blank" rel="noopener" class="text-primary underline-offset-4 hover:underline">
-                      #{{ detailPayment.order_id }}
-                    </a>
+                    <div v-if="detailPayment.order_id" class="flex items-center gap-1.5">
+                      <a :href="orderLink(detailPayment.order_id)" target="_blank" rel="noopener" class="break-all text-primary underline-offset-4 hover:underline">
+                        {{ detailPayment.order_no }}
+                      </a>
+                      <button
+                        type="button"
+                        class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-border/60 text-muted-foreground hover:text-foreground hover:border-border"
+                        :title="t('admin.common.copy')"
+                        @click="handleCopyOrderNo(detailPayment.order_no)"
+                      >
+                        <Copy class="h-3 w-3" />
+                      </button>
+                    </div>
                     <span v-else-if="detailPayment.recharge_no">{{ detailPayment.recharge_no }}</span>
                     <span v-else>-</span>
                     <div v-if="detailPayment.recharge_no" class="mt-2 space-y-1 text-xs text-muted-foreground">
                       <div>
                         {{ t('admin.payments.rechargeUser') }}:
-                        <span v-if="detailPayment.recharge_user_id" class="font-mono">#{{ detailPayment.recharge_user_id }}</span>
+                        <a
+                          v-if="detailPayment.recharge_user_id"
+                          :href="userDetailLink(detailPayment.recharge_user_id)"
+                          target="_blank"
+                          rel="noopener"
+                          class="font-mono text-primary underline-offset-4 hover:underline"
+                        >
+                          #{{ detailPayment.recharge_user_id }}
+                        </a>
                         <span v-else>-</span>
                       </div>
                       <div v-if="detailPayment.recharge_status">
