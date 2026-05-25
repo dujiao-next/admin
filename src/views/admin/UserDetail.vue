@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { adminAPI, type AdminWalletAccount, type AdminWalletTransaction } from '@/api/admin'
 import type { AdminUser, AdminOrder, AdminPayment, AdminMemberLevel, AdminUserOAuthIdentity } from '@/api/types'
 import IdCell from '@/components/IdCell.vue'
-import { Copy } from 'lucide-vue-next'
+import { BadgeCheck, Copy, BadgeAlert } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Card, CardContent } from '@/components/ui/card'
@@ -295,6 +295,10 @@ const orderStatusClass = (status?: string) => orderStatusClassMap(status)
 const orderStatusLabel = (status?: string) => orderStatusLabelMap(t, status)
 const paymentStatusClass = (status?: string) => paymentStatusClassMap(status)
 const paymentStatusLabel = (status?: string) => paymentStatusLabelMap(t, status)
+const emailVerified = computed(() => Boolean(user.value?.email_verified_at))
+const emailVerificationClass = computed(() => emailVerified.value ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700')
+const emailVerificationIcon = computed(() => emailVerified.value ? BadgeCheck : BadgeAlert)
+const emailVerificationLabel = computed(() => emailVerified.value ? t('admin.userDetail.emailVerification.verified') : t('admin.userDetail.emailVerification.unverified'))
 
 const walletDirectionClass = (direction?: string) => {
   if (direction === 'in') return 'theme-badge-success'
@@ -500,7 +504,13 @@ watch(
       <Card class="rounded-lg border-border bg-background shadow-none">
         <CardContent class="p-3">
           <div class="text-xs text-muted-foreground">{{ t('admin.userDetail.fields.email') }}</div>
-          <div class="text-sm text-foreground break-all">{{ user?.email || '-' }}</div>
+          <div class="flex flex-wrap items-center gap-2 text-sm text-foreground">
+            <span class="break-all">{{ user?.email || '-' }}</span>
+            <span class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs" :class="emailVerificationClass">
+              <component :is="emailVerificationIcon" class="h-3.5 w-3.5" />
+              {{ emailVerificationLabel }}
+            </span>
+          </div>
         </CardContent>
       </Card>
       <Card class="rounded-lg border-border bg-background shadow-none">

@@ -1966,6 +1966,10 @@ const messages = {
           active: '正常',
           disabled: '已禁用',
         },
+        emailVerification: {
+          verified: '已验证',
+          unverified: '未验证',
+        },
         actions: {
           detail: '详情',
           edit: '编辑',
@@ -1982,6 +1986,7 @@ const messages = {
           passwordPlaceholder: '不修改请留空',
           passwordTip: '留空则不修改密码',
           locale: '语言',
+          emailVerifiedStatus: '邮箱验证状态',
           status: '状态',
           adminNote: '管理员备注',
           adminNotePlaceholder: '输入管理员备注（仅后台可见）',
@@ -2041,6 +2046,10 @@ const messages = {
           payments: '支付记录',
           coupons: '优惠券记录',
           wallet: '钱包明细',
+        },
+        emailVerification: {
+          verified: '已验证',
+          unverified: '未验证',
         },
         fields: {
           id: '用户ID',
@@ -5325,6 +5334,10 @@ const messages = {
           active: '正常',
           disabled: '已停用',
         },
+        emailVerification: {
+          verified: '已驗證',
+          unverified: '未驗證',
+        },
         actions: {
           detail: '詳情',
           edit: '編輯',
@@ -5341,6 +5354,7 @@ const messages = {
           passwordPlaceholder: '不修改請留空',
           passwordTip: '留空則不修改密碼',
           locale: '語言',
+          emailVerifiedStatus: '信箱驗證狀態',
           status: '狀態',
           adminNote: '管理員備註',
           adminNotePlaceholder: '輸入管理員備註（僅後台可見）',
@@ -5400,6 +5414,10 @@ const messages = {
           payments: '支付記錄',
           coupons: '優惠券記錄',
           wallet: '錢包明細',
+        },
+        emailVerification: {
+          verified: '已驗證',
+          unverified: '未驗證',
         },
         fields: {
           id: '用戶ID',
@@ -8684,6 +8702,10 @@ const messages = {
           active: 'Active',
           disabled: 'Disabled',
         },
+        emailVerification: {
+          verified: 'Verified',
+          unverified: 'Unverified',
+        },
         actions: {
           detail: 'Detail',
           edit: 'Edit',
@@ -8700,6 +8722,7 @@ const messages = {
           passwordPlaceholder: 'Leave blank to keep',
           passwordTip: 'Leave blank to keep password',
           locale: 'Locale',
+          emailVerifiedStatus: 'Email verification status',
           status: 'Status',
           adminNote: 'Admin Note',
           adminNotePlaceholder: 'Enter admin note (visible to admins only)',
@@ -8759,6 +8782,10 @@ const messages = {
           payments: 'Payments',
           coupons: 'Coupons',
           wallet: 'Wallet',
+        },
+        emailVerification: {
+          verified: 'Verified',
+          unverified: 'Unverified',
         },
         fields: {
           id: 'User ID',

@@ -52,6 +52,7 @@ const form = reactive({
   nickname: '',
   password: '',
   locale: 'zh-CN',
+  email_verified: 'unverified',
   status: 'active',
   admin_note: '',
 })
@@ -192,6 +193,7 @@ const openEditModal = (user: AdminUser) => {
   form.nickname = user.display_name || ''
   form.password = ''
   form.locale = user.locale || 'zh-CN'
+  form.email_verified = user.email_verified_at ? 'verified' : 'unverified'
   form.status = user.status || 'active'
   form.admin_note = (user.admin_note as string) || ''
   error.value = ''
@@ -216,6 +218,7 @@ const handleSubmit = async () => {
       nickname: form.nickname,
       password: form.password || undefined,
       locale: form.locale,
+      email_verified: form.email_verified === 'verified',
       status: form.status,
       admin_note: form.admin_note,
     })
@@ -445,6 +448,18 @@ onMounted(() => {
                   <SelectItem value="zh-CN">{{ t('admin.common.lang.zhCN') }}</SelectItem>
                   <SelectItem value="zh-TW">{{ t('admin.common.lang.zhTW') }}</SelectItem>
                   <SelectItem value="en-US">{{ t('admin.common.lang.enUS') }}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.users.form.emailVerifiedStatus') }}</label>
+              <Select v-model="form.email_verified">
+                <SelectTrigger class="h-9 w-full">
+                  <SelectValue :placeholder="t('admin.users.emailVerification.verified')" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="verified">{{ t('admin.users.emailVerification.verified') }}</SelectItem>
+                  <SelectItem value="unverified">{{ t('admin.users.emailVerification.unverified') }}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

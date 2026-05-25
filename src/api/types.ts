@@ -488,6 +488,7 @@ export interface AdminUser {
   wallet_balance?: number | string
   admin_note?: string
   email_verified_at?: string
+  email_verified?: boolean
   last_login_at?: string
   created_at: string
   updated_at: string
