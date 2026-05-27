@@ -3136,8 +3136,8 @@ const messages = {
       },
       licensePurchase: {
         title: '需要授权才能使用 Telegram Bot',
-        desc: 'Telegram Bot 模块需要购买授权后方可启用。授权一次性付费、终身可用，并支持代搭建服务。点击下方链接查看授权方案与购买流程。',
-        securityNote: '为了您的资产交易安全，请认准官方正版授权软件，避免使用来源不明的破解版本造成资金损失。',
+        desc: 'Telegram Bot 模块需要购买授权后方可启用。授权一次性付费、后续迭代升级无需单独付费，并支持技术指导协助搭建服务。点击下方链接查看授权方案与购买流程。',
+        securityNote: '为了您的资产交易安全，请认准官方正版授权软件，避免使用来源不明的自制或破解版本造成资金损失。',
         action: '查看授权方案',
       },
       settings: {
@@ -6564,8 +6564,8 @@ const messages = {
       },
       licensePurchase: {
         title: '需要授權才能使用 Telegram Bot',
-        desc: 'Telegram Bot 模組需要購買授權後方可啟用。授權一次性付費、終身可用，並提供代搭建服務。點擊下方連結查看授權方案與購買流程。',
-        securityNote: '為了您的資產交易安全，請認準官方正版授權軟體，避免使用來源不明的破解版本造成資金損失。',
+        desc: 'Telegram Bot 模組需要購買授權後方可啟用。授權一次性付費、後續迭代升級無需單獨付費，並提供技術指導協助搭建服務。點擊下方連結查看授權方案與購買流程。',
+        securityNote: '為了您的資產交易安全，請認準官方正版授權軟體，避免使用來源不明的自製或破解版本造成資金損失。',
         action: '查看授權方案',
       },
       settings: {
@@ -9992,8 +9992,8 @@ const messages = {
       },
       licensePurchase: {
         title: 'License Required to Use Telegram Bot',
-        desc: 'The Telegram Bot module requires a paid license to activate. One-time purchase with lifetime updates and optional managed deployment service. Click below to view pricing and purchase options.',
-        securityNote: 'For the safety of your funds and transactions, always use the official licensed software. Avoid cracked or untrusted builds, which may compromise your assets.',
+        desc: 'The Telegram Bot module requires a paid license to activate. One-time payment with no additional charges for future updates and upgrades; technical guidance is also available to assist with setup. Click below to view pricing and purchase options.',
+        securityNote: 'For the safety of your funds and transactions, always use the official licensed software. Avoid self-built or cracked versions from untrusted sources, which may compromise your assets.',
         action: 'View License Options',
       },
       settings: {
