@@ -65,6 +65,7 @@ export interface AdminProduct {
   purchase_type: string
   min_purchase_quantity: number
   max_purchase_quantity: number
+  stock_display_mode: string
   fulfillment_type: string
   manual_form_schema: Record<string, unknown> | null
   manual_stock_total: number

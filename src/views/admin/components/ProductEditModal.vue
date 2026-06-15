@@ -153,6 +153,7 @@ const form = reactive({
   purchase_type: 'member',
   min_purchase_quantity: '' as number | '',
   max_purchase_quantity: '' as number | '',
+  stock_display_mode: 'exact',
   fulfillment_type: 'manual',
   manual_stock_total: 0,
   skus: [] as SKUFormItem[],
@@ -280,6 +281,13 @@ const manualFieldTypeOptions = computed(() => [
   { value: 'select', label: t('admin.products.form.manualFormFieldTypes.select') },
   { value: 'radio', label: t('admin.products.form.manualFormFieldTypes.radio') },
   { value: 'checkbox', label: t('admin.products.form.manualFormFieldTypes.checkbox') },
+])
+
+const stockDisplayModeOptions = computed(() => [
+  { value: 'exact', label: t('admin.products.form.stockDisplayModes.exact') },
+  { value: 'status', label: t('admin.products.form.stockDisplayModes.status') },
+  { value: 'range', label: t('admin.products.form.stockDisplayModes.range') },
+  { value: 'hidden', label: t('admin.products.form.stockDisplayModes.hidden') },
 ])
 
 const normalizeLocaleText = (value: unknown) => {
@@ -487,6 +495,7 @@ const resetForm = () => {
     purchase_type: 'member',
     min_purchase_quantity: '',
     max_purchase_quantity: '',
+    stock_display_mode: 'exact',
     fulfillment_type: 'manual',
     manual_stock_total: 0,
     skus: [],
@@ -534,6 +543,7 @@ const populateForm = (product: AdminProduct) => {
     purchase_type: product.purchase_type || 'member',
     min_purchase_quantity: Number(product.min_purchase_quantity || 0) > 0 ? Math.floor(Number(product.min_purchase_quantity || 0)) : '',
     max_purchase_quantity: Number(product.max_purchase_quantity || 0) > 0 ? Math.floor(Number(product.max_purchase_quantity || 0)) : '',
+    stock_display_mode: product.stock_display_mode || 'exact',
     fulfillment_type: product.fulfillment_type || 'manual',
     manual_stock_total: resolveManualStockMetrics(product).total,
     skus: Array.isArray(product.skus) ? product.skus.map((item: AdminProductSKU) => createSKUFormItem(item)) : [],
@@ -606,6 +616,7 @@ const handleSubmit = async () => {
       purchase_type: form.purchase_type,
       min_purchase_quantity: minPurchaseQuantityValue,
       max_purchase_quantity: maxPurchaseQuantityValue,
+      stock_display_mode: form.stock_display_mode,
       fulfillment_type: form.fulfillment_type,
       manual_stock_total: effectiveManualStockTotal,
       skus: normalizedSKUs,
@@ -803,6 +814,21 @@ watch(
               :placeholder="t('admin.products.form.maxPurchaseQuantityPlaceholder')"
             />
             <p class="mt-1 text-xs text-muted-foreground">{{ t('admin.products.form.maxPurchaseQuantityTip') }}</p>
+          </div>
+
+          <div class="col-span-1">
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.products.form.stockDisplayMode') }}</label>
+            <Select v-model="form.stock_display_mode">
+              <SelectTrigger class="h-9 w-full">
+                <SelectValue :placeholder="t('admin.products.form.stockDisplayModes.exact')" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="item in stockDisplayModeOptions" :key="item.value" :value="item.value">
+                  {{ item.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <p class="mt-1 text-xs text-muted-foreground">{{ t('admin.products.form.stockDisplayModeTip') }}</p>
           </div>
 
           <div class="col-span-1">
