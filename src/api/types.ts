@@ -45,6 +45,8 @@ export interface AdminProductSKU {
 }
 
 export interface AdminWholesalePrice {
+  sku_id?: number
+  sku_code?: string
   min_quantity: number
   unit_price: number | string
 }

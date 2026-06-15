@@ -14,6 +14,8 @@ export type WholesaleProductLike = {
 }
 
 export type WholesaleTierLike = {
+  sku_id?: number | string
+  sku_code?: string
   min_quantity?: number | string
   unit_price?: number | string
 }
@@ -102,15 +104,55 @@ export const formatWholesaleSkuLabel = (sku: WholesaleSkuLike, locale?: string) 
   return id > 0 ? `#${id}` : '-'
 }
 
+const normalizeSkuId = (value: unknown) => {
+  const parsed = Number(value || 0)
+  if (!Number.isFinite(parsed)) return 0
+  const integer = Math.floor(parsed)
+  return integer > 0 ? integer : 0
+}
+
+const normalizeSkuCode = (value: unknown) => normalizeText(value).toLowerCase()
+
+export const isUniversalWholesaleTier = (tier: WholesaleTierLike | null | undefined) => {
+  return normalizeSkuId(tier?.sku_id) <= 0 && normalizeSkuCode(tier?.sku_code) === ''
+}
+
+export const wholesaleTierMatchesSku = (tier: WholesaleTierLike | null | undefined, sku: WholesaleSkuLike | null | undefined) => {
+  if (!tier || !sku) return false
+  const tierSkuId = normalizeSkuId(tier.sku_id)
+  const skuId = normalizeSkuId(sku.id)
+  if (tierSkuId > 0 && skuId > 0 && tierSkuId === skuId) return true
+  const tierSkuCode = normalizeSkuCode(tier.sku_code)
+  return tierSkuCode !== '' && tierSkuCode === normalizeSkuCode(sku.sku_code)
+}
+
+export const formatWholesaleTierScopeLabel = (
+  product: WholesaleProductLike | null | undefined,
+  tier: WholesaleTierLike | null | undefined,
+  options?: { locale?: string; allLabel?: string },
+) => {
+  if (isUniversalWholesaleTier(tier)) return options?.allLabel || 'All SKU'
+  const skus = activeSkus(product)
+  const matched = skus.find((sku) => wholesaleTierMatchesSku(tier, sku))
+  if (matched) return formatWholesaleSkuLabel(matched, options?.locale)
+  const skuCode = normalizeText(tier?.sku_code)
+  if (skuCode) return skuCode
+  const skuId = normalizeSkuId(tier?.sku_id)
+  return skuId > 0 ? `SKU#${skuId}` : '-'
+}
+
 export const buildWholesaleSkuPriceReferences = (
   product: WholesaleProductLike | null | undefined,
   options: BuildSkuReferenceOptions,
 ): WholesaleSkuPriceReference[] => {
-  const lowestTierPrice = lowestWholesaleTierUnitPrice(options.tiers)
+  const tiers = Array.isArray(options.tiers) ? options.tiers : []
   return activeSkus(product)
     .map((sku) => {
       const priceAmount = parsePositiveNumber(sku.price_amount)
       if (priceAmount === null) return null
+      const specificTiers = tiers.filter((tier) => wholesaleTierMatchesSku(tier, sku))
+      const relevantTiers = specificTiers.length > 0 ? specificTiers : tiers.filter((tier) => isUniversalWholesaleTier(tier))
+      const lowestTierPrice = lowestWholesaleTierUnitPrice(relevantTiers)
       return {
         id: Number(sku.id || 0),
         label: formatWholesaleSkuLabel(sku, options.locale),

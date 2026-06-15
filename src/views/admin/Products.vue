@@ -20,6 +20,7 @@ import type { ListFetchOptions } from '@/composables/useListRefresh'
 import { confirmAction } from '@/utils/confirm'
 import ProductEditModal from './components/ProductEditModal.vue'
 import { buildAdminCategoryPath, createAdminCategoryMap, createAdminCategoryChildCountMap, flattenAdminCategories, isAdminProductCategorySelectable } from '@/utils/category'
+import { formatWholesaleTierScopeLabel } from '@/utils/wholesalePricing'
 
 const { t } = useI18n()
 const loading = ref(false)
@@ -117,8 +118,16 @@ const formatWholesaleSummary = (product: AdminProduct) => {
   if (!tiers.length) return ''
   return tiers
     .slice()
-    .sort((a, b) => Number(a.min_quantity || 0) - Number(b.min_quantity || 0))
-    .map((tier) => `≥${Number(tier.min_quantity || 0)} ${formatPrice(tier.unit_price, siteCurrency.value)}`)
+    .sort((a, b) => {
+      const scopeA = formatWholesaleTierScopeLabel(product, a, { allLabel: t('admin.wholesalePrices.modal.skuAll') })
+      const scopeB = formatWholesaleTierScopeLabel(product, b, { allLabel: t('admin.wholesalePrices.modal.skuAll') })
+      if (scopeA !== scopeB) return scopeA.localeCompare(scopeB)
+      return Number(a.min_quantity || 0) - Number(b.min_quantity || 0)
+    })
+    .map((tier) => {
+      const scope = formatWholesaleTierScopeLabel(product, tier, { allLabel: t('admin.wholesalePrices.modal.skuAll') })
+      return `${scope} ≥${Number(tier.min_quantity || 0)} ${formatPrice(tier.unit_price, siteCurrency.value)}`
+    })
     .join(' / ')
 }
 
