@@ -420,6 +420,12 @@ const navGroups = computed<NavGroup[]>(() => {
           permission: 'GET:/admin/resellers/site-configs',
         },
         {
+          label: t('admin.navItems.resellerProductSettings'),
+          to: '/resellers/product-settings',
+          icon: SlidersHorizontal,
+          permission: 'GET:/admin/resellers/product-settings',
+        },
+        {
           label: t('admin.navItems.resellerLedgerEntries'),
           to: '/resellers/ledger-entries',
           icon: ReceiptText,

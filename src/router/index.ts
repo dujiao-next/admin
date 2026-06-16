@@ -233,6 +233,12 @@ const routes = [
         meta: { permission: 'GET:/admin/resellers/site-configs' },
       },
       {
+        path: 'resellers/product-settings',
+        name: 'resellers-product-settings',
+        component: () => import('@/views/admin/ResellerProductSettings.vue'),
+        meta: { permission: 'GET:/admin/resellers/product-settings' },
+      },
+      {
         path: 'resellers/ledger-entries',
         name: 'resellers-ledger-entries',
         component: () => import('@/views/admin/ResellerLedgerEntries.vue'),

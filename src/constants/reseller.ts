@@ -35,3 +35,8 @@ export const RESELLER_BALANCE_STATUS_NORMAL = 'normal'
 export const RESELLER_BALANCE_STATUS_NEGATIVE = 'negative_balance'
 export const RESELLER_BALANCE_STATUS_FROZEN_REVIEW = 'frozen_review'
 export const RESELLER_BALANCE_STATUS_DISABLED = 'disabled'
+
+export const RESELLER_PRICING_MODE_INHERIT = 'inherit'
+export const RESELLER_PRICING_MODE_MARKUP_PERCENT = 'markup_percent'
+export const RESELLER_PRICING_MODE_FIXED_MARKUP = 'fixed_markup'
+export const RESELLER_PRICING_MODE_FIXED_PRICE = 'fixed_price'

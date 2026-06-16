@@ -15,6 +15,7 @@ import type {
   AdminUser,
   AdminSiteConnection,
   AdminResellerProfileApprovePayload,
+  AdminResellerProductSettingUpdatePayload,
   AdminResellerReasonPayload,
   AdminResellerSiteConfigPayload,
 } from './types'
@@ -461,6 +462,17 @@ export const adminAPI = {
     api.put(`/admin/resellers/site-configs/${resellerId}`, data),
   resetResellerSiteConfig: (resellerId: number) =>
     api.post(`/admin/resellers/site-configs/${resellerId}/reset`, {}),
+  getResellerProductSettings: (params?: Record<string, unknown>) =>
+    api.get('/admin/resellers/product-settings', { params }),
+  getResellerProductSetting: (resellerId: number, productId: number) =>
+    api.get(`/admin/resellers/product-settings/${resellerId}/${productId}`),
+  updateResellerProductSettings: (
+    resellerId: number,
+    productId: number,
+    data: AdminResellerProductSettingUpdatePayload,
+  ) => api.put(`/admin/resellers/product-settings/${resellerId}/${productId}`, data),
+  resetResellerProductSetting: (resellerId: number, productId: number, skuId = 0) =>
+    api.delete(`/admin/resellers/product-settings/${resellerId}/${productId}`, { params: { sku_id: skuId } }),
   refundOrderToWallet: (id: number, data: AdminRefundToWalletPayload) =>
     api.post(`/admin/orders/${id}/refund-to-wallet`, data),
   manualRefundOrder: (id: number, data: AdminManualRefundPayload) =>

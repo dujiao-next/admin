@@ -895,6 +895,76 @@ export interface AdminResellerSiteConfig extends Required<Pick<AdminResellerSite
   updated_at: string
 }
 
+export interface AdminResellerProductSettingProduct {
+  id: number
+  slug: string
+  title: LocalizedText
+  price_amount: string | number
+  is_active: boolean
+}
+
+export interface AdminResellerProductSetting {
+  id: number
+  reseller_id: number
+  product_id: number
+  sku_id: number
+  is_listed: boolean
+  pricing_mode: string
+  markup_percent: string | number
+  fixed_markup_amount: string | number
+  fixed_price_amount: string | number
+  sort_order: number
+  created_at: string
+  updated_at: string
+  profile?: AdminResellerProfileRef
+  product?: AdminResellerProductSettingProduct
+}
+
+export interface AdminResellerProductSettingRule {
+  id?: number
+  product_id: number
+  sku_id: number
+  is_listed: boolean
+  pricing_mode: string
+  markup_percent: string | number
+  fixed_markup_amount: string | number
+  fixed_price_amount: string | number
+  effective_price_amount?: string | number
+  rule_source?: string
+  sort_order: number
+  updated_at?: string
+}
+
+export interface AdminResellerProductSettingSKU {
+  id: number
+  sku_code: string
+  spec_values: Record<string, string>
+  base_price_amount: string | number
+  is_active: boolean
+  setting?: AdminResellerProductSettingRule
+  effective_price_amount?: string | number
+}
+
+export interface AdminResellerProductSettingDetail {
+  product: AdminResellerProductSettingProduct
+  product_setting?: AdminResellerProductSettingRule
+  skus: AdminResellerProductSettingSKU[]
+}
+
+export interface AdminResellerProductSettingPayloadItem {
+  sku_id: number
+  is_listed: boolean
+  pricing_mode: string
+  markup_percent: string
+  fixed_markup_amount: string
+  fixed_price_amount: string
+  sort_order: number
+}
+
+export interface AdminResellerProductSettingUpdatePayload {
+  settings: AdminResellerProductSettingPayloadItem[]
+}
+
 export interface AdminResellerProfileApprovePayload {
   default_markup_percent?: string
   max_markup_percent?: string
