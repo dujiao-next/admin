@@ -209,6 +209,24 @@ const routes = [
         meta: { permission: 'GET:/admin/affiliates/withdraws' },
       },
       {
+        path: 'resellers/ledger-entries',
+        name: 'resellers-ledger-entries',
+        component: () => import('@/views/admin/ResellerLedgerEntries.vue'),
+        meta: { permission: 'GET:/admin/resellers/ledger-entries' },
+      },
+      {
+        path: 'resellers/balance-accounts',
+        name: 'resellers-balance-accounts',
+        component: () => import('@/views/admin/ResellerBalanceAccounts.vue'),
+        meta: { permission: 'GET:/admin/resellers/balance-accounts' },
+      },
+      {
+        path: 'resellers/withdraws',
+        name: 'resellers-withdraws',
+        component: () => import('@/views/admin/ResellerWithdraws.vue'),
+        meta: { permission: 'GET:/admin/resellers/withdraws' },
+      },
+      {
         path: 'authz',
         name: 'authz',
         component: () => import('@/views/admin/Authz.vue'),
@@ -328,6 +346,9 @@ const PAYMENT_PROTECTED_ROUTE_NAMES = new Set<string>([
   'reconciliation',
   'affiliates-withdraws',
   'affiliates-commissions',
+  'resellers-ledger-entries',
+  'resellers-balance-accounts',
+  'resellers-withdraws',
 ])
 
 router.beforeEach(async (to) => {

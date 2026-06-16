@@ -1,0 +1,20 @@
+export const RESELLER_LEDGER_TYPE_ORDER_PROFIT = 'order_profit'
+export const RESELLER_LEDGER_TYPE_REFUND_DEDUCT = 'refund_deduct'
+export const RESELLER_LEDGER_TYPE_MANUAL_ADJUST = 'manual_adjust'
+export const RESELLER_LEDGER_TYPE_WITHDRAW_LOCK = 'withdraw_lock'
+export const RESELLER_LEDGER_TYPE_WITHDRAW_PAID = 'withdraw_paid'
+
+export const RESELLER_LEDGER_STATUS_PENDING_CONFIRM = 'pending_confirm'
+export const RESELLER_LEDGER_STATUS_AVAILABLE = 'available'
+export const RESELLER_LEDGER_STATUS_LOCKED = 'locked'
+export const RESELLER_LEDGER_STATUS_WITHDRAWN = 'withdrawn'
+export const RESELLER_LEDGER_STATUS_CANCELED = 'canceled'
+
+export const RESELLER_WITHDRAW_STATUS_PENDING = 'pending'
+export const RESELLER_WITHDRAW_STATUS_REJECTED = 'rejected'
+export const RESELLER_WITHDRAW_STATUS_PAID = 'paid'
+
+export const RESELLER_BALANCE_STATUS_NORMAL = 'normal'
+export const RESELLER_BALANCE_STATUS_NEGATIVE = 'negative_balance'
+export const RESELLER_BALANCE_STATUS_FROZEN_REVIEW = 'frozen_review'
+export const RESELLER_BALANCE_STATUS_DISABLED = 'disabled'

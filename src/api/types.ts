@@ -785,3 +785,74 @@ export interface AdminAffiliateWithdraw {
   user_email?: string
   affiliate_profile?: { id: number; user_id: number; code: string; user_email?: string; user_display_name?: string; user?: { id: number; email: string; display_name?: string } }
 }
+
+export interface AdminResellerUser {
+  id: number
+  email?: string
+  display_name?: string
+  username?: string
+}
+
+export interface AdminResellerProfileRef {
+  id: number
+  user_id: number
+  status?: string
+  settlement_status?: string
+  user?: AdminResellerUser
+}
+
+export interface AdminResellerOrderRef {
+  id: number
+  order_no: string
+}
+
+export interface AdminResellerLedgerEntry {
+  id: number
+  reseller_id: number
+  order_id?: number
+  type: string
+  amount: number | string
+  currency: string
+  idempotency_key: string
+  metadata_json?: Record<string, unknown>
+  status: string
+  available_at?: string
+  withdraw_request_id?: number
+  remark?: string
+  created_at: string
+  updated_at: string
+  profile?: AdminResellerProfileRef
+  order?: AdminResellerOrderRef
+}
+
+export interface AdminResellerBalanceAccount {
+  id: number
+  reseller_id: number
+  currency: string
+  status: string
+  available_amount_cache: number | string
+  locked_amount_cache: number | string
+  negative_amount_cache: number | string
+  last_ledger_entry_id: number
+  risk_note?: string
+  created_at: string
+  updated_at: string
+  profile?: AdminResellerProfileRef
+}
+
+export interface AdminResellerWithdraw {
+  id: number
+  reseller_id: number
+  amount: number | string
+  currency: string
+  channel: string
+  account: string
+  status: string
+  reject_reason?: string
+  processed_by?: number
+  processed_at?: string
+  processor?: { id?: number; username?: string; [key: string]: unknown } | string
+  created_at: string
+  updated_at: string
+  profile?: AdminResellerProfileRef
+}

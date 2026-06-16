@@ -391,6 +391,31 @@ const navGroups = computed<NavGroup[]>(() => {
       ],
     },
     {
+      id: 'reseller',
+      label: t('admin.navGroups.resellerManagement'),
+      icon: Users,
+      items: [
+        {
+          label: t('admin.navItems.resellerLedgerEntries'),
+          to: '/resellers/ledger-entries',
+          icon: ReceiptText,
+          permission: 'GET:/admin/resellers/ledger-entries',
+        },
+        {
+          label: t('admin.navItems.resellerBalanceAccounts'),
+          to: '/resellers/balance-accounts',
+          icon: Wallet,
+          permission: 'GET:/admin/resellers/balance-accounts',
+        },
+        {
+          label: t('admin.navItems.resellerWithdraws'),
+          to: '/resellers/withdraws',
+          icon: WalletCards,
+          permission: 'GET:/admin/resellers/withdraws',
+        },
+      ],
+    },
+    {
       id: 'integration',
       label: t('admin.navGroups.integrationManagement'),
       icon: Link,

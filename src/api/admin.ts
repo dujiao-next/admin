@@ -420,6 +420,16 @@ export const adminAPI = {
   getAffiliateWithdraws: (params?: Record<string, unknown>) => api.get('/admin/affiliates/withdraws', { params }),
   rejectAffiliateWithdraw: (id: number, data: { reason?: string }) => api.post(`/admin/affiliates/withdraws/${id}/reject`, data),
   payAffiliateWithdraw: (id: number) => api.post(`/admin/affiliates/withdraws/${id}/pay`, {}),
+  getResellerLedgerEntries: (params?: Record<string, unknown>) =>
+    api.get('/admin/resellers/ledger-entries', { params }),
+  getResellerBalanceAccounts: (params?: Record<string, unknown>) =>
+    api.get('/admin/resellers/balance-accounts', { params }),
+  getResellerWithdraws: (params?: Record<string, unknown>) =>
+    api.get('/admin/resellers/withdraws', { params }),
+  rejectResellerWithdraw: (id: number, data: { reason?: string }) =>
+    api.post(`/admin/resellers/withdraws/${id}/reject`, data),
+  payResellerWithdraw: (id: number) =>
+    api.post(`/admin/resellers/withdraws/${id}/pay`, {}),
   refundOrderToWallet: (id: number, data: AdminRefundToWalletPayload) =>
     api.post(`/admin/orders/${id}/refund-to-wallet`, data),
   manualRefundOrder: (id: number, data: AdminManualRefundPayload) =>
