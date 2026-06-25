@@ -406,6 +406,8 @@ export interface AdminPost {
   is_published: boolean
   published_at?: string
   created_at: string
+  category_id?: number | null
+  category?: { id: number; name: LocalizedText } | null
 }
 
 // --- PaymentChannel ---

@@ -304,6 +304,25 @@ const navGroups = computed<NavGroup[]>(() => {
       ],
     },
     {
+      id: 'articles',
+      label: t('admin.navGroups.articleManagement'),
+      icon: Newspaper,
+      items: [
+        {
+          label: t('admin.navItems.articleList'),
+          to: '/posts/blog',
+          icon: FileText,
+          permission: 'GET:/admin/posts',
+        },
+        {
+          label: t('admin.navItems.postCategories'),
+          to: '/posts/categories',
+          icon: FolderTree,
+          permission: 'GET:/admin/post-categories',
+        },
+      ],
+    },
+    {
       id: 'content',
       label: t('admin.navGroups.contentManagement'),
       icon: FileText,
@@ -315,16 +334,16 @@ const navGroups = computed<NavGroup[]>(() => {
           permission: 'GET:/admin/banners',
         },
         {
-          label: t('admin.navItems.posts'),
-          to: '/posts',
-          icon: Newspaper,
-          permission: 'GET:/admin/posts',
-        },
-        {
           label: t('admin.navItems.media'),
           to: '/media',
           icon: ImageIcon,
           permission: 'GET:/admin/media',
+        },
+        {
+          label: t('admin.navItems.announcementList'),
+          to: '/posts/notice',
+          icon: Bell,
+          permission: 'GET:/admin/posts',
         },
       ],
     },

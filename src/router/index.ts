@@ -126,7 +126,17 @@ const routes = [
         meta: { permission: 'GET:/admin/users/:id' },
       },
       {
+        path: 'posts/categories',
+        name: 'postCategories',
+        component: () => import('@/views/admin/PostCategories.vue'),
+        meta: { permission: 'GET:/admin/post-categories' },
+      },
+      {
         path: 'posts',
+        redirect: '/posts/blog',
+      },
+      {
+        path: 'posts/:type(blog|notice)',
         name: 'posts',
         component: () => import('@/views/admin/Posts.vue'),
         meta: { permission: 'GET:/admin/posts' },

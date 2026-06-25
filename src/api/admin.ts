@@ -618,4 +618,11 @@ export const adminAPI = {
     api.get(`/admin/ads/render/${slotCode}`, { params }),
   reportAdImpression: (data: { tenant: string; client: string; slot_code: string; items: { ad_id: number; impression_token: string }[] }) =>
     api.post('/admin/ads/impression', data),
+
+  // 文章分类
+  getPostCategories: (params?: Record<string, unknown>) => api.get('/admin/post-categories', { params }),
+  createPostCategory: (data: any) => api.post('/admin/post-categories', data),
+  updatePostCategory: (id: number, data: any) => api.put(`/admin/post-categories/${id}`, data),
+  deletePostCategory: (id: number) => api.delete(`/admin/post-categories/${id}`),
+  patchPostCategoryStatus: (id: number, is_active: boolean) => api.patch(`/admin/post-categories/${id}/status`, { is_active }),
 }
