@@ -26,6 +26,7 @@ const loading = ref(false)
 const searchQuery = ref('')
 const stockStatus = ref('all')
 const wholesaleStatus = ref('all')
+const categoryFilter = ref('all')
 const route = useRoute()
 const router = useRouter()
 
@@ -221,6 +222,7 @@ const fetchProducts = async (options: ListFetchOptions = {}) => {
       search: searchQuery.value,
       stock_status: stockStatus.value,
       wholesale: wholesaleStatus.value,
+      category_id: categoryFilter.value === 'all' ? undefined : categoryFilter.value,
     })
     products.value = res.data.data || []
     if (res.data.pagination) {
@@ -308,6 +310,7 @@ const resetFilters = () => {
   searchQuery.value = ''
   stockStatus.value = 'all'
   wholesaleStatus.value = 'all'
+  categoryFilter.value = 'all'
   pagination.page = 1
   if (route.query.wholesale !== undefined) {
     router.replace({ query: { ...route.query, wholesale: undefined } })
@@ -495,6 +498,25 @@ watch(
             </SelectContent>
           </Select>
         </div>
+        <div class="w-full md:w-56">
+          <Select v-model="categoryFilter" @update:modelValue="handleSearch">
+            <SelectTrigger class="h-9 w-full">
+              <SelectValue :placeholder="t('admin.products.filters.categoryPlaceholder')" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{{ t('admin.products.filters.categoryAll') }}</SelectItem>
+              <SelectItem
+                v-for="item in flattenAdminCategories(categories).map(i => ({ ...i, selectable: isAdminProductCategorySelectable(i.category, categoryChildCountMap) }))"
+                :key="item.category.id"
+                :value="String(item.category.id)"
+                :disabled="!item.selectable"
+                :class="item.depth > 0 ? 'pl-5' : ''"
+              >
+                {{ buildAdminCategoryPath(item.category, categoryMap, (c) => getLocalizedText(c.name)) }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div class="w-full md:w-48">
           <Select v-model="wholesaleStatus" @update:modelValue="handleWholesaleStatusChange">
             <SelectTrigger class="h-9 w-full">
@@ -528,9 +550,9 @@ watch(
                 :key="item.category.id"
                 :value="String(item.category.id)"
                 :disabled="!item.selectable"
-                :class="item.depth > 0 ? 'pl-6' : ''"
+                :class="item.depth > 0 ? 'pl-5' : ''"
               >
-                {{ item.depth > 0 ? getLocalizedText(item.category.name) : buildAdminCategoryPath(item.category, categoryMap, (c) => getLocalizedText(c.name)) }}
+                {{ buildAdminCategoryPath(item.category, categoryMap, (c) => getLocalizedText(c.name)) }}
               </SelectItem>
             </SelectContent>
           </Select>
