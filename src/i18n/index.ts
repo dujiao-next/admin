@@ -427,6 +427,15 @@ const messages = {
       filter: {
         allConnections: '全部连接',
         connectionPlaceholder: '筛选连接',
+        upstreamStatusPlaceholder: '上游状态',
+        allUpstreamStatus: '全部',
+        upstreamInactive: '上游已下架',
+        upstreamDeleted: '上游已删除',
+        productStatusPlaceholder: '商品状态',
+        allProductStatus: '全部',
+        productActive: '已启用',
+        productInactive: '已禁用',
+        searchPlaceholder: '搜索商品...',
       },
       delete: {
         confirm: '确认删除映射 #{id}？',
@@ -4637,6 +4646,15 @@ const messages = {
       filter: {
         allConnections: '全部連接',
         connectionPlaceholder: '篩選連接',
+        upstreamStatusPlaceholder: '上游狀態',
+        allUpstreamStatus: '全部',
+        upstreamInactive: '上游已下架',
+        upstreamDeleted: '上游已刪除',
+        productStatusPlaceholder: '商品狀態',
+        allProductStatus: '全部',
+        productActive: '已啟用',
+        productInactive: '已禁用',
+        searchPlaceholder: '搜尋商品...',
       },
       delete: {
         confirm: '確認刪除映射 #{id}？',
@@ -8847,6 +8865,15 @@ const messages = {
       filter: {
         allConnections: 'All Connections',
         connectionPlaceholder: 'Filter by connection',
+        upstreamStatusPlaceholder: 'Upstream status',
+        allUpstreamStatus: 'All',
+        upstreamInactive: 'Upstream delisted',
+        upstreamDeleted: 'Upstream deleted',
+        productStatusPlaceholder: 'Product status',
+        allProductStatus: 'All',
+        productActive: 'Enabled',
+        productInactive: 'Disabled',
+        searchPlaceholder: 'Search products...',
       },
       delete: {
         confirm: 'Delete mapping #{id}?',
