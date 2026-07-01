@@ -160,6 +160,26 @@ const resolveManualStockMetrics = (product: AdminProduct) => {
   return { total, locked, sold }
 }
 
+/**
+ * 供应商名称截断：10 个汉字宽度（20 个英文字符），超出加 ...
+ * 中文/全角字符计 2 单位，英文/半角计 1 单位
+ */
+const truncateSupplierName = (name: string, maxChineseChars: number): string => {
+  const maxWidth = maxChineseChars * 2
+  let width = 0
+  let result = ''
+  for (const ch of name) {
+    const w = ch.charCodeAt(0) > 255 ? 2 : 1
+    if (width + w > maxWidth) {
+      result += '...'
+      break
+    }
+    result += ch
+    width += w
+  }
+  return result
+}
+
 const formatManualStockSummary = (product: AdminProduct) => {
   const metrics = resolveManualStockMetrics(product)
   const total = metrics.total
@@ -594,6 +614,13 @@ watch(
                       class="rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[11px] text-indigo-700"
                     >
                       {{ t('admin.products.mappedProduct') }}
+                    </span>
+                    <span
+                      v-if="product.is_mapped && product.supplier_name"
+                      class="rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[11px] text-violet-700"
+                      :title="product.supplier_name"
+                    >
+                      {{ truncateSupplierName(product.supplier_name, 10) }}
                     </span>
                     <span
                       class="rounded-full border px-2 py-0.5 text-[11px]"

@@ -15,6 +15,7 @@ const submitting = ref(false)
 
 const form = reactive({
   enabled: false,
+  allow_negative_margin: false,
   max_pending_orders_per_user: 3,
   max_pending_orders_per_ip: 5,
   max_pending_orders_per_guest_email: 2,
@@ -35,6 +36,7 @@ const loadConfig = async () => {
     const data = res.data?.data as Record<string, unknown> | undefined
     if (data) {
       form.enabled = !!data.enabled
+      form.allow_negative_margin = !!data.allow_negative_margin
       form.max_pending_orders_per_user = data.max_pending_orders_per_user != null ? Number(data.max_pending_orders_per_user) : 3
       form.max_pending_orders_per_ip = data.max_pending_orders_per_ip != null ? Number(data.max_pending_orders_per_ip) : 5
       form.max_pending_orders_per_guest_email = data.max_pending_orders_per_guest_email != null ? Number(data.max_pending_orders_per_guest_email) : 2
@@ -73,6 +75,7 @@ const save = async () => {
       key: 'order_risk_control_config',
       value: {
         enabled: form.enabled,
+        allow_negative_margin: form.allow_negative_margin,
         max_pending_orders_per_user: Number(form.max_pending_orders_per_user),
         max_pending_orders_per_ip: Number(form.max_pending_orders_per_ip),
         max_pending_orders_per_guest_email: Number(form.max_pending_orders_per_guest_email),
@@ -118,6 +121,17 @@ onMounted(() => {
         <div>
           <Label class="text-sm font-medium">{{ t('admin.settings.orderRiskControl.enabled') }}</Label>
           <p class="text-xs text-muted-foreground">{{ t('admin.settings.orderRiskControl.enabledHint') }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 允许负利润 -->
+    <div class="rounded-lg border p-6">
+      <div class="flex items-center gap-3">
+        <Switch v-model="form.allow_negative_margin" />
+        <div>
+          <Label class="text-sm font-medium">{{ t('admin.settings.orderRiskControl.allowNegativeMargin') }}</Label>
+          <p class="text-xs text-muted-foreground">{{ t('admin.settings.orderRiskControl.allowNegativeMarginHint') }}</p>
         </div>
       </div>
     </div>

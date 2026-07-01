@@ -427,6 +427,15 @@ const messages = {
       filter: {
         allConnections: '全部连接',
         connectionPlaceholder: '筛选连接',
+        upstreamStatusPlaceholder: '上游状态',
+        allUpstreamStatus: '全部',
+        upstreamInactive: '上游已下架',
+        upstreamDeleted: '上游已删除',
+        productStatusPlaceholder: '商品状态',
+        allProductStatus: '全部',
+        productActive: '已启用',
+        productInactive: '已禁用',
+        searchPlaceholder: '搜索商品...',
       },
       delete: {
         confirm: '确认删除映射 #{id}？',
@@ -2567,6 +2576,8 @@ const messages = {
           subtitle: '配置下单风控策略，防止恶意占用库存。',
           enabled: '启用订单风控',
           enabledHint: '开启后，系统将对下单行为进行风控检查。',
+          allowNegativeMargin: '允许负利润',
+          allowNegativeMarginHint: '开启后允许售价不高于成本的订单提交至上游；关闭后（默认）拦截负利润订单。',
           pendingLimits: {
             title: '并发待支付订单限制',
             subtitle: '限制同一用户/IP/游客邮箱的最大待支付订单数量，防止恶意占库存。设为 0 表示不限制。',
@@ -4637,6 +4648,15 @@ const messages = {
       filter: {
         allConnections: '全部連接',
         connectionPlaceholder: '篩選連接',
+        upstreamStatusPlaceholder: '上游狀態',
+        allUpstreamStatus: '全部',
+        upstreamInactive: '上游已下架',
+        upstreamDeleted: '上游已刪除',
+        productStatusPlaceholder: '商品狀態',
+        allProductStatus: '全部',
+        productActive: '已啟用',
+        productInactive: '已禁用',
+        searchPlaceholder: '搜尋商品...',
       },
       delete: {
         confirm: '確認刪除映射 #{id}？',
@@ -6777,6 +6797,8 @@ const messages = {
           subtitle: '配置下單風控策略，防止惡意佔用庫存。',
           enabled: '啟用訂單風控',
           enabledHint: '開啟後，系統將對下單行為進行風控檢查。',
+          allowNegativeMargin: '允許負利潤',
+          allowNegativeMarginHint: '開啟後允許售價不高於成本的訂單提交至上遊；關閉後（預設）攔截負利潤訂單。',
           pendingLimits: {
             title: '並發待支付訂單限制',
             subtitle: '限制同一用戶/IP/遊客郵箱的最大待支付訂單數量，防止惡意佔庫存。設為 0 表示不限制。',
@@ -8847,6 +8869,15 @@ const messages = {
       filter: {
         allConnections: 'All Connections',
         connectionPlaceholder: 'Filter by connection',
+        upstreamStatusPlaceholder: 'Upstream status',
+        allUpstreamStatus: 'All',
+        upstreamInactive: 'Upstream delisted',
+        upstreamDeleted: 'Upstream deleted',
+        productStatusPlaceholder: 'Product status',
+        allProductStatus: 'All',
+        productActive: 'Enabled',
+        productInactive: 'Disabled',
+        searchPlaceholder: 'Search products...',
       },
       delete: {
         confirm: 'Delete mapping #{id}?',
@@ -10987,6 +11018,8 @@ const messages = {
           subtitle: 'Configure order risk control policies to prevent malicious inventory hoarding.',
           enabled: 'Enable Order Risk Control',
           enabledHint: 'When enabled, the system will perform risk checks on order placement.',
+          allowNegativeMargin: 'Allow Negative Margin',
+          allowNegativeMarginHint: 'When enabled, orders with non-positive margin can be submitted upstream. When disabled (default), negative margin orders are rejected.',
           pendingLimits: {
             title: 'Concurrent Pending Order Limits',
             subtitle: 'Limit the maximum number of pending orders per user/IP/guest email to prevent inventory hoarding. Set to 0 for no limit.',

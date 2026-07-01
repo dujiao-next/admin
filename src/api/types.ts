@@ -78,6 +78,7 @@ export interface AdminProduct {
   auto_stock_locked: number
   auto_stock_sold: number
   is_mapped: boolean
+  supplier_name: string
   is_active: boolean
   sort_order: number
   created_at: string
