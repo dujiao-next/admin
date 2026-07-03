@@ -1302,7 +1302,7 @@ const messages = {
           bepusdtNotifyUrlPlaceholder: '默认: https://dujiao-api.ymd.cc/api/v1/payments/callback',
           bepusdtReturnUrl: '同步回跳地址',
           bepusdtReturnUrlPlaceholder: '默认: https://dujiao.ymd.cc/pay',
-          bepusdtHint: '支持币种请参考文档：https://github.com/v03413/BEpusdt/blob/main/docs/api/api.md',
+          bepusdtHint: '二维码模式直接展示链上地址和金额，不跳转 BEpusdt 收银台；支持币种请参考文档：https://github.com/v03413/BEpusdt/blob/main/docs/api/api.md',
           // —— epusdt（GMPay）配置 ——
           epusdt: 'epusdt',
           epusdtSection: 'epusdt 配置',
@@ -5524,7 +5524,7 @@ const messages = {
           bepusdtNotifyUrlPlaceholder: '默認: https://dujiao-api.ymd.cc/api/v1/payments/callback',
           bepusdtReturnUrl: '同步回跳地址',
           bepusdtReturnUrlPlaceholder: '默認: https://dujiao.ymd.cc/pay',
-          bepusdtHint: '支持幣種請參考文檔：https://github.com/v03413/BEpusdt/blob/main/docs/api/api.md',
+          bepusdtHint: '二維碼模式直接展示鏈上地址和金額，不跳轉 BEpusdt 收銀台；支持幣種請參考文檔：https://github.com/v03413/BEpusdt/blob/main/docs/api/api.md',
           // —— epusdt（GMPay）配置 ——
           epusdt: 'epusdt',
           epusdtSection: 'epusdt 配置',
@@ -9746,7 +9746,7 @@ const messages = {
           bepusdtNotifyUrlPlaceholder: 'Default: https://dujiao-api.ymd.cc/api/v1/payments/callback',
           bepusdtReturnUrl: 'Return URL',
           bepusdtReturnUrlPlaceholder: 'Default: https://dujiao.ymd.cc/pay',
-          bepusdtHint: 'Supported currencies: see docs https://github.com/v03413/BEpusdt/blob/main/docs/api/api.md',
+          bepusdtHint: 'QR mode shows the on-chain address and amount directly without opening the BEpusdt cashier. Supported currencies: see docs https://github.com/v03413/BEpusdt/blob/main/docs/api/api.md',
           // —— epusdt (GMPay) ——
           epusdt: 'epusdt',
           epusdtSection: 'epusdt configuration',

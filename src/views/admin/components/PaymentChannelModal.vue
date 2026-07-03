@@ -279,6 +279,7 @@ const interactionModeOptions = computed(() => {
   }
   if (form.provider_type === 'bepusdt') {
     return [
+      { value: 'qr', label: 'admin.paymentChannels.interactionModes.qr' },
       { value: 'redirect', label: 'admin.paymentChannels.interactionModes.redirect' },
     ]
   }
