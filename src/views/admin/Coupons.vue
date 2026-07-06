@@ -62,6 +62,7 @@ const form = reactive({
   usage_limit: 0,
   per_user_limit: 0,
   disabled_wholesale_price: false,
+  per_item_discount: false,
   payment_roles: [] as string[],
   member_levels: [] as number[],
   starts_at: '',
@@ -132,6 +133,7 @@ const resetForm = () => {
   form.usage_limit = 0
   form.per_user_limit = 0
   form.disabled_wholesale_price = false
+  form.per_item_discount = false
   form.payment_roles = []
   form.member_levels = []
   form.starts_at = ''
@@ -411,6 +413,7 @@ const openEditModal = (coupon: AdminCoupon) => {
   form.usage_limit = coupon.usage_limit || 0
   form.per_user_limit = coupon.per_user_limit || 0
   form.disabled_wholesale_price = Boolean(coupon.disabled_wholesale_price)
+  form.per_item_discount = form.type === 'fixed' && Boolean(coupon.per_item_discount)
   form.payment_roles = normalizePaymentRoles(coupon.payment_roles)
   form.member_levels = normalizeMemberLevels(coupon.member_levels)
   form.starts_at = toLocalInput(coupon.starts_at)
@@ -447,6 +450,7 @@ const handleSubmit = async () => {
       usage_limit: Number(form.usage_limit || 0),
       per_user_limit: Number(form.per_user_limit || 0),
       disabled_wholesale_price: Boolean(form.disabled_wholesale_price),
+      per_item_discount: form.type === 'fixed' ? Boolean(form.per_item_discount) : false,
       payment_roles: normalizePaymentRoles(form.payment_roles),
       member_levels: normalizeMemberLevels(form.member_levels),
       starts_at: form.starts_at ? toISO(form.starts_at) : '',
@@ -534,6 +538,15 @@ watch(
   () => {
     applyRouteFilter()
     fetchCoupons(1)
+  }
+)
+
+watch(
+  () => form.type,
+  (type) => {
+    if (type !== 'fixed') {
+      form.per_item_discount = false
+    }
   }
 )
 
@@ -727,6 +740,10 @@ watch(
               <label class="mb-1.5 block text-xs font-medium text-muted-foreground">{{ t('admin.coupons.modal.value') }} *</label>
               <Input v-model.number="form.value" type="number" step="0.01" required placeholder="20" />
               <p v-if="errors.value" class="text-xs text-destructive mt-1">{{ errors.value }}</p>
+              <div v-if="form.type === 'fixed'" class="mt-3 flex items-center gap-2">
+                <Switch v-model="form.per_item_discount" />
+                <span class="text-xs text-muted-foreground">{{ t('admin.coupons.modal.perItemDiscount') }}</span>
+              </div>
             </div>
             <div class="md:col-span-2">
               <label class="mb-1.5 block text-xs font-medium text-muted-foreground">{{ t('admin.coupons.modal.scope') }} *</label>

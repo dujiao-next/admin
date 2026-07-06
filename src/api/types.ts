@@ -239,6 +239,7 @@ export interface AdminCoupon {
   used_count: number
   per_user_limit: number
   disabled_wholesale_price?: boolean
+  per_item_discount?: boolean
   payment_roles?: string[]
   member_levels?: number[]
   scope_type: string
