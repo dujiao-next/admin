@@ -18,7 +18,14 @@ import { getLocalizedText, formatMoney } from '@/utils/format'
 import { getFirstImageUrl } from '@/utils/image'
 import { notifyError, notifySuccess } from '@/utils/notify'
 import { confirmAction } from '@/utils/confirm'
-import { buildWholesaleSkuPriceReferences, hasMultipleActiveWholesaleSkus } from '@/utils/wholesalePricing'
+import {
+  buildWholesaleSkuPriceReferences,
+  formatWholesaleSkuLabel,
+  formatWholesaleTierScopeLabel,
+  hasMultipleActiveWholesaleSkus,
+  listActiveWholesaleSkus,
+  wholesaleTierScopeValue,
+} from '@/utils/wholesalePricing'
 
 const { t, locale } = useI18n()
 const loading = ref(false)
@@ -28,6 +35,8 @@ const siteCurrency = ref('CNY')
 const products = ref<AdminProduct[]>([])
 
 type WholesaleTierFormItem = {
+  sku_id: number | string
+  sku_code: string
   min_quantity: number | string
   unit_price: number | string
 }
@@ -59,6 +68,11 @@ const formatPrice = (amount: number | string) => formatMoney(amount, siteCurrenc
 
 const productName = (product: AdminProduct) => getLocalizedText(product.title || {}) || `#${product.id}`
 
+const activeSkuOptions = computed(() => {
+  if (!editingProduct.value) return []
+  return listActiveWholesaleSkus(editingProduct.value)
+})
+
 const skuPriceReferences = computed(() => {
   if (!editingProduct.value) return []
   return buildWholesaleSkuPriceReferences(editingProduct.value, {
@@ -76,7 +90,12 @@ const sortedWholesaleTiers = (product: AdminProduct): AdminWholesalePrice[] => {
   const tiers = Array.isArray(product.wholesale_prices) ? product.wholesale_prices : []
   return tiers
     .slice()
-    .sort((a, b) => Number(a.min_quantity || 0) - Number(b.min_quantity || 0))
+    .sort((a, b) => {
+      const scopeA = wholesaleTierScopeValue(a)
+      const scopeB = wholesaleTierScopeValue(b)
+      if (scopeA !== scopeB) return scopeA.localeCompare(scopeB)
+      return Number(a.min_quantity || 0) - Number(b.min_quantity || 0)
+    })
 }
 
 const hasWholesalePrices = (product: AdminProduct) => sortedWholesaleTiers(product).length > 0
@@ -85,11 +104,21 @@ const formatWholesaleSummary = (product: AdminProduct) => {
   const tiers = sortedWholesaleTiers(product)
   if (!tiers.length) return t('admin.wholesalePrices.tiersEmpty')
   return tiers
-    .map((tier) => `>=${Number(tier.min_quantity || 0)} ${formatPrice(tier.unit_price)}`)
+    .map((tier) => {
+      const scope = formatWholesaleTierScopeLabel(
+        product,
+        tier,
+        String(locale.value || 'zh-CN'),
+        t('admin.wholesalePrices.modal.skuAll'),
+      )
+      return `${scope} >=${Number(tier.min_quantity || 0)} ${formatPrice(tier.unit_price)}`
+    })
     .join(' / ')
 }
 
 const createTierFormItem = (raw?: Partial<WholesaleTierFormItem>): WholesaleTierFormItem => ({
+  sku_id: wholesaleTierScopeValue(raw),
+  sku_code: String(raw?.sku_code || '').trim(),
   min_quantity: raw?.min_quantity ?? '',
   unit_price: raw?.unit_price ?? '',
 })
@@ -97,6 +126,8 @@ const createTierFormItem = (raw?: Partial<WholesaleTierFormItem>): WholesaleTier
 const openConfigureModal = (product: AdminProduct) => {
   editingProduct.value = product
   tierForm.value = sortedWholesaleTiers(product).map((tier) => createTierFormItem({
+    sku_id: tier.sku_id || 0,
+    sku_code: tier.sku_code || '',
     min_quantity: Number(tier.min_quantity || 0),
     unit_price: Number(tier.unit_price || 0),
   }))
@@ -118,8 +149,50 @@ const removeTier = (index: number) => {
   tierForm.value.splice(index, 1)
 }
 
+const tierScopeLabel = (scopeValue: string | number) => {
+  if (!editingProduct.value) return t('admin.wholesalePrices.modal.skuAll')
+  return formatWholesaleTierScopeLabel(
+    editingProduct.value,
+    { sku_id: scopeValue },
+    String(locale.value || 'zh-CN'),
+    t('admin.wholesalePrices.modal.skuAll'),
+  )
+}
+
+const skuScopeValue = (sku: { id?: number }) => `id:${Number(sku.id || 0)}`
+
+const isKnownSkuScope = (scopeValue: string | number) => {
+  const scope = wholesaleTierScopeValue({ sku_id: scopeValue })
+  return scope === 'all' || activeSkuOptions.value.some((sku) => skuScopeValue(sku) === scope)
+}
+
+const buildTierScopePayload = (scopeValue: string | number) => {
+  const scope = wholesaleTierScopeValue({ sku_id: scopeValue })
+  if (scope.startsWith('id:')) {
+    const skuID = Math.floor(Number(scope.slice(3)))
+    const sku = activeSkuOptions.value.find((item) => Number(item.id || 0) === skuID)
+    return {
+      scope,
+      sku_id: skuID,
+      sku_code: String(sku?.sku_code || '').trim(),
+    }
+  }
+  if (scope.startsWith('code:')) {
+    return {
+      scope,
+      sku_id: 0,
+      sku_code: scope.slice(5).trim(),
+    }
+  }
+  return {
+    scope: 'all',
+    sku_id: 0,
+    sku_code: '',
+  }
+}
+
 const normalizeTiersForSubmit = (): AdminWholesalePrice[] => {
-  const seen = new Set<number>()
+  const seen = new Set<string>()
   return tierForm.value
     .map((item, index) => {
       const minQuantity = Math.floor(Number(item.min_quantity))
@@ -127,16 +200,28 @@ const normalizeTiersForSubmit = (): AdminWholesalePrice[] => {
       if (!Number.isFinite(minQuantity) || minQuantity <= 0 || !Number.isFinite(unitPrice) || unitPrice <= 0) {
         throw new Error(t('admin.wholesalePrices.errors.invalidTier', { index: index + 1 }))
       }
-      if (seen.has(minQuantity)) {
-        throw new Error(t('admin.wholesalePrices.errors.duplicateQuantity', { quantity: minQuantity }))
+      const scope = buildTierScopePayload(item.sku_id)
+      const duplicateKey = `${scope.scope}:${minQuantity}`
+      if (seen.has(duplicateKey)) {
+        throw new Error(t('admin.wholesalePrices.errors.duplicateQuantity', {
+          scope: tierScopeLabel(item.sku_id),
+          quantity: minQuantity,
+        }))
       }
-      seen.add(minQuantity)
+      seen.add(duplicateKey)
       return {
+        sku_id: scope.sku_id || undefined,
+        sku_code: scope.sku_code || undefined,
         min_quantity: minQuantity,
         unit_price: unitPrice,
       }
     })
-    .sort((a, b) => Number(a.min_quantity || 0) - Number(b.min_quantity || 0))
+    .sort((a, b) => {
+      const scopeA = wholesaleTierScopeValue(a)
+      const scopeB = wholesaleTierScopeValue(b)
+      if (scopeA !== scopeB) return scopeA.localeCompare(scopeB)
+      return Number(a.min_quantity || 0) - Number(b.min_quantity || 0)
+    })
 }
 
 const fetchSiteCurrency = async () => {
@@ -451,8 +536,31 @@ onMounted(async () => {
             <div
               v-for="(tier, index) in tierForm"
               :key="`wholesale-tier-${index}`"
-              class="grid grid-cols-1 gap-3 rounded-lg border border-border bg-background p-4 md:grid-cols-[1fr_1fr_auto] md:items-end"
+              class="grid grid-cols-1 gap-3 rounded-lg border border-border bg-background p-4 md:grid-cols-[1.2fr_1fr_1fr_auto] md:items-end"
             >
+              <div>
+                <label class="mb-1.5 block text-xs font-medium text-muted-foreground">
+                  {{ t('admin.wholesalePrices.modal.skuScope') }}
+                </label>
+                <Select v-model="tier.sku_id">
+                  <SelectTrigger class="h-9 w-full">
+                    <SelectValue :placeholder="t('admin.wholesalePrices.modal.skuAll')" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{{ t('admin.wholesalePrices.modal.skuAll') }}</SelectItem>
+                    <SelectItem
+                      v-for="sku in activeSkuOptions"
+                      :key="sku.id"
+                      :value="skuScopeValue(sku)"
+                    >
+                      {{ formatWholesaleSkuLabel(sku, String(locale || 'zh-CN')) }}
+                    </SelectItem>
+                    <SelectItem v-if="!isKnownSkuScope(tier.sku_id)" :value="String(tier.sku_id)">
+                      {{ tierScopeLabel(tier.sku_id) }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div>
                 <label class="mb-1.5 block text-xs font-medium text-muted-foreground">
                   {{ t('admin.wholesalePrices.modal.minQuantity') }}

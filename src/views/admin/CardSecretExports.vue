@@ -3,7 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useDebounceFn } from '@vueuse/core'
-import { Download, PackageCheck, Upload } from 'lucide-vue-next'
+import { AlertTriangle, Copy, Download, PackageCheck, Upload, X } from 'lucide-vue-next'
 import { adminAPI } from '@/api/admin'
 import type { AdminCardSecretBatch, AdminProduct, AdminProductSKU } from '@/api/types'
 import { Button } from '@/components/ui/button'
@@ -31,6 +31,18 @@ const deleteAfterExport = ref(false)
 const exporting = ref(false)
 const successMessage = ref('')
 const errorMessage = ref('')
+const confirmExportOpen = ref(false)
+const resultMessage = ref('')
+const exportResult = ref<{
+  content: string
+  blob: Blob
+  filename: string
+  format: 'txt' | 'csv'
+  count: number
+  deleted: boolean
+  productLabel: string
+  skuLabel: string
+} | null>(null)
 
 const normalizeFilterValue = (value: string) => (value === '__all__' ? '' : value)
 
@@ -132,11 +144,18 @@ const exportDisabled = computed(() => {
   return exporting.value || !currentProductId.value || exportCount.value <= 0 || exportCount.value > currentAvailableCount.value
 })
 
+const confirmExportMessage = computed(() => {
+  return deleteAfterExport.value
+    ? t('admin.cardSecretExports.confirmDelete', { count: exportCount.value })
+    : t('admin.cardSecretExports.confirmUsed', { count: exportCount.value })
+})
+
 const productLink = (productId: number) => `${adminPath}/products?product_id=${productId}`
 
 const resetMessages = () => {
   successMessage.value = ''
   errorMessage.value = ''
+  resultMessage.value = ''
 }
 
 const syncSkuSelection = () => {
@@ -278,13 +297,14 @@ const handleSkuSelectionChange = async () => {
   await loadInventoryMeta()
 }
 
-const downloadExportFile = (response: any, format: 'txt' | 'csv') => {
+const resolveExportFilename = (response: any, format: 'txt' | 'csv') => {
   const contentDisposition = String(response?.headers?.['content-disposition'] || '')
   const filenameMatch = contentDisposition.match(/filename="?([^";]+)"?/i)
   const fallbackName = `card-secrets-available-${new Date().toISOString().replace(/[:.]/g, '-')}.${format}`
-  const filename = filenameMatch?.[1] || fallbackName
-  const contentType = format === 'csv' ? 'text/csv;charset=utf-8' : 'text/plain;charset=utf-8'
-  const blob = new Blob([response.data], { type: contentType })
+  return filenameMatch?.[1] || fallbackName
+}
+
+const downloadBlob = (blob: Blob, filename: string) => {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
@@ -305,34 +325,79 @@ const submitExport = async () => {
     errorMessage.value = t('admin.cardSecretExports.errors.countInvalid')
     return
   }
+  confirmExportOpen.value = true
+}
 
-  const confirmed = window.confirm(
-    deleteAfterExport.value
-      ? t('admin.cardSecretExports.confirmDelete', { count: exportCount.value })
-      : t('admin.cardSecretExports.confirmUsed', { count: exportCount.value }),
-  )
-  if (!confirmed) return
-
+const runConfirmedExport = async () => {
+  if (!currentProductId.value) return
+  confirmExportOpen.value = false
   exporting.value = true
   try {
+    const format = exportFormat.value
+    const deleted = deleteAfterExport.value
+    const count = exportCount.value
     const response = await adminAPI.exportAvailableCardSecrets({
       product_id: currentProductId.value,
       sku_id: currentSkuId.value || undefined,
       batch_id: currentBatchId.value || undefined,
-      limit: exportCount.value,
-      format: exportFormat.value,
-      delete_after_export: deleteAfterExport.value,
+      limit: count,
+      format,
+      delete_after_export: deleted,
     })
-    downloadExportFile(response, exportFormat.value)
-    successMessage.value = deleteAfterExport.value
-      ? t('admin.cardSecretExports.success.deleted', { count: exportCount.value })
-      : t('admin.cardSecretExports.success.used', { count: exportCount.value })
+    const blob = response.data as Blob
+    const content = await blob.text()
+    exportResult.value = {
+      content,
+      blob,
+      filename: resolveExportFilename(response, format),
+      format,
+      count,
+      deleted,
+      productLabel: currentProductLabel.value,
+      skuLabel: currentSkuLabel.value,
+    }
+    successMessage.value = deleted
+      ? t('admin.cardSecretExports.success.deleted', { count })
+      : t('admin.cardSecretExports.success.used', { count })
     await loadInventoryMeta()
   } catch (error: any) {
     errorMessage.value = error?.message || t('admin.cardSecretExports.errors.exportFailed')
   } finally {
     exporting.value = false
   }
+}
+
+const copyExportContent = async () => {
+  if (!exportResult.value) return
+  resultMessage.value = ''
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(exportResult.value.content)
+    } else {
+      const textarea = document.createElement('textarea')
+      textarea.value = exportResult.value.content
+      textarea.setAttribute('readonly', 'true')
+      textarea.style.position = 'fixed'
+      textarea.style.left = '-9999px'
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand('copy')
+      textarea.remove()
+    }
+    resultMessage.value = t('admin.cardSecretExports.result.copied')
+  } catch {
+    resultMessage.value = t('admin.common.copyFailed')
+  }
+}
+
+const downloadExportResult = () => {
+  if (!exportResult.value) return
+  downloadBlob(exportResult.value.blob, exportResult.value.filename)
+}
+
+const closeExportResult = () => {
+  exportResult.value = null
+  resultMessage.value = ''
 }
 
 watch(currentAvailableCount, (count) => {
@@ -543,6 +608,127 @@ onMounted(async () => {
           </div>
         </div>
         <p class="mt-4 text-xs text-muted-foreground">{{ t('admin.cardSecretExports.targetHint') }}</p>
+      </div>
+    </div>
+
+    <div
+      v-if="confirmExportOpen"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 py-6 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div class="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
+        <div class="flex items-start gap-3 border-b border-border px-5 py-4">
+          <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
+            <AlertTriangle class="h-5 w-5" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-base font-semibold text-foreground">{{ t('admin.cardSecretExports.confirmTitle') }}</h3>
+            <p class="mt-1 text-sm leading-6 text-muted-foreground">{{ confirmExportMessage }}</p>
+          </div>
+          <button
+            type="button"
+            class="rounded-full p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+            :aria-label="t('admin.common.cancel')"
+            @click="confirmExportOpen = false"
+          >
+            <X class="h-4 w-4" />
+          </button>
+        </div>
+        <div class="space-y-2 px-5 py-4 text-sm">
+          <div class="flex justify-between gap-4">
+            <span class="text-muted-foreground">{{ t('admin.cardSecretExports.targetTitle') }}</span>
+            <span class="text-right font-medium text-foreground">{{ currentProductLabel }}</span>
+          </div>
+          <div class="flex justify-between gap-4">
+            <span class="text-muted-foreground">{{ t('admin.cardSecrets.skuLabel') }}</span>
+            <span class="text-right text-foreground">{{ currentSkuLabel }}</span>
+          </div>
+          <div class="flex justify-between gap-4">
+            <span class="text-muted-foreground">{{ t('admin.cardSecretExports.countLabel') }}</span>
+            <span class="font-mono text-foreground">{{ exportCount }}</span>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 border-t border-border bg-muted/30 px-5 py-4">
+          <Button variant="outline" :disabled="exporting" @click="confirmExportOpen = false">
+            {{ t('admin.common.cancel') }}
+          </Button>
+          <Button :variant="deleteAfterExport ? 'destructive' : 'default'" :disabled="exporting" @click="runConfirmedExport">
+            {{ exporting ? t('admin.cardSecretExports.exporting') : t('admin.common.confirm') }}
+          </Button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="exportResult"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 py-6 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div class="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
+        <div class="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
+          <div class="min-w-0">
+            <h3 class="text-base font-semibold text-foreground">{{ t('admin.cardSecretExports.result.title') }}</h3>
+            <p class="mt-1 text-sm text-muted-foreground">
+              {{
+                exportResult.deleted
+                  ? t('admin.cardSecretExports.success.deleted', { count: exportResult.count })
+                  : t('admin.cardSecretExports.success.used', { count: exportResult.count })
+              }}
+            </p>
+          </div>
+          <div class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300">
+            {{ exportResult.format.toUpperCase() }}
+          </div>
+        </div>
+
+        <div class="grid gap-3 border-b border-border bg-muted/20 px-5 py-3 text-sm md:grid-cols-3">
+          <div class="min-w-0">
+            <div class="text-xs text-muted-foreground">{{ t('admin.cardSecretExports.targetTitle') }}</div>
+            <div class="mt-1 truncate text-foreground">{{ exportResult.productLabel }}</div>
+          </div>
+          <div class="min-w-0">
+            <div class="text-xs text-muted-foreground">{{ t('admin.cardSecrets.skuLabel') }}</div>
+            <div class="mt-1 truncate text-foreground">{{ exportResult.skuLabel }}</div>
+          </div>
+          <div class="min-w-0">
+            <div class="text-xs text-muted-foreground">{{ t('admin.cardSecretExports.result.filename') }}</div>
+            <div class="mt-1 truncate font-mono text-foreground">{{ exportResult.filename }}</div>
+          </div>
+        </div>
+
+        <div class="min-h-0 flex-1 p-5">
+          <div class="mb-2 flex items-center justify-between gap-3">
+            <div class="text-sm font-medium text-foreground">{{ t('admin.cardSecretExports.result.content') }}</div>
+            <div v-if="resultMessage" class="text-xs text-muted-foreground">{{ resultMessage }}</div>
+          </div>
+          <textarea
+            :value="exportResult.content"
+            readonly
+            spellcheck="false"
+            class="h-[52vh] min-h-[320px] w-full resize-none rounded-xl border border-border bg-background p-4 font-mono text-xs leading-5 text-foreground outline-none focus:border-primary"
+          />
+          <p class="mt-2 text-xs leading-5 text-muted-foreground">
+            {{ t('admin.cardSecretExports.result.keepOpenHint') }}
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-3 border-t border-border bg-muted/30 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <Button variant="outline" class="w-full sm:w-auto" @click="copyExportContent">
+            <Copy class="mr-2 h-4 w-4" />
+            {{ t('admin.cardSecretExports.result.copy') }}
+          </Button>
+          <div class="flex flex-col gap-2 sm:flex-row">
+            <Button class="w-full sm:w-auto" @click="downloadExportResult">
+              <Download class="mr-2 h-4 w-4" />
+              {{ t('admin.cardSecretExports.result.download') }}
+            </Button>
+            <Button variant="outline" class="w-full sm:w-auto" @click="closeExportResult">
+              {{ t('admin.common.close') }}
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

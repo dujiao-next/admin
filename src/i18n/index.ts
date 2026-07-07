@@ -1316,7 +1316,7 @@ const messages = {
           bepusdtNotifyUrlPlaceholder: '默认: https://dujiao-api.ymd.cc/api/v1/payments/callback',
           bepusdtReturnUrl: '同步回跳地址',
           bepusdtReturnUrlPlaceholder: '默认: https://dujiao.ymd.cc/pay',
-          bepusdtHint: '支持币种请参考文档：https://github.com/v03413/BEpusdt/blob/main/docs/api/api.md',
+          bepusdtHint: '二维码模式直接展示链上地址和金额，不跳转 BEpusdt 收银台；支持币种请参考文档：https://github.com/v03413/BEpusdt/blob/main/docs/api/api.md',
           // —— epusdt（GMPay）配置 ——
           epusdt: 'epusdt',
           epusdtSection: 'epusdt 配置',
@@ -1969,6 +1969,7 @@ const messages = {
         targetTitle: '当前导出目标',
         targetHint: '未勾选删除时，导出的可用卡密会变成已用；勾选删除时会直接删除对应卡密。',
         batchCount: '批次数',
+        confirmTitle: '确认导出卡密',
         confirmUsed: '确认导出 {count} 条可用卡密，并标记为已用？',
         confirmDelete: '确认导出 {count} 条可用卡密，并直接删除这些库存行？该操作不可恢复。',
         errors: {
@@ -1978,6 +1979,15 @@ const messages = {
         success: {
           used: '已导出 {count} 条卡密，并标记为已用',
           deleted: '已导出 {count} 条卡密，并删除对应库存',
+        },
+        result: {
+          title: '导出结果',
+          filename: '文件名',
+          content: '卡密内容',
+          copy: '复制',
+          copied: '已复制到剪贴板',
+          download: '下载文件',
+          keepOpenHint: '导出内容会一直保留到你点击关闭，下载失败时可重新下载或复制。',
         },
       },
       giftCards: {
@@ -2518,12 +2528,14 @@ const messages = {
         modal: {
           title: '配置批发价',
           productInfo: '为已有商品配置批发价',
+          skuScope: '适用 SKU',
+          skuAll: '全部 SKU',
           ruleTitle: '多 SKU 商品的批发价规则',
-          ruleProductLevel: '批发价是商品级阶梯，适用于该商品下所有启用 SKU。',
-          ruleQuantityShared: '起批数量按同一商品的所有 SKU 购买数量合计判断。',
-          ruleNoRaise: '阶梯单价只会降低高于该价格的 SKU，不会抬高低价 SKU。',
+          ruleProductLevel: '批发价可配置为全部 SKU 通用，也可单独指定某个 SKU。',
+          ruleQuantityShared: '全部 SKU 通用价按同商品购买总数判断；SKU 专属价按该 SKU 当前行数量判断。',
+          ruleNoRaise: 'SKU 配了专属批发价后不再回退通用价，且阶梯价不会抬高低价 SKU。',
           skuReferenceTitle: 'SKU 价格参考',
-          skuReferenceDesc: '下方按当前填写的最低批发单价判断哪些 SKU 会被降价。',
+          skuReferenceDesc: '下方按各 SKU 实际可用的最低批发单价判断哪些 SKU 会被降价。',
           skuReferenceApplies: '当前阶梯会降价',
           skuReferenceNotApplies: '当前阶梯不降价',
           skuReferencePending: '填写阶梯后判断',
@@ -2539,7 +2551,7 @@ const messages = {
         tiersEmpty: '未配置批发价',
         errors: {
           invalidTier: '第 {index} 条批发价配置无效',
-          duplicateQuantity: '批发数量重复：{quantity}',
+          duplicateQuantity: '{scope} 的批发数量重复：{quantity}',
           saveFailed: '保存批发价失败',
           clearFailed: '清空批发价失败',
         },
@@ -5556,7 +5568,7 @@ const messages = {
           bepusdtNotifyUrlPlaceholder: '默認: https://dujiao-api.ymd.cc/api/v1/payments/callback',
           bepusdtReturnUrl: '同步回跳地址',
           bepusdtReturnUrlPlaceholder: '默認: https://dujiao.ymd.cc/pay',
-          bepusdtHint: '支持幣種請參考文檔：https://github.com/v03413/BEpusdt/blob/main/docs/api/api.md',
+          bepusdtHint: '二維碼模式直接展示鏈上地址和金額，不跳轉 BEpusdt 收銀台；支持幣種請參考文檔：https://github.com/v03413/BEpusdt/blob/main/docs/api/api.md',
           // —— epusdt（GMPay）配置 ——
           epusdt: 'epusdt',
           epusdtSection: 'epusdt 配置',
@@ -6209,6 +6221,7 @@ const messages = {
         targetTitle: '當前匯出目標',
         targetHint: '未勾選刪除時，匯出的可用卡密會變成已用；勾選刪除時會直接刪除對應卡密。',
         batchCount: '批次數',
+        confirmTitle: '確認匯出卡密',
         confirmUsed: '確認匯出 {count} 條可用卡密，並標記為已用？',
         confirmDelete: '確認匯出 {count} 條可用卡密，並直接刪除這些庫存列？此操作不可復原。',
         errors: {
@@ -6218,6 +6231,15 @@ const messages = {
         success: {
           used: '已匯出 {count} 條卡密，並標記為已用',
           deleted: '已匯出 {count} 條卡密，並刪除對應庫存',
+        },
+        result: {
+          title: '匯出結果',
+          filename: '檔案名稱',
+          content: '卡密內容',
+          copy: '複製',
+          copied: '已複製到剪貼簿',
+          download: '下載檔案',
+          keepOpenHint: '匯出內容會一直保留到你點擊關閉，下載失敗時可重新下載或複製。',
         },
       },
       giftCards: {
@@ -6758,12 +6780,14 @@ const messages = {
         modal: {
           title: '配置批發價',
           productInfo: '為既有商品配置批發價',
+          skuScope: '適用 SKU',
+          skuAll: '全部 SKU',
           ruleTitle: '多 SKU 商品的批發價規則',
-          ruleProductLevel: '批發價是商品級階梯，適用於該商品下所有啟用 SKU。',
-          ruleQuantityShared: '起批數量按同一商品的所有 SKU 購買數量合計判斷。',
-          ruleNoRaise: '階梯單價只會降低高於該價格的 SKU，不會抬高低價 SKU。',
+          ruleProductLevel: '批發價可配置為全部 SKU 通用，也可單獨指定某個 SKU。',
+          ruleQuantityShared: '全部 SKU 通用價按同商品購買總數判斷；SKU 專屬價按該 SKU 目前行數量判斷。',
+          ruleNoRaise: 'SKU 配了專屬批發價後不再回退通用價，且階梯價不會抬高低價 SKU。',
           skuReferenceTitle: 'SKU 價格參考',
-          skuReferenceDesc: '下方依目前填寫的最低批發單價判斷哪些 SKU 會被降價。',
+          skuReferenceDesc: '下方依各 SKU 實際可用的最低批發單價判斷哪些 SKU 會被降價。',
           skuReferenceApplies: '目前階梯會降價',
           skuReferenceNotApplies: '目前階梯不降價',
           skuReferencePending: '填寫階梯後判斷',
@@ -6779,7 +6803,7 @@ const messages = {
         tiersEmpty: '未配置批發價',
         errors: {
           invalidTier: '第 {index} 條批發價配置無效',
-          duplicateQuantity: '批發數量重複：{quantity}',
+          duplicateQuantity: '{scope} 的批發數量重複：{quantity}',
           saveFailed: '儲存批發價失敗',
           clearFailed: '清空批發價失敗',
         },
@@ -9796,7 +9820,7 @@ const messages = {
           bepusdtNotifyUrlPlaceholder: 'Default: https://dujiao-api.ymd.cc/api/v1/payments/callback',
           bepusdtReturnUrl: 'Return URL',
           bepusdtReturnUrlPlaceholder: 'Default: https://dujiao.ymd.cc/pay',
-          bepusdtHint: 'Supported currencies: see docs https://github.com/v03413/BEpusdt/blob/main/docs/api/api.md',
+          bepusdtHint: 'QR mode shows the on-chain address and amount directly without opening the BEpusdt cashier. Supported currencies: see docs https://github.com/v03413/BEpusdt/blob/main/docs/api/api.md',
           // —— epusdt (GMPay) ——
           epusdt: 'epusdt',
           epusdtSection: 'epusdt configuration',
@@ -10449,6 +10473,7 @@ const messages = {
         targetTitle: 'Current Export Target',
         targetHint: 'Without delete, exported secrets become used. With delete checked, the corresponding secrets are removed directly.',
         batchCount: 'Batches',
+        confirmTitle: 'Confirm Export',
         confirmUsed: 'Export {count} available secrets and mark them as used?',
         confirmDelete: 'Export {count} available secrets and delete these stock rows directly? This cannot be undone.',
         errors: {
@@ -10458,6 +10483,15 @@ const messages = {
         success: {
           used: 'Exported {count} secrets and marked them as used',
           deleted: 'Exported {count} secrets and deleted corresponding stock',
+        },
+        result: {
+          title: 'Export Result',
+          filename: 'Filename',
+          content: 'Secret content',
+          copy: 'Copy',
+          copied: 'Copied to clipboard',
+          download: 'Download file',
+          keepOpenHint: 'The exported content stays here until you click Close. If download fails, you can retry or copy it.',
         },
       },
       giftCards: {
@@ -10998,12 +11032,14 @@ const messages = {
         modal: {
           title: 'Configure wholesale pricing',
           productInfo: 'Configure wholesale pricing for an existing product',
+          skuScope: 'Applies to SKU',
+          skuAll: 'All SKUs',
           ruleTitle: 'Wholesale rules for multi-SKU products',
-          ruleProductLevel: 'Wholesale pricing is product-level and applies to all active SKUs under this product.',
-          ruleQuantityShared: 'The minimum quantity is matched by the combined quantity of all SKUs in the same product.',
-          ruleNoRaise: 'A tier only lowers SKUs priced above that unit price; it never raises cheaper SKUs.',
+          ruleProductLevel: 'Wholesale pricing can apply to all SKUs or a specific SKU.',
+          ruleQuantityShared: 'All-SKU tiers use total product quantity; SKU-specific tiers use that SKU line quantity.',
+          ruleNoRaise: 'A SKU with specific tiers will not fall back to all-SKU tiers, and tiers never raise cheaper SKUs.',
           skuReferenceTitle: 'SKU price reference',
-          skuReferenceDesc: 'The rows below use the lowest draft wholesale unit price to show which SKUs would be lowered.',
+          skuReferenceDesc: 'The rows below use each SKU\'s effective lowest wholesale unit price to show which SKUs would be lowered.',
           skuReferenceApplies: 'Current tier lowers price',
           skuReferenceNotApplies: 'Current tier does not lower',
           skuReferencePending: 'Enter a tier to check',
@@ -11019,7 +11055,7 @@ const messages = {
         tiersEmpty: 'No wholesale pricing',
         errors: {
           invalidTier: 'Wholesale tier #{index} is invalid',
-          duplicateQuantity: 'Duplicate wholesale quantity: {quantity}',
+          duplicateQuantity: 'Duplicate wholesale quantity for {scope}: {quantity}',
           saveFailed: 'Failed to save wholesale pricing',
           clearFailed: 'Failed to clear wholesale pricing',
         },

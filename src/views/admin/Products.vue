@@ -20,8 +20,9 @@ import type { ListFetchOptions } from '@/composables/useListRefresh'
 import { confirmAction } from '@/utils/confirm'
 import ProductEditModal from './components/ProductEditModal.vue'
 import { buildAdminCategoryPath, createAdminCategoryMap, createAdminCategoryChildCountMap, flattenAdminCategories, isAdminProductCategorySelectable } from '@/utils/category'
+import { formatWholesaleTierScopeLabel, wholesaleTierScopeValue } from '@/utils/wholesalePricing'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const loading = ref(false)
 const searchQuery = ref('')
 const stockStatus = ref('all')
@@ -117,8 +118,21 @@ const formatWholesaleSummary = (product: AdminProduct) => {
   if (!tiers.length) return ''
   return tiers
     .slice()
-    .sort((a, b) => Number(a.min_quantity || 0) - Number(b.min_quantity || 0))
-    .map((tier) => `≥${Number(tier.min_quantity || 0)} ${formatPrice(tier.unit_price, siteCurrency.value)}`)
+    .sort((a, b) => {
+      const scopeA = wholesaleTierScopeValue(a)
+      const scopeB = wholesaleTierScopeValue(b)
+      if (scopeA !== scopeB) return scopeA.localeCompare(scopeB)
+      return Number(a.min_quantity || 0) - Number(b.min_quantity || 0)
+    })
+    .map((tier) => {
+      const scope = formatWholesaleTierScopeLabel(
+        product,
+        tier,
+        String(locale.value || 'zh-CN'),
+        t('admin.wholesalePrices.modal.skuAll'),
+      )
+      return `${scope} ≥${Number(tier.min_quantity || 0)} ${formatPrice(tier.unit_price, siteCurrency.value)}`
+    })
     .join(' / ')
 }
 

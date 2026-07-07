@@ -14,6 +14,8 @@ export type WholesaleProductLike = {
 }
 
 export type WholesaleTierLike = {
+  sku_id?: number | string
+  sku_code?: string
   min_quantity?: number | string
   unit_price?: number | string
 }
@@ -33,7 +35,14 @@ type BuildSkuReferenceOptions = {
   formatPrice: (amount: number) => string
 }
 
+type WholesaleTierScope = {
+  type: 'all' | 'id' | 'code'
+  id: number
+  code: string
+}
+
 const normalizeText = (value: unknown) => String(value ?? '').trim()
+const normalizeCode = (value: unknown) => normalizeText(value).toLowerCase()
 
 const localeFallbacks = (locale?: string) => {
   const normalized = normalizeText(locale).toLowerCase()
@@ -70,7 +79,13 @@ const parsePositiveNumber = (value: unknown) => {
   return parsed
 }
 
-const activeSkus = (product: WholesaleProductLike | null | undefined) => {
+const parsePositiveInteger = (value: unknown) => {
+  const parsed = Math.floor(Number(value))
+  if (!Number.isFinite(parsed) || parsed <= 0) return 0
+  return parsed
+}
+
+export const listActiveWholesaleSkus = (product: WholesaleProductLike | null | undefined) => {
   const skus = Array.isArray(product?.skus) ? product.skus : []
   return skus
     .filter((sku) => sku?.is_active !== false)
@@ -83,7 +98,57 @@ const activeSkus = (product: WholesaleProductLike | null | undefined) => {
     })
 }
 
-export const hasMultipleActiveWholesaleSkus = (product: WholesaleProductLike | null | undefined) => activeSkus(product).length > 1
+const resolveWholesaleTierScope = (tier: WholesaleTierLike | null | undefined): WholesaleTierScope => {
+  const rawSkuID = normalizeText(tier?.sku_id)
+  if (rawSkuID === 'all') return { type: 'all', id: 0, code: '' }
+  if (rawSkuID.startsWith('id:')) {
+    const id = parsePositiveInteger(rawSkuID.slice(3))
+    if (id > 0) return { type: 'id', id, code: '' }
+  }
+  if (rawSkuID.startsWith('code:')) {
+    const code = normalizeText(rawSkuID.slice(5))
+    if (code) return { type: 'code', id: 0, code }
+  }
+
+  const id = parsePositiveInteger(tier?.sku_id)
+  if (id > 0) return { type: 'id', id, code: '' }
+
+  const code = normalizeText(tier?.sku_code)
+  if (code) return { type: 'code', id: 0, code }
+  return { type: 'all', id: 0, code: '' }
+}
+
+export const wholesaleTierScopeValue = (tier: WholesaleTierLike | null | undefined) => {
+  const scope = resolveWholesaleTierScope(tier)
+  if (scope.type === 'id') return `id:${scope.id}`
+  if (scope.type === 'code') return `code:${scope.code}`
+  return 'all'
+}
+
+export const isUniversalWholesaleTier = (tier: WholesaleTierLike | null | undefined) => resolveWholesaleTierScope(tier).type === 'all'
+
+export const wholesaleTierMatchesSku = (tier: WholesaleTierLike | null | undefined, sku: WholesaleSkuLike | null | undefined) => {
+  const scope = resolveWholesaleTierScope(tier)
+  if (scope.type === 'all') return true
+  if (!sku) return false
+  if (scope.type === 'id') return Number(sku.id || 0) === scope.id
+  return normalizeCode(sku.sku_code) === normalizeCode(scope.code)
+}
+
+const hasSpecificWholesaleTier = (tiers: WholesaleTierLike[] | undefined, sku: WholesaleSkuLike) => {
+  return (Array.isArray(tiers) ? tiers : []).some((tier) => !isUniversalWholesaleTier(tier) && wholesaleTierMatchesSku(tier, sku))
+}
+
+const tiersForSku = (tiers: WholesaleTierLike[] | undefined, sku: WholesaleSkuLike) => {
+  const rows = Array.isArray(tiers) ? tiers : []
+  const hasSpecific = hasSpecificWholesaleTier(rows, sku)
+  return rows.filter((tier) => {
+    if (hasSpecific) return !isUniversalWholesaleTier(tier) && wholesaleTierMatchesSku(tier, sku)
+    return isUniversalWholesaleTier(tier)
+  })
+}
+
+export const hasMultipleActiveWholesaleSkus = (product: WholesaleProductLike | null | undefined) => listActiveWholesaleSkus(product).length > 1
 
 export const lowestWholesaleTierUnitPrice = (tiers: WholesaleTierLike[] | undefined) => {
   const prices = (Array.isArray(tiers) ? tiers : [])
@@ -102,15 +167,35 @@ export const formatWholesaleSkuLabel = (sku: WholesaleSkuLike, locale?: string) 
   return id > 0 ? `#${id}` : '-'
 }
 
+export const formatWholesaleTierScopeLabel = (
+  product: WholesaleProductLike | null | undefined,
+  tier: WholesaleTierLike | null | undefined,
+  locale?: string,
+  allLabel = '全部 SKU',
+) => {
+  const scope = resolveWholesaleTierScope(tier)
+  if (scope.type === 'all') return allLabel
+
+  const skus = listActiveWholesaleSkus(product)
+  const sku = skus.find((item) => {
+    if (scope.type === 'id') return Number(item.id || 0) === scope.id
+    return normalizeCode(item.sku_code) === normalizeCode(scope.code)
+  })
+  if (sku) return formatWholesaleSkuLabel(sku, locale)
+  if (scope.type === 'id') return `#${scope.id}`
+  return scope.code
+}
+
 export const buildWholesaleSkuPriceReferences = (
   product: WholesaleProductLike | null | undefined,
   options: BuildSkuReferenceOptions,
 ): WholesaleSkuPriceReference[] => {
-  const lowestTierPrice = lowestWholesaleTierUnitPrice(options.tiers)
-  return activeSkus(product)
+  return listActiveWholesaleSkus(product)
     .map((sku) => {
       const priceAmount = parsePositiveNumber(sku.price_amount)
       if (priceAmount === null) return null
+      const matchedTiers = tiersForSku(options.tiers, sku)
+      const lowestTierPrice = lowestWholesaleTierUnitPrice(matchedTiers)
       return {
         id: Number(sku.id || 0),
         label: formatWholesaleSkuLabel(sku, options.locale),
