@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useDebounceFn } from '@vueuse/core'
 import { adminAPI } from '@/api/admin'
 import type { AdminProductMapping, AdminSiteConnection, AdminCategory, AdminProduct, AdminProductSKU } from '@/api/types'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Switch } from '@/components/ui/switch'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogScrollContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -30,7 +32,7 @@ const categoryOptions = computed(() => flattenAdminCategories(categories.value).
   selectable: isAdminProductCategorySelectable(item.category, categoryChildCountMap.value),
 })))
 const pagination = reactive({ page: 1, page_size: 20, total: 0, total_page: 1 })
-const filters = reactive({ connection_id: '__all__' })
+const filters = reactive({ connection_id: '__all__', upstream_status: '__all__', product_status: '__all__', search: '' })
 const syncingId = ref<number | null>(null)
 
 // Expand detail
@@ -221,9 +223,14 @@ const fetchMappings = async (page = 1, options: ListFetchOptions = {}) => {
   selectedMappingIds.value = new Set()
   try {
     const connId = normalizeFilterValue(filters.connection_id)
+    const us = normalizeFilterValue(filters.upstream_status)
+    const ps = normalizeFilterValue(filters.product_status)
     const res = await adminAPI.getProductMappings({
       page, page_size: pagination.page_size,
       connection_id: connId || undefined,
+      upstream_status: us || undefined,
+      product_status: ps || undefined,
+      search: filters.search || undefined,
     })
     mappings.value = (res.data.data as (AdminProductMapping & { product?: AdminProduct })[]) || []
     const p = res.data.pagination
@@ -250,6 +257,7 @@ const changePageSize = (size: number) => {
 }
 
 const handleFilterChange = () => fetchMappings(1)
+const debouncedSearch = useDebounceFn(() => fetchMappings(1), 300)
 
 // --- Batch selection ---
 const selectedMappingIds = ref<Set<number>>(new Set())
@@ -680,6 +688,39 @@ onMounted(() => { fetchConnections(); fetchCategories(); fetchMappings() })
           <SelectContent>
             <SelectItem value="__all__">{{ t('productMappings.filter.allConnections') }}</SelectItem>
             <SelectItem v-for="conn in connections" :key="conn.id" :value="String(conn.id)">{{ conn.name }}</SelectItem>
+          </SelectContent>
+        </Select>
+        <div class="relative w-full sm:w-[220px]">
+          <div class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <Input
+            v-model="filters.search"
+            :placeholder="t('productMappings.filter.searchPlaceholder')"
+            class="pl-9 h-9"
+            @update:modelValue="debouncedSearch"
+          />
+        </div>
+        <Select v-model="filters.upstream_status" @update:modelValue="handleFilterChange">
+          <SelectTrigger class="h-9 w-full sm:w-[180px]">
+            <SelectValue :placeholder="t('productMappings.filter.upstreamStatusPlaceholder')" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__all__">{{ t('productMappings.filter.allUpstreamStatus') }}</SelectItem>
+            <SelectItem value="inactive">{{ t('productMappings.filter.upstreamInactive') }}</SelectItem>
+            <SelectItem value="deleted">{{ t('productMappings.filter.upstreamDeleted') }}</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select v-model="filters.product_status" @update:modelValue="handleFilterChange">
+          <SelectTrigger class="h-9 w-full sm:w-[180px]">
+            <SelectValue :placeholder="t('productMappings.filter.productStatusPlaceholder')" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__all__">{{ t('productMappings.filter.allProductStatus') }}</SelectItem>
+            <SelectItem value="active">{{ t('productMappings.filter.productActive') }}</SelectItem>
+            <SelectItem value="inactive">{{ t('productMappings.filter.productInactive') }}</SelectItem>
           </SelectContent>
         </Select>
       </div>
