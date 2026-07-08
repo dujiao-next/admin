@@ -11,6 +11,7 @@ import { notifyError, notifySuccess } from '@/utils/notify'
 const { t } = useI18n()
 
 const MAX_CUSTOM_ITEMS = 10
+const BUILTIN_KEYS = ['blog', 'notice', 'about'] as const
 const supportedLanguages = ['zh-CN', 'zh-TW', 'en-US'] as const
 type SupportedLanguage = (typeof supportedLanguages)[number]
 
@@ -43,6 +44,12 @@ interface CustomNavItem {
   icon: string
 }
 
+interface BuiltinNavItem {
+  key: (typeof BUILTIN_KEYS)[number]
+  enabled: boolean
+  sort_order: number
+}
+
 const props = defineProps<{
   currentLang: SupportedLanguage
 }>()
@@ -55,13 +62,21 @@ const submitting = ref(false)
 const loaded = ref(false)
 
 const form = reactive({
-  builtin: {
-    blog: true,
-    notice: true,
-    about: true,
-  },
+  builtin: [
+    { key: 'blog', enabled: true, sort_order: 0 },
+    { key: 'notice', enabled: true, sort_order: 1 },
+    { key: 'about', enabled: true, sort_order: 2 },
+  ] as BuiltinNavItem[],
   customItems: [] as CustomNavItem[],
 })
+
+const nextSortOrder = (): number => {
+  const orders = [
+    ...form.builtin.map((item) => item.sort_order),
+    ...form.customItems.map((item) => item.sort_order),
+  ]
+  return orders.length ? Math.max(...orders) + 1 : 0
+}
 
 const createEmptyItem = (): CustomNavItem => ({
   id: Date.now(),
@@ -69,7 +84,7 @@ const createEmptyItem = (): CustomNavItem => ({
   link_type: 'internal',
   url: '',
   target: '_self',
-  sort_order: 0,
+  sort_order: nextSortOrder(),
   enabled: true,
   icon: 'link',
 })
@@ -89,11 +104,29 @@ const fetchNavConfig = async () => {
     const data = res.data?.data
     if (data && typeof data === 'object') {
       const d = data as Record<string, unknown>
-      if (d.builtin && typeof d.builtin === 'object') {
+      if (Array.isArray(d.builtin)) {
+        // 规范数组形态：按 key 取 enabled/sort_order
+        const byKey = new Map<string, Record<string, unknown>>()
+        for (const raw of d.builtin as Array<Record<string, unknown>>) {
+          const key = String(raw.key || '')
+          if (key) byKey.set(key, raw)
+        }
+        form.builtin = BUILTIN_KEYS.map((key, index) => {
+          const raw = byKey.get(key)
+          return {
+            key,
+            enabled: raw ? raw.enabled !== false : true,
+            sort_order: raw && typeof raw.sort_order === 'number' ? (raw.sort_order as number) : index,
+          }
+        })
+      } else if (d.builtin && typeof d.builtin === 'object') {
+        // 旧布尔字典：按默认序派生 sort_order（与后端一致）
         const b = d.builtin as Record<string, boolean>
-        form.builtin.blog = b.blog !== false
-        form.builtin.notice = b.notice !== false
-        form.builtin.about = b.about !== false
+        form.builtin = BUILTIN_KEYS.map((key, index) => ({
+          key,
+          enabled: b[key] !== false,
+          sort_order: index,
+        }))
       }
       if (Array.isArray(d.custom_items)) {
         form.customItems = (d.custom_items as Array<Record<string, unknown>>).map((item) => ({
@@ -125,7 +158,11 @@ const save = async () => {
     const payload = {
       key: 'nav_config',
       value: {
-        builtin: { ...form.builtin },
+        builtin: form.builtin.map((item) => ({
+          key: item.key,
+          enabled: item.enabled,
+          sort_order: item.sort_order,
+        })),
         custom_items: form.customItems.map((item) => ({
           id: item.id,
           title: { ...item.title },
@@ -164,17 +201,15 @@ defineExpose({ save, submitting })
         <p class="mt-1 text-xs text-muted-foreground">{{ t('admin.settings.navigation.builtin.subtitle') }}</p>
       </div>
       <div class="divide-y divide-border px-6">
-        <div class="flex items-center justify-between py-4">
-          <Label class="text-sm font-medium">{{ t('admin.settings.navigation.builtin.blog') }}</Label>
-          <Switch v-model="form.builtin.blog" />
-        </div>
-        <div class="flex items-center justify-between py-4">
-          <Label class="text-sm font-medium">{{ t('admin.settings.navigation.builtin.notice') }}</Label>
-          <Switch v-model="form.builtin.notice" />
-        </div>
-        <div class="flex items-center justify-between py-4">
-          <Label class="text-sm font-medium">{{ t('admin.settings.navigation.builtin.about') }}</Label>
-          <Switch v-model="form.builtin.about" />
+        <div v-for="item in form.builtin" :key="item.key" class="flex items-center justify-between gap-4 py-4">
+          <Label class="text-sm font-medium">{{ t(`admin.settings.navigation.builtin.${item.key}`) }}</Label>
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-muted-foreground">{{ t('admin.settings.navigation.custom.fields.sortOrder') }}</span>
+              <Input v-model.number="item.sort_order" type="number" class="w-20" placeholder="0" />
+            </div>
+            <Switch v-model="item.enabled" />
+          </div>
         </div>
       </div>
     </div>
