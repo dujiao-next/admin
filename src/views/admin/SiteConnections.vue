@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { adminAPI } from '@/api/admin'
 import type { AdminSiteConnection } from '@/api/types'
@@ -42,8 +42,27 @@ const form = reactive({
   price_markup_percent: 0,
   price_rounding_mode: 'none',
   auto_sync_price: 'false',
+  excluded_product_ids: '',
 })
 const reapplyingId = ref<number | null>(null)
+
+// 分析排除商品 ID 输入，返回非法条目列表（非数字、非正整数、小数等）
+const excludedIdsWarnings = computed(() => {
+  const raw = form.excluded_product_ids.trim()
+  if (!raw) return []
+  const parts = raw.split(/[,\s]+/).filter((s: string) => s !== '')
+  return parts.filter((p: string) => {
+    const n = Number(p)
+    return Number.isNaN(n) || !Number.isFinite(n) || n <= 0 || !Number.isInteger(n)
+  })
+})
+
+const excludedIdsWarningMessage = computed(() => {
+  if (excludedIdsWarnings.value.length === 0) return ''
+  return t('siteConnections.form.excludedProductIdsWarning', {
+    count: excludedIdsWarnings.value.length,
+  })
+})
 
 const siteConnectionSchema = {
   name: [rules.required()],
@@ -101,6 +120,7 @@ const resetForm = () => {
     price_markup_percent: 0,
     price_rounding_mode: 'none',
     auto_sync_price: 'false',
+    excluded_product_ids: '',
   })
 }
 
@@ -139,6 +159,15 @@ const openEditModal = (conn: AdminSiteConnection) => {
     price_markup_percent: conn.price_markup_percent ?? 0,
     price_rounding_mode: conn.price_rounding_mode || 'none',
     auto_sync_price: conn.auto_sync_price ? 'true' : 'false',
+    excluded_product_ids: (() => {
+      const raw = conn.excluded_product_ids
+      if (!raw) return ''
+      try {
+        return JSON.parse(raw).join(', ')
+      } catch {
+        return raw
+      }
+    })(),
   })
   showModal.value = true
 }
@@ -166,6 +195,15 @@ const buildPayload = () => {
     price_markup_percent: Number(form.price_markup_percent) || 0,
     price_rounding_mode: form.price_rounding_mode,
     auto_sync_price: form.auto_sync_price === 'true',
+    excluded_product_ids: (() => {
+      const raw = form.excluded_product_ids.trim()
+      if (!raw) return ''
+      const ids = raw
+        .split(/[,\s]+/)
+        .map((s: string) => Number(s.trim()))
+        .filter((n: number) => !Number.isNaN(n) && n > 0)
+      return JSON.stringify(ids)
+    })(),
   }
 }
 
@@ -460,6 +498,29 @@ onMounted(() => {
                 </Select>
                 <p class="mt-1 text-xs text-muted-foreground">{{ t('siteConnections.form.autoSyncPriceHint') }}</p>
               </div>
+            </div>
+          </div>
+
+          <div class="border-t border-border pt-4">
+            <div>
+              <h3 class="mb-1 text-sm font-medium text-foreground">{{ t('siteConnections.form.exclusionSection') }}</h3>
+              <p class="mb-3 text-xs text-muted-foreground">{{ t('siteConnections.form.exclusionHint') }}</p>
+            </div>
+            <div>
+              <label class="mb-1.5 block text-xs font-medium text-muted-foreground">{{ t('siteConnections.form.excludedProductIds') }}</label>
+              <textarea
+                v-model="form.excluded_product_ids"
+                rows="3"
+                class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                :placeholder="t('siteConnections.form.excludedProductIdsPlaceholder')"
+              ></textarea>
+              <p
+                v-if="excludedIdsWarningMessage"
+                class="mt-1 text-xs text-amber-600"
+              >
+                {{ excludedIdsWarningMessage }}
+              </p>
+              <p v-else class="mt-1 text-xs text-muted-foreground">{{ t('siteConnections.form.excludedProductIdsHint') }}</p>
             </div>
           </div>
 
