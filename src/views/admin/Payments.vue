@@ -163,6 +163,7 @@ const providerTypeLabel = (value?: string) => {
   const map: Record<string, string> = {
     official: t('admin.paymentChannels.providerTypes.official'),
     epay: t('admin.paymentChannels.providerTypes.epay'),
+    bepusdt: t('admin.paymentChannels.providerTypes.bepusdt'),
     epusdt: t('admin.paymentChannels.providerTypes.epusdt'),
     tokenpay: t('admin.paymentChannels.providerTypes.tokenpay'),
     wallet: t('admin.paymentChannels.providerTypes.wallet'),
@@ -182,10 +183,16 @@ const channelTypeLabel = (value?: string) => {
     'usdt-trc20': t('admin.paymentChannels.channelTypes.usdtTrc20'),
     'usdc-trc20': t('admin.paymentChannels.channelTypes.usdcTrc20'),
     trx: t('admin.paymentChannels.channelTypes.trx'),
+    bepusdt: t('admin.paymentChannels.channelTypes.bepusdtCashier'),
     balance: t('admin.paymentChannels.channelTypes.balance'),
   }
   if (!value) return '-'
   return map[value] || value
+}
+
+const paymentChannelTypeLabel = (payment: AdminPayment) => {
+  const value = String(payment.display_channel_type || payment.channel_type || '').trim()
+  return channelTypeLabel(value)
 }
 
 const handleCopyOrderNo = async (orderNo?: string) => {
@@ -411,7 +418,7 @@ watch(
             </TableCell>
             <TableCell class="min-w-[180px] px-6 py-4 text-xs text-muted-foreground">
               <div class="break-words text-foreground">{{ payment.channel_name || '-' }}</div>
-              <div class="break-words text-muted-foreground">{{ providerTypeLabel(payment.provider_type) }} / {{ channelTypeLabel(payment.channel_type) }}</div>
+              <div class="break-words text-muted-foreground">{{ providerTypeLabel(payment.provider_type) }} / {{ paymentChannelTypeLabel(payment) }}</div>
               <div class="text-muted-foreground mt-0.5">
                 {{ t('admin.payments.channelId') }}:
                 <a v-if="payment.channel_id" :href="channelLink(payment.channel_id)" target="_blank" rel="noopener" class="text-primary underline-offset-4 hover:underline">
@@ -513,7 +520,7 @@ watch(
                 <CardContent class="p-4">
                   <div class="text-xs text-muted-foreground mb-2">{{ t('admin.payments.detailChannel') }}</div>
                   <div class="text-foreground text-sm break-words">{{ detailPayment.channel_name || '-' }}</div>
-                  <div class="text-xs text-muted-foreground mt-1 break-words">{{ providerTypeLabel(detailPayment.provider_type) }} / {{ channelTypeLabel(detailPayment.channel_type) }}</div>
+                  <div class="text-xs text-muted-foreground mt-1 break-words">{{ providerTypeLabel(detailPayment.provider_type) }} / {{ paymentChannelTypeLabel(detailPayment) }}</div>
                 </CardContent>
               </Card>
               <Card class="rounded-lg border-border bg-background shadow-none">

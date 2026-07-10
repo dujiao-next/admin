@@ -445,6 +445,7 @@ export interface AdminPayment {
   channel_id: number
   provider_type: string
   channel_type: string
+  display_channel_type?: string
   interaction_mode: string
   amount: number
   payable_amount: number

@@ -100,6 +100,7 @@ const channelTypeLabel = (value?: string) => {
     'usdt-trc20': t('admin.paymentChannels.channelTypes.usdtTrc20'),
     'usdc-trc20': t('admin.paymentChannels.channelTypes.usdcTrc20'),
     trx: t('admin.paymentChannels.channelTypes.trx'),
+    bepusdt: t('admin.paymentChannels.channelTypes.bepusdtCashier'),
     'tron-usdt': t('admin.paymentChannels.channelTypes.tronUsdt'),
     'tron-trx': t('admin.paymentChannels.channelTypes.tronTrx'),
     'ethereum-usdt': t('admin.paymentChannels.channelTypes.ethereumUsdt'),
@@ -128,6 +129,10 @@ const resolveChannelTypeDisplay = (channel: AdminPaymentChannel) => {
     return currency || 'USDT'
   }
   if (channel.provider_type === 'bepusdt') {
+    const orderMode = String(channel.config_json?.order_mode || '').trim()
+    if (orderMode === 'cashier') {
+      return channelTypeLabel('bepusdt')
+    }
     const tradeType = String(channel.config_json?.trade_type || '').trim()
     return tradeType || channelTypeLabel(channel.channel_type)
   }
