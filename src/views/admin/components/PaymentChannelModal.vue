@@ -134,6 +134,7 @@ const bepusdtConfig = reactive({
   gateway_url: '',
   auth_token: '',
   trade_type: 'usdt.trc20',
+  currencies: '',
   fiat: 'CNY',
   notify_url: '',
   return_url: '',
@@ -412,6 +413,7 @@ const resetBepusdtConfig = () => {
   bepusdtConfig.gateway_url = ''
   bepusdtConfig.auth_token = ''
   bepusdtConfig.trade_type = 'usdt.trc20'
+  bepusdtConfig.currencies = ''
   bepusdtConfig.fiat = 'CNY'
   bepusdtConfig.notify_url = 'https://api.yourdomain.com/api/v1/payments/callback'
   bepusdtConfig.return_url = 'https://yourdomain.com/pay'
@@ -547,6 +549,7 @@ const applyBepusdtConfig = (raw: Record<string, unknown>) => {
   bepusdtConfig.gateway_url = String(raw.gateway_url || '')
   bepusdtConfig.auth_token = String(raw.auth_token || '')
   bepusdtConfig.trade_type = String(raw.trade_type || 'usdt.trc20')
+  bepusdtConfig.currencies = String(raw.currencies || '')
   bepusdtConfig.fiat = String(raw.fiat || 'CNY')
   bepusdtConfig.notify_url = String(raw.notify_url || '')
   bepusdtConfig.return_url = String(raw.return_url || '')
@@ -728,6 +731,10 @@ const buildBepusdtConfig = () => {
   const tradeType = String(bepusdtConfig.trade_type || '').trim()
   if (tradeType !== '') {
     config.trade_type = tradeType
+  }
+  const currencies = String(bepusdtConfig.currencies || '').trim()
+  if (currencies !== '') {
+    config.currencies = currencies
   }
   const fiat = String(bepusdtConfig.fiat || '').trim()
   if (fiat !== '') {
@@ -1024,6 +1031,7 @@ const handleSubmit = async () => {
       ...buildWechatConfig(),
     }
   } else if (form.provider_type === 'bepusdt') {
+    delete configJson.currencies
     configJson = {
       ...configJson,
       ...buildBepusdtConfig(),
@@ -1480,6 +1488,10 @@ const closeModal = () => {
             <div class="min-w-0">
               <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.paymentChannels.modal.bepusdtFiat') }}</label>
               <Input v-model="bepusdtConfig.fiat" :placeholder="t('admin.paymentChannels.modal.bepusdtFiatPlaceholder')" />
+            </div>
+            <div class="min-w-0 md:col-span-2">
+              <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.paymentChannels.modal.bepusdtCurrencies') }}</label>
+              <Input v-model="bepusdtConfig.currencies" :placeholder="t('admin.paymentChannels.modal.bepusdtCurrenciesPlaceholder')" />
             </div>
             <div class="min-w-0">
               <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.paymentChannels.modal.bepusdtNotifyUrl') }}</label>

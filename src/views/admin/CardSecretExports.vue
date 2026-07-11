@@ -1,18 +1,22 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useDebounceFn } from '@vueuse/core'
 import { AlertTriangle, Copy, Download, PackageCheck, Upload, X } from 'lucide-vue-next'
 import { adminAPI } from '@/api/admin'
-import type { AdminCardSecretBatch, AdminProduct, AdminProductSKU } from '@/api/types'
+import type { AdminCardSecretBatch, AdminCardSecretExport, AdminProduct, AdminProductSKU } from '@/api/types'
+import ListPagination from '@/components/ListPagination.vue'
+import TableSkeleton from '@/components/TableSkeleton.vue'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { getLocalizedText } from '@/utils/format'
+import { formatDate, getLocalizedText } from '@/utils/format'
 
 const { t } = useI18n()
+const route = useRoute()
 const adminPath = import.meta.env.VITE_ADMIN_PATH || ''
 
 const productKeyword = ref('')
@@ -43,6 +47,12 @@ const exportResult = ref<{
   productLabel: string
   skuLabel: string
 } | null>(null)
+const exportRecords = ref<AdminCardSecretExport[]>([])
+const exportRecordsLoading = ref(false)
+const exportRecordPage = ref(1)
+const exportRecordPagination = ref({ page: 1, page_size: 20, total: 0, total_page: 1 })
+
+const focusedExportID = computed(() => parsePositiveInteger(route.query.export_id))
 
 const normalizeFilterValue = (value: string) => (value === '__all__' ? '' : value)
 
@@ -151,6 +161,28 @@ const confirmExportMessage = computed(() => {
 })
 
 const productLink = (productId: number) => `${adminPath}/products?product_id=${productId}`
+
+const loadExportRecords = async () => {
+  exportRecordsLoading.value = true
+  try {
+    const response = await adminAPI.getCardSecretExports({
+      id: focusedExportID.value || undefined,
+      page: focusedExportID.value ? 1 : exportRecordPage.value,
+      page_size: exportRecordPagination.value.page_size,
+    })
+    exportRecords.value = Array.isArray(response.data?.data) ? response.data.data : []
+    exportRecordPagination.value = response.data?.pagination || exportRecordPagination.value
+  } catch {
+    exportRecords.value = []
+  } finally {
+    exportRecordsLoading.value = false
+  }
+}
+
+const handleExportRecordPageChange = async (page: number) => {
+  exportRecordPage.value = page
+  await loadExportRecords()
+}
 
 const resetMessages = () => {
   successMessage.value = ''
@@ -346,6 +378,7 @@ const runConfirmedExport = async () => {
     })
     const blob = response.data as Blob
     const content = await blob.text()
+    const recordID = parsePositiveInteger(response?.headers?.['x-export-record-id'])
     exportResult.value = {
       content,
       blob,
@@ -360,6 +393,10 @@ const runConfirmedExport = async () => {
       ? t('admin.cardSecretExports.success.deleted', { count })
       : t('admin.cardSecretExports.success.used', { count })
     await loadInventoryMeta()
+    if (recordID) {
+      exportRecordPage.value = 1
+    }
+    await loadExportRecords()
   } catch (error: any) {
     errorMessage.value = error?.message || t('admin.cardSecretExports.errors.exportFailed')
   } finally {
@@ -411,7 +448,12 @@ watch(currentAvailableCount, (count) => {
 })
 
 onMounted(async () => {
-  await loadProductOptions()
+  await Promise.all([loadProductOptions(), loadExportRecords()])
+})
+
+watch(focusedExportID, async () => {
+  exportRecordPage.value = 1
+  await loadExportRecords()
 })
 </script>
 
@@ -610,6 +652,75 @@ onMounted(async () => {
         <p class="mt-4 text-xs text-muted-foreground">{{ t('admin.cardSecretExports.targetHint') }}</p>
       </div>
     </div>
+
+    <section class="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+      <div class="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 class="text-lg font-semibold text-foreground">{{ t('admin.cardSecretExports.history.title') }}</h2>
+          <p class="mt-1 text-sm text-muted-foreground">{{ t('admin.cardSecretExports.history.description') }}</p>
+        </div>
+        <Button v-if="focusedExportID" variant="outline" as-child>
+          <RouterLink to="/card-secret-exports">{{ t('admin.cardSecretExports.history.showAll') }}</RouterLink>
+        </Button>
+      </div>
+      <div class="overflow-x-auto">
+        <Table class="min-w-[900px]">
+          <TableHeader>
+            <TableRow>
+              <TableHead>{{ t('admin.cardSecretExports.history.id') }}</TableHead>
+              <TableHead>{{ t('admin.cardSecretExports.history.product') }}</TableHead>
+              <TableHead>{{ t('admin.cardSecretExports.history.sku') }}</TableHead>
+              <TableHead>{{ t('admin.cardSecretExports.history.batch') }}</TableHead>
+              <TableHead>{{ t('admin.cardSecretExports.history.count') }}</TableHead>
+              <TableHead>{{ t('admin.cardSecretExports.history.format') }}</TableHead>
+              <TableHead>{{ t('admin.cardSecretExports.history.action') }}</TableHead>
+              <TableHead>{{ t('admin.cardSecretExports.history.admin') }}</TableHead>
+              <TableHead>{{ t('admin.cardSecretExports.history.createdAt') }}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow v-if="exportRecordsLoading">
+              <TableCell :colspan="9" class="p-0"><TableSkeleton :columns="9" :rows="4" /></TableCell>
+            </TableRow>
+            <TableRow v-else-if="exportRecords.length === 0">
+              <TableCell :colspan="9" class="py-8 text-center text-muted-foreground">
+                {{ t('admin.cardSecretExports.history.empty') }}
+              </TableCell>
+            </TableRow>
+            <TableRow
+              v-for="record in exportRecords"
+              :key="record.id"
+              :class="focusedExportID === record.id ? 'bg-primary/5' : ''"
+            >
+              <TableCell class="font-mono">#{{ record.id }}</TableCell>
+              <TableCell>
+                <a :href="productLink(record.product_id)" class="text-primary hover:underline">#{{ record.product_id }}</a>
+              </TableCell>
+              <TableCell>{{ record.sku_id ? `#${record.sku_id}` : t('admin.cardSecrets.skuAll') }}</TableCell>
+              <TableCell>{{ record.batch_id ? `#${record.batch_id}` : t('admin.cardSecretExports.batchAll') }}</TableCell>
+              <TableCell>{{ record.count }}</TableCell>
+              <TableCell>{{ String(record.format || '').toUpperCase() }}</TableCell>
+              <TableCell>
+                <span v-if="!record.delete_after_export" class="text-primary">
+                  {{ t('admin.cardSecretExports.history.markedUsed') }}
+                </span>
+                <span v-else class="text-destructive">{{ t('admin.cardSecretExports.history.deleted') }}</span>
+              </TableCell>
+              <TableCell>{{ record.admin_id ? `#${record.admin_id}` : '-' }}</TableCell>
+              <TableCell>{{ formatDate(record.created_at) }}</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
+      <ListPagination
+        v-if="!focusedExportID && exportRecordPagination.total_page > 1"
+        :page="exportRecordPagination.page"
+        :total-page="exportRecordPagination.total_page"
+        :total="exportRecordPagination.total"
+        :page-size="exportRecordPagination.page_size"
+        @change-page="handleExportRecordPageChange"
+      />
+    </section>
 
     <div
       v-if="confirmExportOpen"

@@ -214,6 +214,7 @@ const resolveSecretBatchLabel = (secret: AdminCardSecret) => {
 
 const productLink = (productId: number) => `${adminPath}/products?product_id=${productId}`
 const orderLink = (orderId: number) => `${adminPath}/orders?order_id=${orderId}`
+const exportLink = (exportId: number) => `${adminPath}/card-secret-exports?export_id=${exportId}`
 
 const clearBatchActionMessages = () => {
   batchActionError.value = ''
@@ -1138,9 +1139,19 @@ onMounted(async () => {
                     >
                       #{{ secret.order_id }}
                     </a>
+                    <a
+                      v-else-if="secret.export_id"
+                      :href="exportLink(secret.export_id)"
+                      class="text-primary underline-offset-4 hover:underline"
+                    >
+                      {{ t('admin.cardSecrets.listTable.exportRecord', { id: secret.export_id }) }}
+                    </a>
                     <span v-else class="text-muted-foreground">-</span>
-                    <span v-if="secret.status === 'used'" class="text-[11px] text-muted-foreground">
+                    <span v-if="secret.status === 'used' && secret.order_id" class="text-[11px] text-muted-foreground">
                       {{ t('admin.cardSecrets.listTable.usedOrderHint') }}
+                    </span>
+                    <span v-else-if="secret.status === 'used' && secret.export_id" class="text-[11px] text-muted-foreground">
+                      {{ t('admin.cardSecrets.listTable.usedExportHint') }}
                     </span>
                   </div>
                 </TableCell>

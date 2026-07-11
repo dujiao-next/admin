@@ -535,6 +535,8 @@ export const adminAPI = {
     api.post('/admin/card-secrets/export', data, { blob: true }),
   exportAvailableCardSecrets: (data: AdminExportAvailableCardSecretsPayload) =>
     api.post('/admin/card-secrets/export-available', data, { blob: true }),
+  getCardSecretExports: (params?: Record<string, unknown>) =>
+    api.get('/admin/card-secret-exports', { params }),
   getCardSecretStats: (params?: Record<string, unknown>) => api.get('/admin/card-secrets/stats', { params }),
   getCardSecretBatches: (params?: Record<string, unknown>) => api.get('/admin/card-secrets/batches', { params }),
   getCardSecretTemplate: () => api.get('/admin/card-secrets/template'),
