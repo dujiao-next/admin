@@ -101,6 +101,7 @@ const channelTypeLabel = (value?: string) => {
     'usdc-trc20': t('admin.paymentChannels.channelTypes.usdcTrc20'),
     trx: t('admin.paymentChannels.channelTypes.trx'),
     bepusdt: t('admin.paymentChannels.channelTypes.bepusdtCashier'),
+    epusdt: t('admin.paymentChannels.channelTypes.epusdt'),
     'tron-usdt': t('admin.paymentChannels.channelTypes.tronUsdt'),
     'tron-trx': t('admin.paymentChannels.channelTypes.tronTrx'),
     'ethereum-usdt': t('admin.paymentChannels.channelTypes.ethereumUsdt'),
@@ -137,8 +138,15 @@ const resolveChannelTypeDisplay = (channel: AdminPaymentChannel) => {
     return tradeType || channelTypeLabel(channel.channel_type)
   }
   if (channel.provider_type === 'epusdt') {
-    const tradeType = String(channel.config_json?.trade_type || '').trim()
-    return tradeType || 'usdt.trc20'
+    const token = String(channel.config_json?.token || '').trim().toLowerCase()
+    const network = String(channel.config_json?.network || '').trim().toLowerCase()
+    if (!token && !network) {
+      return t('admin.paymentChannels.channelTypes.epusdtCashier')
+    }
+    if (token && network) {
+      return `${token}.${network}`
+    }
+    return channelTypeLabel(channel.channel_type)
   }
   if (channel.provider_type === 'okpay') {
     const coin = resolveOkpayConfiguredCoin(channel.config_json)

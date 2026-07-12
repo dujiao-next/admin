@@ -184,6 +184,7 @@ const channelTypeLabel = (value?: string) => {
     'usdc-trc20': t('admin.paymentChannels.channelTypes.usdcTrc20'),
     trx: t('admin.paymentChannels.channelTypes.trx'),
     bepusdt: t('admin.paymentChannels.channelTypes.bepusdtCashier'),
+    epusdt: t('admin.paymentChannels.channelTypes.epusdtCashier'),
     balance: t('admin.paymentChannels.channelTypes.balance'),
   }
   if (!value) return '-'

@@ -144,6 +144,7 @@ const epusdtConfig = reactive({
   gateway_url: '',
   pid: '',
   secret_key: '',
+  order_mode: 'transaction',
   token: 'usdt',
   network: 'tron',
   currency: 'cny',
@@ -257,9 +258,6 @@ const formChannelOptions = computed(() => {
     return officialChannelOptions
   }
   if (form.provider_type === 'bepusdt') {
-    return bepusdtChannelOptions
-  }
-  if (form.provider_type === 'epusdt') {
     return bepusdtChannelOptions
   }
   if (form.provider_type === 'okpay') {
@@ -428,6 +426,7 @@ const resetEpusdtConfig = () => {
   epusdtConfig.gateway_url = ''
   epusdtConfig.pid = ''
   epusdtConfig.secret_key = ''
+  epusdtConfig.order_mode = 'transaction'
   epusdtConfig.token = 'usdt'
   epusdtConfig.network = 'tron'
   epusdtConfig.currency = 'cny'
@@ -564,8 +563,9 @@ const applyEpusdtConfig = (raw: Record<string, unknown>) => {
   epusdtConfig.gateway_url = String(raw.gateway_url || '')
   epusdtConfig.pid = String(raw.pid || '')
   epusdtConfig.secret_key = String(raw.secret_key || '')
-  epusdtConfig.token = String(raw.token || 'usdt')
-  epusdtConfig.network = String(raw.network || 'tron')
+  epusdtConfig.order_mode = String(raw.order_mode || 'transaction') === 'cashier' ? 'cashier' : 'transaction'
+  epusdtConfig.token = epusdtConfig.order_mode === 'cashier' ? '' : String(raw.token || 'usdt')
+  epusdtConfig.network = epusdtConfig.order_mode === 'cashier' ? '' : String(raw.network || 'tron')
   epusdtConfig.currency = String(raw.currency || 'cny')
   epusdtConfig.notify_url = String(raw.notify_url || '')
   epusdtConfig.return_url = String(raw.return_url || '')
@@ -754,8 +754,9 @@ const buildEpusdtConfig = () => {
   config.gateway_url = String(epusdtConfig.gateway_url || '').trim()
   config.pid = String(epusdtConfig.pid || '').trim()
   config.secret_key = String(epusdtConfig.secret_key || '').trim()
-  config.token = String(epusdtConfig.token || '').trim().toLowerCase()
-  config.network = String(epusdtConfig.network || '').trim().toLowerCase()
+  config.order_mode = String(epusdtConfig.order_mode || 'transaction') === 'cashier' ? 'cashier' : 'transaction'
+  config.token = config.order_mode === 'cashier' ? '' : String(epusdtConfig.token || '').trim().toLowerCase()
+  config.network = config.order_mode === 'cashier' ? '' : String(epusdtConfig.network || '').trim().toLowerCase()
   config.currency = String(epusdtConfig.currency || '').trim().toLowerCase()
   config.notify_url = String(epusdtConfig.notify_url || '').trim()
   config.return_url = String(epusdtConfig.return_url || '').trim()
@@ -844,10 +845,7 @@ watch(
     } else if (value === 'bepusdt') {
       form.channel_type = 'bepusdt'
     } else if (value === 'epusdt') {
-      const allowed = bepusdtChannelOptions.map((option) => option.value)
-      if (!allowed.includes(form.channel_type)) {
-        form.channel_type = allowed[0] || 'usdt-trc20'
-      }
+      form.channel_type = 'epusdt'
     } else if (value === 'okpay') {
       const allowed = okpayChannelOptions.map((option) => option.value)
       if (!allowed.includes(form.channel_type)) {
@@ -899,6 +897,26 @@ watch(
     const allowed = interactionModeOptions.value.map((item) => item.value)
     if (!allowed.includes(form.interaction_mode)) {
       form.interaction_mode = pickDefaultInteractionMode()
+    }
+  }
+)
+
+watch(
+  () => epusdtConfig.order_mode,
+  () => {
+    if (form.provider_type !== 'epusdt' || applyingChannelData.value) {
+      return
+    }
+    if (epusdtConfig.order_mode === 'cashier') {
+      epusdtConfig.token = ''
+      epusdtConfig.network = ''
+      return
+    }
+    if (String(epusdtConfig.token || '').trim() === '') {
+      epusdtConfig.token = 'usdt'
+    }
+    if (String(epusdtConfig.network || '').trim() === '') {
+      epusdtConfig.network = 'tron'
     }
   }
 )
@@ -1095,6 +1113,8 @@ const handleSubmit = async () => {
         ? 'usdt'
         : form.provider_type === 'bepusdt'
           ? resolveBepusdtChannelType()
+          : form.provider_type === 'epusdt'
+            ? 'epusdt'
           : form.channel_type,
     interaction_mode: form.interaction_mode,
     fee_rate: String(form.fee_rate || '0').trim(),
@@ -1164,7 +1184,7 @@ const closeModal = () => {
               </SelectContent>
             </Select>
           </div>
-          <div v-if="form.provider_type !== 'tokenpay' && form.provider_type !== 'bepusdt'" class="min-w-0">
+          <div v-if="form.provider_type !== 'tokenpay' && form.provider_type !== 'bepusdt' && form.provider_type !== 'epusdt'" class="min-w-0">
             <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.paymentChannels.modal.channelType') }}</label>
             <Select v-model="form.channel_type">
               <SelectTrigger class="h-9 w-full">
@@ -1556,12 +1576,24 @@ const closeModal = () => {
               <Input v-model="epusdtConfig.secret_key" :placeholder="t('admin.paymentChannels.modal.epusdtSecretKeyPlaceholder')" />
             </div>
             <div class="min-w-0">
-              <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.paymentChannels.modal.epusdtToken') }}</label>
-              <Input v-model="epusdtConfig.token" :placeholder="t('admin.paymentChannels.modal.epusdtTokenPlaceholder')" />
+              <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.paymentChannels.modal.epusdtOrderMode') }}</label>
+              <Select v-model="epusdtConfig.order_mode">
+                <SelectTrigger class="h-9 w-full">
+                  <SelectValue :placeholder="t('admin.paymentChannels.modal.epusdtOrderModeTransaction')" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="transaction">{{ t('admin.paymentChannels.modal.epusdtOrderModeTransaction') }}</SelectItem>
+                  <SelectItem value="cashier">{{ t('admin.paymentChannels.modal.epusdtOrderModeCashier') }}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <div class="min-w-0">
+            <div v-if="epusdtConfig.order_mode !== 'cashier'" class="min-w-0">
+              <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.paymentChannels.modal.epusdtToken') }}</label>
+              <Input v-model="epusdtConfig.token" required :placeholder="t('admin.paymentChannels.modal.epusdtTokenPlaceholder')" />
+            </div>
+            <div v-if="epusdtConfig.order_mode !== 'cashier'" class="min-w-0">
               <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.paymentChannels.modal.epusdtNetwork') }}</label>
-              <Input v-model="epusdtConfig.network" :placeholder="t('admin.paymentChannels.modal.epusdtNetworkPlaceholder')" />
+              <Input v-model="epusdtConfig.network" required :placeholder="t('admin.paymentChannels.modal.epusdtNetworkPlaceholder')" />
             </div>
             <div class="min-w-0">
               <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.paymentChannels.modal.epusdtCurrency') }}</label>
