@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { confirmAction } from '@/utils/confirm'
+import { getAdminRouteUrl } from '@/utils/adminPath'
 import { notifyError, notifySuccess } from '@/utils/notify'
 
 const { t } = useI18n()
@@ -30,8 +31,7 @@ const jumpPage = ref('')
 
 const filterStatus = ref('__all__')
 const searchQuery = ref('')
-const adminPath = import.meta.env.VITE_ADMIN_PATH || ''
-const userDetailLink = (userId: number) => `${adminPath}/users/${userId}`
+const userDetailLink = (userId: number) => getAdminRouteUrl(`/users/${userId}`)
 
 const statusOptions = [
   { value: '__all__', key: 'apiCredentials.filters.allStatus' },

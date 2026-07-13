@@ -10,11 +10,10 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { getAdminRouteUrl } from '@/utils/adminPath'
 import { getLocalizedText } from '@/utils/format'
 
 const { t } = useI18n()
-const adminPath = import.meta.env.VITE_ADMIN_PATH || ''
-
 const productKeyword = ref('')
 const productOptions = ref<AdminProduct[]>([])
 const productOptionsLoading = ref(false)
@@ -150,7 +149,7 @@ const confirmExportMessage = computed(() => {
     : t('admin.cardSecretExports.confirmUsed', { count: exportCount.value })
 })
 
-const productLink = (productId: number) => `${adminPath}/products?product_id=${productId}`
+const productLink = (productId: number) => getAdminRouteUrl(`/products?product_id=${productId}`)
 
 const resetMessages = () => {
   successMessage.value = ''

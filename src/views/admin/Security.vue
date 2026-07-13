@@ -8,6 +8,7 @@ import { notifyError, notifySuccess } from '@/utils/notify'
 import { confirmAction } from '@/utils/confirm'
 import Setup2FAModal from './components/Setup2FAModal.vue'
 import RecoveryCodesModal from './components/RecoveryCodesModal.vue'
+import { getAdminRouteUrl } from '@/utils/adminPath'
 import { formatDate } from '@/utils/format'
 
 const { t } = useI18n()
@@ -66,8 +67,7 @@ const submitDisable = async () => {
     disableForm.recoveryCode = ''
     disableForm.useRecovery = false
     localStorage.removeItem('admin_token')
-    const adminPath = import.meta.env.VITE_ADMIN_PATH || ''
-    window.location.href = `${adminPath}/login`
+    window.location.href = getAdminRouteUrl('/login')
   } catch (err: any) {
     notifyErrorIfNeeded(err, t('admin.twofa.disable.failed'))
   }
@@ -121,8 +121,7 @@ const changePassword = async () => {
     })
     notifySuccess(t('admin.settings.alerts.passwordSuccess'))
     localStorage.removeItem('admin_token')
-    const adminPath = import.meta.env.VITE_ADMIN_PATH || ''
-    window.location.href = `${adminPath}/login`
+    window.location.href = getAdminRouteUrl('/login')
   } catch (err: any) {
     notifyErrorIfNeeded(err, t('admin.settings.alerts.passwordFailed'))
   } finally {

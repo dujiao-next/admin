@@ -20,6 +20,7 @@ import {
   orderStatusLabel,
 } from '@/utils/status'
 import { formatDate, formatMoney, getLocalizedText, toRFC3339 } from '@/utils/format'
+import { getAdminRouteUrl } from '@/utils/adminPath'
 import { formatSkuDisplayLabel } from '@/utils/sku'
 import OrderDetailDialog from './components/OrderDetailDialog.vue'
 import OrderFulfillmentModal from './components/OrderFulfillmentModal.vue'
@@ -57,8 +58,7 @@ const fulfillmentParentId = ref<number | null>(null)
 const maxRefundDays = ref(30)
 const route = useRoute()
 const { t, locale } = useI18n()
-const adminPath = import.meta.env.VITE_ADMIN_PATH || ''
-const userDetailLink = (userId: number) => `${adminPath}/users/${userId}`
+const userDetailLink = (userId: number) => getAdminRouteUrl(`/users/${userId}`)
 
 const itemSkuLabel = (item: AdminOrderItem & Record<string, unknown>) =>
   formatSkuDisplayLabel((item as any)?.sku_snapshot, locale.value)

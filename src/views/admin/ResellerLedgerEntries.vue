@@ -25,6 +25,7 @@ import TableSkeleton from '@/components/TableSkeleton.vue'
 import ListPagination from '@/components/ListPagination.vue'
 import { useListRefresh, type ListFetchOptions } from '@/composables/useListRefresh'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { getAdminRouteUrl } from '@/utils/adminPath'
 import { formatDate, toRFC3339 } from '@/utils/format'
 import ComplianceGuardWrapper from '@/components/ComplianceGuardWrapper.vue'
 
@@ -39,8 +40,6 @@ const pagination = ref({
   total: 0,
   total_page: 1,
 })
-const adminPath = import.meta.env.VITE_ADMIN_PATH || ''
-
 const filters = reactive({
   keyword: '',
   resellerId: '',
@@ -62,8 +61,8 @@ const initFiltersFromQuery = () => {
 
 const normalizeFilterValue = (value: string) => (value === '__all__' ? '' : value)
 const pageSizeOptions = [10, 20, 50, 100]
-const userDetailLink = (userId: number) => `${adminPath}/users/${userId}`
-const orderLink = (orderNo: string) => `${adminPath}/orders?order_no=${encodeURIComponent(orderNo)}`
+const userDetailLink = (userId: number) => getAdminRouteUrl(`/users/${userId}`)
+const orderLink = (orderNo: string) => getAdminRouteUrl(`/orders?order_no=${encodeURIComponent(orderNo)}`)
 
 const fetchRows = async (page = 1, options: ListFetchOptions = {}) => {
   if (!options.preserveRows) loading.value = true

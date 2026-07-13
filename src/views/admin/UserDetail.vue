@@ -15,6 +15,7 @@ import ListPagination from '@/components/ListPagination.vue'
 import type { AcceptableValue } from 'reka-ui'
 import { copyText } from '@/utils/clipboard'
 import { confirmAction } from '@/utils/confirm'
+import { getAdminRouteUrl } from '@/utils/adminPath'
 import {
   orderStatusClass as orderStatusClassMap,
   orderStatusLabel as orderStatusLabelMap,
@@ -27,7 +28,6 @@ import { formatDate, formatMoney, getLocalizedText } from '@/utils/format'
 
 const { t } = useI18n()
 const route = useRoute()
-const adminPath = import.meta.env.VITE_ADMIN_PATH || ''
 const userId = computed(() => Number(route.params.id))
 
 interface UserDetailCouponUsage {
@@ -284,10 +284,10 @@ const changeTab = (tab: 'orders' | 'payments' | 'coupons' | 'wallet') => {
   }
 }
 
-const orderLink = (orderId: number) => `${adminPath}/orders?order_id=${orderId}`
-const paymentDetailLink = (paymentId: number) => `${adminPath}/payments?payment_id=${paymentId}`
-const orderListLink = computed(() => `${adminPath}/orders?user_id=${userId.value}`)
-const paymentListLink = computed(() => `${adminPath}/payments?user_id=${userId.value}`)
+const orderLink = (orderId: number) => getAdminRouteUrl(`/orders?order_id=${orderId}`)
+const paymentDetailLink = (paymentId: number) => getAdminRouteUrl(`/payments?payment_id=${paymentId}`)
+const orderListLink = computed(() => getAdminRouteUrl(`/orders?user_id=${userId.value}`))
+const paymentListLink = computed(() => getAdminRouteUrl(`/payments?user_id=${userId.value}`))
 
 const statusClass = (status?: string) => userStatusClass(status)
 const statusLabel = (status?: string) => userStatusLabel(t, status)
@@ -470,7 +470,7 @@ watch(
   <div class="space-y-6">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div class="flex items-center gap-3">
-        <router-link :to="`${adminPath}/users`" class="text-muted-foreground hover:text-foreground transition-colors">
+        <router-link to="/users" class="text-muted-foreground hover:text-foreground transition-colors">
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>

@@ -19,6 +19,7 @@ import TableSkeleton from '@/components/TableSkeleton.vue'
 import ListPagination from '@/components/ListPagination.vue'
 import { useListRefresh, type ListFetchOptions } from '@/composables/useListRefresh'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { getAdminRouteUrl } from '@/utils/adminPath'
 import { formatDate } from '@/utils/format'
 import ComplianceGuardWrapper from '@/components/ComplianceGuardWrapper.vue'
 
@@ -33,8 +34,6 @@ const pagination = ref({
   total: 0,
   total_page: 1,
 })
-const adminPath = import.meta.env.VITE_ADMIN_PATH || ''
-
 const filters = reactive({
   keyword: '',
   resellerId: '',
@@ -51,7 +50,7 @@ const initFiltersFromQuery = () => {
 
 const normalizeFilterValue = (value: string) => (value === '__all__' ? '' : value)
 const pageSizeOptions = [10, 20, 50, 100]
-const userDetailLink = (userId: number) => `${adminPath}/users/${userId}`
+const userDetailLink = (userId: number) => getAdminRouteUrl(`/users/${userId}`)
 const resolveResellerUserID = (item: AdminResellerBalanceAccount) => Number(item?.profile?.user_id || item?.profile?.user?.id || 0)
 
 const fetchRows = async (page = 1, options: ListFetchOptions = {}) => {

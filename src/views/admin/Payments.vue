@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { paymentStatusClass, paymentStatusLabel } from '@/utils/status'
 import ComplianceGuardWrapper from '@/components/ComplianceGuardWrapper.vue'
 import { copyText } from '@/utils/clipboard'
+import { getAdminRouteUrl } from '@/utils/adminPath'
 import { formatDate, toRFC3339 } from '@/utils/format'
 
 const loading = ref(true)
@@ -30,7 +31,6 @@ const pagination = ref({
   total: 0,
   total_page: 1,
 })
-const adminPath = import.meta.env.VITE_ADMIN_PATH || ''
 const filters = reactive({
   userId: '',
   orderId: '',
@@ -95,9 +95,9 @@ const changePageSize = (size: number) => {
   fetchPayments(1)
 }
 
-const orderLink = (orderId: number) => `${adminPath}/orders?order_id=${orderId}`
-const userDetailLink = (userId: number) => `${adminPath}/users/${userId}`
-const channelLink = (channelId: number) => `${adminPath}/payment-channels?channel_id=${channelId}`
+const orderLink = (orderId: number) => getAdminRouteUrl(`/orders?order_id=${orderId}`)
+const userDetailLink = (userId: number) => getAdminRouteUrl(`/users/${userId}`)
+const channelLink = (channelId: number) => getAdminRouteUrl(`/payment-channels?channel_id=${channelId}`)
 
 const handleExport = async () => {
   exportError.value = ''
