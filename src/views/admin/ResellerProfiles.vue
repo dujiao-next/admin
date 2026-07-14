@@ -24,6 +24,7 @@ import { useListRefresh, type ListFetchOptions } from '@/composables/useListRefr
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { confirmAction } from '@/utils/confirm'
+import { getAdminRouteUrl } from '@/utils/adminPath'
 import { notifyError, notifySuccess } from '@/utils/notify'
 import { formatDate, toRFC3339 } from '@/utils/format'
 import { getResellerProfileActionState, getResellerProfileStatusKey } from '@/utils/resellerManagement'
@@ -54,11 +55,10 @@ const filters = reactive({
   createdTo: '',
 })
 
-const adminPath = import.meta.env.VITE_ADMIN_PATH || ''
 const pageSizeOptions = [10, 20, 50, 100]
 const normalizeFilterValue = (value: string) => (value === '__all__' ? '' : value)
-const userDetailLink = (userId: number) => `${adminPath}/users/${userId}`
-const profileDetailLink = (profileId: number) => `${adminPath}/resellers/profiles/${profileId}`
+const userDetailLink = (userId: number) => getAdminRouteUrl(`/users/${userId}`)
+const profileDetailLink = (profileId: number) => getAdminRouteUrl(`/resellers/profiles/${profileId}`)
 
 const approveForm = reactive({
   defaultMarkup: '0.00',

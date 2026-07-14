@@ -8,6 +8,7 @@ import { Copy } from 'lucide-vue-next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogScrollContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { copyText } from '@/utils/clipboard'
+import { getAdminRouteUrl } from '@/utils/adminPath'
 import { formatDate, getLocalizedText } from '@/utils/format'
 import { formatSkuDisplayLabel } from '@/utils/sku'
 
@@ -24,8 +25,6 @@ const { t, locale } = useI18n()
 
 const entrySkuLabel = (entry: Record<string, unknown>) =>
   formatSkuDisplayLabel(entry?.sku_snapshot, locale.value)
-const adminPath = import.meta.env.VITE_ADMIN_PATH || ''
-
 const detailLoading = ref(false)
 const detailError = ref('')
 const detailRefund = ref<AdminOrderRefund | null>(null)
@@ -38,7 +37,7 @@ const resetDetail = () => {
 
 const resolveOrderDetailLink = (refund: AdminOrderRefund | null) => {
   if (!refund || !refund.order_id) return ''
-  return `${adminPath}/orders?order_id=${refund.order_id}`
+  return getAdminRouteUrl(`/orders?order_id=${refund.order_id}`)
 }
 
 const refundTypeLabel = (item: AdminOrderRefund | null) => {

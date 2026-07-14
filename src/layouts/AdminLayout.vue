@@ -56,6 +56,7 @@ import { RefreshCw, ExternalLink, CheckCircle2, AlertCircle } from 'lucide-vue-n
 import { useAdminAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 import { adminAPI } from '@/api/admin'
+import { getAdminRouteUrl } from '@/utils/adminPath'
 import { applySiteIcon } from '@/utils/favicon'
 import { marked } from 'marked'
 
@@ -746,7 +747,7 @@ const handleResize = () => {
 
 const handleLogout = () => {
   authStore.logout()
-  window.location.href = '/login'
+  window.location.href = getAdminRouteUrl('/login')
 }
 
 onMounted(() => {

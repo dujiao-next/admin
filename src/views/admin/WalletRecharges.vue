@@ -11,6 +11,7 @@ import TableSkeleton from '@/components/TableSkeleton.vue'
 import ListPagination from '@/components/ListPagination.vue'
 import { useListRefresh, type ListFetchOptions } from '@/composables/useListRefresh'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { getAdminRouteUrl } from '@/utils/adminPath'
 import { paymentStatusClass, paymentStatusLabel } from '@/utils/status'
 import { formatDate, toRFC3339 } from '@/utils/format'
 import ComplianceGuardWrapper from '@/components/ComplianceGuardWrapper.vue'
@@ -25,8 +26,6 @@ const pagination = ref({
   total: 0,
   total_page: 1,
 })
-const adminPath = import.meta.env.VITE_ADMIN_PATH || ''
-
 const filters = reactive({
   rechargeNo: '',
   userId: '',
@@ -92,9 +91,9 @@ const changePageSize = (size: number) => {
   fetchRecharges(1)
 }
 
-const userLink = (userID: number) => `${adminPath}/users/${userID}`
-const paymentLink = (paymentID: number) => `${adminPath}/payments?payment_id=${paymentID}`
-const channelLink = (channelID: number) => `${adminPath}/payment-channels?channel_id=${channelID}`
+const userLink = (userID: number) => getAdminRouteUrl(`/users/${userID}`)
+const paymentLink = (paymentID: number) => getAdminRouteUrl(`/payments?payment_id=${paymentID}`)
+const channelLink = (channelID: number) => getAdminRouteUrl(`/payment-channels?channel_id=${channelID}`)
 
 const statusClass = (status?: string) => paymentStatusClass(status)
 const statusLabel = (status?: string) => paymentStatusLabel(t, status)
