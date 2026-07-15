@@ -215,6 +215,7 @@ const form = reactive({
   footer_links: [] as FooterLinkItem[],
   storefront_template: 'classic' as 'classic' | 'vault',
   template_mode: 'card' as 'card' | 'list',
+  locale_url_mode: 'none' as 'none' | 'prefix',
 })
 
 const smtpData = reactive({
@@ -444,6 +445,9 @@ const fetchSettings = async () => {
 
       const rawStorefrontTemplate = String(data.storefront_template || 'classic').trim()
       form.storefront_template = rawStorefrontTemplate === 'vault' ? 'vault' : 'classic'
+
+      const rawLocaleURLMode = String(data.locale_url_mode || 'none').trim()
+      form.locale_url_mode = rawLocaleURLMode === 'prefix' ? 'prefix' : 'none'
     }
 
     if (orderRes.data && orderRes.data.data) {
@@ -597,6 +601,7 @@ const saveSiteSettings = async () => {
       footer_links: form.footer_links,
       storefront_template: form.storefront_template,
       template_mode: form.template_mode,
+      locale_url_mode: form.locale_url_mode,
     },
   }
   await adminAPI.updateSettings(payload)
@@ -1182,6 +1187,63 @@ onMounted(() => {
                 <div class="mt-1 text-xs text-muted-foreground">{{ t('admin.settings.template.listModeDesc') }}</div>
               </div>
               <div v-if="form.template_mode === 'list'" class="absolute right-3 top-3">
+                <svg class="h-5 w-5 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+              </div>
+            </Label>
+          </RadioGroup>
+        </div>
+      </div>
+
+      <!-- Locale URL mode -->
+      <div class="rounded-xl border border-border bg-card">
+        <div class="border-b border-border bg-muted/40 px-6 py-4">
+          <h2 class="text-lg font-semibold">{{ t('admin.settings.localeUrlMode.title') }}</h2>
+          <p class="mt-1 text-xs text-muted-foreground">{{ t('admin.settings.localeUrlMode.subtitle') }}</p>
+        </div>
+        <div class="px-6 py-6">
+          <RadioGroup v-model="form.locale_url_mode" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Label
+              class="relative flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 p-6 transition-all"
+              :class="form.locale_url_mode === 'none'
+                ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                : 'border-border hover:border-muted-foreground/30'"
+            >
+              <RadioGroupItem value="none" class="sr-only" />
+              <div class="flex h-16 w-16 items-center justify-center rounded-xl" :class="form.locale_url_mode === 'none' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'">
+                <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                </svg>
+              </div>
+              <div class="text-center">
+                <div class="font-semibold" :class="form.locale_url_mode === 'none' ? 'text-primary' : ''">{{ t('admin.settings.localeUrlMode.defaultMode') }}</div>
+                <div class="mt-1 text-xs text-muted-foreground">{{ t('admin.settings.localeUrlMode.defaultModeDesc') }}</div>
+              </div>
+              <div v-if="form.locale_url_mode === 'none'" class="absolute right-3 top-3">
+                <svg class="h-5 w-5 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+              </div>
+            </Label>
+
+            <Label
+              class="relative flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 p-6 transition-all"
+              :class="form.locale_url_mode === 'prefix'
+                ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                : 'border-border hover:border-muted-foreground/30'"
+            >
+              <RadioGroupItem value="prefix" class="sr-only" />
+              <div class="flex h-16 w-16 items-center justify-center rounded-xl" :class="form.locale_url_mode === 'prefix' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'">
+                <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5a11.953 11.953 0 01-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5a17.92 17.92 0 01-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+                </svg>
+              </div>
+              <div class="text-center">
+                <div class="font-semibold" :class="form.locale_url_mode === 'prefix' ? 'text-primary' : ''">{{ t('admin.settings.localeUrlMode.prefixMode') }}</div>
+                <div class="mt-1 text-xs text-muted-foreground">{{ t('admin.settings.localeUrlMode.prefixModeDesc') }}</div>
+              </div>
+              <div v-if="form.locale_url_mode === 'prefix'" class="absolute right-3 top-3">
                 <svg class="h-5 w-5 text-primary" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                 </svg>
