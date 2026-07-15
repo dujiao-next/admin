@@ -555,7 +555,7 @@ const applyBepusdtConfig = (raw: Record<string, unknown>) => {
   bepusdtConfig.gateway_url = String(raw.gateway_url || '')
   bepusdtConfig.auth_token = String(raw.auth_token || '')
   bepusdtConfig.order_mode = String(raw.order_mode || 'transaction') === 'cashier' ? 'cashier' : 'transaction'
-  bepusdtConfig.trade_type = bepusdtConfig.order_mode === 'cashier' ? String(raw.trade_type || '') : String(raw.trade_type || 'usdt.trc20')
+  bepusdtConfig.trade_type = bepusdtConfig.order_mode === 'cashier' ? '' : String(raw.trade_type || 'usdt.trc20')
   bepusdtConfig.currencies = bepusdtConfig.order_mode === 'cashier' ? String(raw.currencies || '') : ''
   bepusdtConfig.fiat = String(raw.fiat || 'CNY')
   bepusdtConfig.notify_url = String(raw.notify_url || '')
@@ -1085,6 +1085,11 @@ const handleSubmit = async () => {
       ...buildWechatConfig(),
     }
   } else if (form.provider_type === 'bepusdt') {
+    if (bepusdtConfig.order_mode === 'cashier') {
+      delete configJson.trade_type
+    } else {
+      delete configJson.currencies
+    }
     configJson = {
       ...configJson,
       ...buildBepusdtConfig(),
