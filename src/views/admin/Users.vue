@@ -12,13 +12,14 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { toggleArrayMember } from '@/lib/utils'
 import { Textarea } from '@/components/ui/textarea'
-import { Dialog, DialogHeader, DialogScrollContent, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogHeader, DialogScrollContent, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import TableSkeleton from '@/components/TableSkeleton.vue'
 import ListPagination from '@/components/ListPagination.vue'
 import { useListRefresh, type ListFetchOptions } from '@/composables/useListRefresh'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { confirmAction } from '@/utils/confirm'
+import { notifySuccess, notifyError } from '@/utils/notify'
 import { useFormValidation, rules } from '@/composables/useFormValidation'
 import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-vue-next'
 
@@ -38,6 +39,7 @@ const filters = reactive({
   userId: '',
   keyword: '',
   status: '__all__',
+  memberLevelId: '__all__',
   createdFrom: '',
   createdTo: '',
   lastLoginFrom: '',
@@ -80,7 +82,11 @@ const form = reactive({
   email_verified: 'unverified',
   status: 'active',
   admin_note: '',
+  memberLevelId: '',
 })
+
+// Track original member level to avoid overwriting auto-upgrades on unrelated edits
+let originalMemberLevelId = ''
 
 const { errors: formErrors, validate, clearErrors } = useFormValidation({
   email: [rules.required('This field is required'), rules.email('Invalid email')],
@@ -96,6 +102,7 @@ const fetchUsers = async (page = 1, options: ListFetchOptions = {}) => {
       user_id: filters.userId || undefined,
       keyword: filters.keyword || undefined,
       status: normalizeFilterValue(filters.status) || undefined,
+      member_level_id: filters.memberLevelId === '__all__' ? undefined : (filters.memberLevelId === '__none__' ? '0' : filters.memberLevelId),
       created_from: toRFC3339(filters.createdFrom),
       created_to: toRFC3339(filters.createdTo),
       last_login_from: toRFC3339(filters.lastLoginFrom),
@@ -126,6 +133,16 @@ const fetchSiteCurrency = async () => {
 
 const memberLevelsMap = ref<Map<number, AdminMemberLevel>>(new Map())
 
+// 转为数组供 Select 组件使用，避免 Map 在模板中迭代的兼容性问题
+const memberLevelOptions = computed(() => {
+  const opts: { id: number; label: string }[] = []
+  memberLevelsMap.value.forEach((level, id) => {
+    const icon = level.icon ? level.icon + ' ' : ''
+    opts.push({ id, label: icon + getLocalizedText(level.name) })
+  })
+  return opts
+})
+
 const fetchMemberLevels = async () => {
   try {
     const response = await adminAPI.getMemberLevels({ page: 1, page_size: 100 })
@@ -147,6 +164,15 @@ const getMemberLevelLabel = (user: AdminUser) => {
   return icon + getLocalizedText(level.name)
 }
 
+// Check if the user being edited references a soft-deleted level
+const editingUserDeletedLevel = computed(() => {
+  if (!editingId.value) return null
+  const levelId = Number(form.memberLevelId)
+  if (!levelId || form.memberLevelId === '__none__') return null
+  if (memberLevelsMap.value.has(levelId)) return null
+  return levelId
+})
+
 const handleSearch = () => {
   fetchUsers(1)
 }
@@ -160,6 +186,7 @@ const resetFilters = () => {
   filters.userId = ''
   filters.keyword = ''
   filters.status = '__all__'
+  filters.memberLevelId = '__all__'
   filters.createdFrom = ''
   filters.createdTo = ''
   filters.lastLoginFrom = ''
@@ -222,6 +249,8 @@ const openEditModal = (user: AdminUser) => {
   form.locale = user.locale || 'zh-CN'
   form.email_verified = user.email_verified_at ? 'verified' : 'unverified'
   form.status = user.status || 'active'
+  form.memberLevelId = user.member_level_id ? String(user.member_level_id) : '__none__'
+  originalMemberLevelId = form.memberLevelId
   form.admin_note = (user.admin_note as string) || ''
   error.value = ''
   clearErrors()
@@ -240,7 +269,7 @@ const handleSubmit = async () => {
   if (!validate({ email: form.email, nickname: form.nickname } as Record<string, unknown>)) return
   submitting.value = true
   try {
-    await adminAPI.updateUser(editingId.value, {
+    const body: Record<string, unknown> = {
       email: form.email,
       nickname: form.nickname,
       password: form.password || undefined,
@@ -248,11 +277,19 @@ const handleSubmit = async () => {
       email_verified: form.email_verified === 'verified',
       status: form.status,
       admin_note: form.admin_note,
-    })
+    }
+    // Only send member_level_id if admin explicitly changed it
+    if (form.memberLevelId !== originalMemberLevelId) {
+      body.member_level_id = form.memberLevelId === '__none__' ? 0 : Number(form.memberLevelId)
+    }
+    await adminAPI.updateUser(editingId.value, body)
+    notifySuccess(t('admin.common.operationSuccess'))
     closeModal()
     fetchUsers(pagination.value.page)
   } catch (err: any) {
-    error.value = err?.message || t('admin.users.errors.updateFailed')
+    const msg = err?.message || t('admin.users.errors.updateFailed')
+    notifyError(msg)
+    error.value = msg
   } finally {
     submitting.value = false
   }
@@ -303,6 +340,20 @@ onMounted(() => {
             <SelectItem value="disabled">{{ t('admin.users.status.disabled') }}</SelectItem>
           </SelectContent>
         </Select>
+        </div>
+        <div class="w-full md:w-40">
+          <Select v-model="filters.memberLevelId" @update:modelValue="handleSearch">
+            <SelectTrigger class="h-9 w-full">
+              <SelectValue :placeholder="t('admin.users.filterMemberLevel')" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">{{ t('admin.users.filterMemberLevelAll') }}</SelectItem>
+              <SelectItem value="__none__">{{ t('admin.users.form.memberLevelNone') }}</SelectItem>
+              <SelectItem v-for="opt in memberLevelOptions" :key="opt.id" :value="String(opt.id)">
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div class="flex w-full flex-col gap-2 md:w-auto md:flex-row md:flex-wrap md:items-center">
           <span class="text-xs text-muted-foreground whitespace-nowrap">{{ t('admin.users.filterCreatedRange') }}</span>
@@ -489,6 +540,7 @@ onMounted(() => {
       <DialogScrollContent class="w-[calc(100vw-1rem)] max-w-xl p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>{{ t('admin.users.modal.editTitle') }}</DialogTitle>
+          <DialogDescription class="sr-only">{{ t('admin.users.modal.editDescription') }}</DialogDescription>
         </DialogHeader>
         <form class="space-y-4" @submit.prevent="handleSubmit">
           <div class="grid grid-cols-1 gap-4">
@@ -541,6 +593,27 @@ onMounted(() => {
                 <SelectContent>
                   <SelectItem value="active">{{ t('admin.users.status.active') }}</SelectItem>
                   <SelectItem value="disabled">{{ t('admin.users.status.disabled') }}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.users.form.memberLevel') }}</label>
+              <Select v-model="form.memberLevelId">
+                <SelectTrigger class="h-9 w-full">
+                  <SelectValue :placeholder="t('admin.users.form.memberLevelPlaceholder')" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">{{ t('admin.users.form.memberLevelNone') }}</SelectItem>
+                  <SelectItem
+                    v-if="editingUserDeletedLevel"
+                    :value="String(editingUserDeletedLevel)"
+                    disabled
+                  >
+                    {{ t('admin.users.form.memberLevelDeleted', { id: editingUserDeletedLevel }) }}
+                  </SelectItem>
+                  <SelectItem v-for="opt in memberLevelOptions" :key="opt.id" :value="String(opt.id)">
+                    {{ opt.label }}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

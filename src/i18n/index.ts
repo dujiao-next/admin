@@ -2081,6 +2081,8 @@ const messages = {
         filterLastLoginRange: '最后登录时间范围',
         filterLastLoginFrom: '登录开始',
         filterLastLoginTo: '登录结束',
+        filterMemberLevel: '会员等级',
+        filterMemberLevelAll: '全部等级',
         batch: {
           enable: '批量启用',
           disable: '批量禁用',
@@ -2114,6 +2116,7 @@ const messages = {
         },
         modal: {
           editTitle: '编辑用户',
+          editDescription: '修改用户的基本信息、状态和会员等级',
         },
         form: {
           email: '邮箱',
@@ -2128,6 +2131,10 @@ const messages = {
           status: '状态',
           adminNote: '管理员备注',
           adminNotePlaceholder: '输入管理员备注（仅后台可见）',
+          memberLevel: '会员等级',
+          memberLevelPlaceholder: '选择会员等级',
+          memberLevelNone: '无等级',
+          memberLevelDeleted: '已删除等级 #{id}',
         },
         errors: {
           updateFailed: '更新用户失败',
@@ -3896,6 +3903,7 @@ const messages = {
           spendThreshold: '消费升级阈值',
           isDefault: '默认等级',
           sortOrder: '排序',
+          memberCount: '会员人数',
           isActive: '状态',
           createdAt: '创建时间',
           action: '操作',
@@ -6333,6 +6341,8 @@ const messages = {
         filterUserId: '用戶ID',
         filterKeyword: '搜尋信箱 / 暱稱 / 第三方帳號...',
         filterStatusAll: '全部狀態',
+        filterMemberLevel: '會員等級',
+        filterMemberLevelAll: '全部等級',
         filterCreatedRange: '註冊時間範圍',
         filterCreatedFrom: '註冊開始',
         filterCreatedTo: '註冊結束',
@@ -6372,6 +6382,7 @@ const messages = {
         },
         modal: {
           editTitle: '編輯用戶',
+          editDescription: '修改用戶的基本資訊、狀態和會員等級',
         },
         form: {
           email: '信箱',
@@ -6386,6 +6397,10 @@ const messages = {
           status: '狀態',
           adminNote: '管理員備註',
           adminNotePlaceholder: '輸入管理員備註（僅後台可見）',
+          memberLevel: '會員等級',
+          memberLevelPlaceholder: '選擇會員等級',
+          memberLevelNone: '無等級',
+          memberLevelDeleted: '已刪除等級 #{id}',
         },
         errors: {
           updateFailed: '更新用戶失敗',
@@ -8154,6 +8169,7 @@ const messages = {
           spendThreshold: '消費升級閾值',
           isDefault: '預設等級',
           sortOrder: '排序',
+          memberCount: '會員人數',
           isActive: '狀態',
           createdAt: '建立時間',
           action: '操作',
@@ -10591,6 +10607,8 @@ const messages = {
         filterUserId: 'User ID',
         filterKeyword: 'Search email / nickname / third-party account...',
         filterStatusAll: 'All status',
+        filterMemberLevel: 'Member Level',
+        filterMemberLevelAll: 'All Levels',
         filterCreatedRange: 'Registration range',
         filterCreatedFrom: 'Register from',
         filterCreatedTo: 'Register to',
@@ -10630,6 +10648,7 @@ const messages = {
         },
         modal: {
           editTitle: 'Edit user',
+          editDescription: 'Modify user basic info, status, and member level',
         },
         form: {
           email: 'Email',
@@ -10644,6 +10663,10 @@ const messages = {
           status: 'Status',
           adminNote: 'Admin Note',
           adminNotePlaceholder: 'Enter admin note (visible to admins only)',
+          memberLevel: 'Member Level',
+          memberLevelPlaceholder: 'Select member level',
+          memberLevelNone: 'None',
+          memberLevelDeleted: 'Deleted Level #{id}',
         },
         errors: {
           updateFailed: 'Failed to update user',
@@ -12412,6 +12435,7 @@ const messages = {
           spendThreshold: 'Spend Threshold',
           isDefault: 'Default',
           sortOrder: 'Sort Order',
+          memberCount: 'Members',
           isActive: 'Status',
           createdAt: 'Created At',
           action: 'Actions',

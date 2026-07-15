@@ -292,6 +292,7 @@ export interface AdminMemberLevel {
   is_default: boolean
   sort_order: number
   is_active: boolean
+  member_count?: number
   created_at: string
   updated_at: string
 }
