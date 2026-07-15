@@ -2806,6 +2806,14 @@ const messages = {
           currency: '全站币种',
           currencyTip: '全站仅允许一种币种，商品价格自动继承该币种',
         },
+        localeUrlMode: {
+          title: 'URL 语言模式',
+          subtitle: '选择前台 URL 的语言区分方式，切换后前台刷新生效',
+          defaultMode: '默认模式',
+          defaultModeDesc: 'URL 无语言前缀，语言由浏览器或用户选择决定',
+          prefixMode: '前缀模式',
+          prefixModeDesc: 'URL 使用 /zh/ /en/ /tw/ 前缀区分语言，支持 SEO 和链接分享',
+        },
         registration: {
           title: '注册配置',
           subtitle: '控制前台用户注册行为',
@@ -7064,6 +7072,14 @@ const messages = {
           currency: '全站幣種',
           currencyTip: '全站僅允許一種幣種，商品價格會自動繼承該幣種',
         },
+        localeUrlMode: {
+          title: 'URL 語言模式',
+          subtitle: '選擇前台 URL 的語言區分方式，切換後前台刷新生效',
+          defaultMode: '預設模式',
+          defaultModeDesc: 'URL 無語言前綴，語言由瀏覽器或用戶選擇決定',
+          prefixMode: '前綴模式',
+          prefixModeDesc: 'URL 使用 /zh/ /en/ /tw/ 前綴區分語言，支援 SEO 和連結分享',
+        },
         registration: {
           title: '註冊配置',
           subtitle: '控制前台用戶註冊行為',
@@ -11321,6 +11337,14 @@ const messages = {
           siteDescriptionTip: 'Displayed in the front-end footer. Leave empty to use the default text',
           currency: 'Site currency',
           currencyTip: 'Only one currency is allowed across the site, and product prices inherit it automatically',
+        },
+        localeUrlMode: {
+          title: 'URL Language Mode',
+          subtitle: 'Choose how language is reflected in the front-end URL. Takes effect after page refresh.',
+          defaultMode: 'Default Mode',
+          defaultModeDesc: 'No language prefix in URL. Language is determined by browser or user selection.',
+          prefixMode: 'Prefix Mode',
+          prefixModeDesc: 'URL uses /zh/ /en/ /tw/ prefixes to distinguish languages. Supports SEO and link sharing.',
         },
         registration: {
           title: 'Registration',
