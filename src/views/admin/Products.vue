@@ -26,6 +26,7 @@ const { t, locale } = useI18n()
 const loading = ref(false)
 const searchQuery = ref('')
 const stockStatus = ref('all')
+const activeStatus = ref('all')
 const wholesaleStatus = ref('all')
 const categoryFilter = ref('all')
 const route = useRoute()
@@ -235,6 +236,7 @@ const fetchProducts = async (options: ListFetchOptions = {}) => {
       page_size: pagination.page_size,
       search: searchQuery.value,
       stock_status: stockStatus.value,
+      active_status: activeStatus.value,
       wholesale: wholesaleStatus.value,
       category_id: categoryFilter.value === 'all' ? undefined : categoryFilter.value,
     })
@@ -323,6 +325,7 @@ const handleWholesaleStatusChange = () => {
 const resetFilters = () => {
   searchQuery.value = ''
   stockStatus.value = 'all'
+  activeStatus.value = 'all'
   wholesaleStatus.value = 'all'
   categoryFilter.value = 'all'
   pagination.page = 1
@@ -509,6 +512,18 @@ watch(
               <SelectItem value="low">{{ t('admin.products.stockStatus.low') }}</SelectItem>
               <SelectItem value="normal">{{ t('admin.products.stockStatus.normal') }}</SelectItem>
               <SelectItem value="unlimited">{{ t('admin.products.stockStatus.unlimited') }}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div class="w-full md:w-56">
+          <Select v-model="activeStatus" @update:modelValue="handleSearch">
+            <SelectTrigger class="h-9 w-full">
+              <SelectValue :placeholder="t('admin.products.filters.activeStatusPlaceholder')" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{{ t('admin.products.filters.activeStatusAll') }}</SelectItem>
+              <SelectItem value="active">{{ t('admin.products.filters.activeStatusActive') }}</SelectItem>
+              <SelectItem value="inactive">{{ t('admin.products.filters.activeStatusInactive') }}</SelectItem>
             </SelectContent>
           </Select>
         </div>
