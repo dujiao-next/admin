@@ -1398,6 +1398,10 @@ const messages = {
         filters: {
           stockStatusPlaceholder: '库存状态',
           stockStatusAll: '全部库存状态',
+          activeStatusPlaceholder: '商品状态',
+          activeStatusAll: '全部商品状态',
+          activeStatusActive: '已上架',
+          activeStatusInactive: '已下架',
           wholesalePlaceholder: '批发价',
           wholesaleAll: '全部批发价',
           wholesaleEnabled: '有批发价',
@@ -5656,6 +5660,10 @@ const messages = {
         filters: {
           stockStatusPlaceholder: '庫存狀態',
           stockStatusAll: '全部庫存狀態',
+          activeStatusPlaceholder: '商品狀態',
+          activeStatusAll: '全部商品狀態',
+          activeStatusActive: '已上架',
+          activeStatusInactive: '已下架',
           wholesalePlaceholder: '批發價',
           wholesaleAll: '全部批發價',
           wholesaleEnabled: '有批發價',
@@ -9914,6 +9922,10 @@ const messages = {
         filters: {
           stockStatusPlaceholder: 'Stock status',
           stockStatusAll: 'All stock status',
+          activeStatusPlaceholder: 'Product status',
+          activeStatusAll: 'All status',
+          activeStatusActive: 'Listed',
+          activeStatusInactive: 'Delisted',
           wholesalePlaceholder: 'Wholesale pricing',
           wholesaleAll: 'All wholesale pricing',
           wholesaleEnabled: 'With wholesale pricing',
