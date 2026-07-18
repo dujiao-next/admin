@@ -544,6 +544,7 @@ export interface AdminSiteConnection {
   price_markup_percent?: number
   price_rounding_mode?: string
   auto_sync_price?: boolean
+  excluded_product_ids?: string
   created_at: string
   updated_at: string
 }
