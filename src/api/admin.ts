@@ -522,7 +522,7 @@ export const adminAPI = {
   deleteMemberLevelPrice: (id: number) => api.delete(`/admin/member-level-prices/${id}`),
   setUserMemberLevel: (userId: number, memberLevelId: number) => api.put(`/admin/users/${userId}/member-level`, { member_level_id: memberLevelId }),
   backfillMemberLevels: () => api.post('/admin/member-levels/backfill'),
-  createCardSecretBatch: (data: { product_id: number; sku_id?: number; name?: string; secrets: string[]; batch_no?: string; note?: string; deduplicate?: boolean }) => api.post('/admin/card-secrets/batch', data),
+  createCardSecretBatch: (data: { product_id: number; sku_id?: number; name?: string; secrets: string[]; batch_no?: string; note?: string; overwrite_duplicates?: boolean }) => api.post('/admin/card-secrets/batch', data),
   importCardSecretCSV: (formData: FormData) =>
     api.post('/admin/card-secrets/import', formData),
   getCardSecrets: (params?: Record<string, unknown>) => api.get('/admin/card-secrets', { params }),
@@ -535,6 +535,8 @@ export const adminAPI = {
     api.post('/admin/card-secrets/export', data, { blob: true }),
   exportAvailableCardSecrets: (data: AdminExportAvailableCardSecretsPayload) =>
     api.post('/admin/card-secrets/export-available', data, { blob: true }),
+  getCardSecretExports: (params?: Record<string, unknown>) =>
+    api.get('/admin/card-secret-exports', { params }),
   getCardSecretStats: (params?: Record<string, unknown>) => api.get('/admin/card-secrets/stats', { params }),
   getCardSecretBatches: (params?: Record<string, unknown>) => api.get('/admin/card-secrets/batches', { params }),
   getCardSecretTemplate: () => api.get('/admin/card-secrets/template'),
