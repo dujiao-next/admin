@@ -34,6 +34,7 @@ const categoryOptions = computed(() => flattenAdminCategories(categories.value).
 const pagination = reactive({ page: 1, page_size: 20, total: 0, total_page: 1 })
 const filters = reactive({ connection_id: '__all__', upstream_status: '__all__', product_status: '__all__', search: '' })
 const syncingId = ref<number | null>(null)
+const fullSyncingId = ref<number | null>(null)
 
 // Expand detail
 const expandedMappingId = ref<number | null>(null)
@@ -336,6 +337,25 @@ const handleSync = async (mapping: AdminProductMapping) => {
   } catch (err: any) {
     notifyError(t('productMappings.sync.failed') + ': ' + (err?.response?.data?.message || err?.message || ''))
   } finally { syncingId.value = null }
+}
+
+const handleFullSync = async (mapping: AdminProductMapping) => {
+  const confirmed = await confirmAction({
+    title: t('productMappings.fullSync.confirmTitle'),
+    description: t('productMappings.fullSync.confirmMessage'),
+    confirmText: t('productMappings.fullSync.confirm'),
+    cancelText: t('productMappings.fullSync.cancel'),
+  })
+  if (!confirmed) return
+
+  fullSyncingId.value = mapping.id
+  try {
+    await adminAPI.fullSyncProductMapping(mapping.id)
+    notifySuccess(t('productMappings.fullSync.success'))
+    fetchMappings(pagination.page)
+  } catch (err: any) {
+    notifyError(t('productMappings.fullSync.failed') + ': ' + (err?.response?.data?.message || err?.message || ''))
+  } finally { fullSyncingId.value = null }
 }
 
 const handleToggleStatus = async (mapping: AdminProductMapping) => {
@@ -810,6 +830,9 @@ onMounted(() => { fetchConnections(); fetchCategories(); fetchMappings() })
 
           <!-- Actions -->
           <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-2 shrink-0" @click.stop>
+            <Button size="sm" variant="outline" class="w-full sm:w-auto" :disabled="fullSyncingId === mapping.id" @click="handleFullSync(mapping)">
+              {{ fullSyncingId === mapping.id ? t('productMappings.actions.syncing') : t('productMappings.fullSync.button') }}
+            </Button>
             <Button size="sm" variant="outline" class="w-full sm:w-auto" :disabled="syncingId === mapping.id" @click="handleSync(mapping)">
               {{ syncingId === mapping.id ? t('productMappings.actions.syncing') : t('productMappings.actions.sync') }}
             </Button>

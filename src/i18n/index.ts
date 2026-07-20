@@ -345,6 +345,16 @@ const messages = {
         success: '同步成功',
         failed: '同步失败',
       },
+      fullSync: {
+        button: '全量同步',
+        syncing: '同步中...',
+        confirmTitle: '确认全量同步',
+        confirmMessage: '全量同步会从上游重新获取产品信息，会覆盖你当前的修改，包括标题、详情、价格、规格名称等，请问是否继续？',
+        confirm: '确认',
+        cancel: '取消',
+        success: '全量同步成功',
+        failed: '全量同步失败',
+      },
       batch: {
         selectAll: '全选',
         selected: '已选 {count} 项',
@@ -4620,6 +4630,16 @@ const messages = {
         success: '同步成功',
         failed: '同步失敗',
       },
+      fullSync: {
+        button: '全量同步',
+        syncing: '同步中...',
+        confirmTitle: '確認全量同步',
+        confirmMessage: '全量同步會從上游重新獲取產品資訊，會覆蓋你當前的修改，包括標題、詳情、價格、規格名稱等，請問是否繼續？',
+        confirm: '確認',
+        cancel: '取消',
+        success: '全量同步成功',
+        failed: '全量同步失敗',
+      },
       batch: {
         selectAll: '全選',
         selected: '已選 {count} 項',
@@ -8894,6 +8914,16 @@ const messages = {
       sync: {
         success: 'Sync succeeded',
         failed: 'Sync failed',
+      },
+      fullSync: {
+        button: 'Full Sync',
+        syncing: 'Syncing...',
+        confirmTitle: 'Confirm Full Sync',
+        confirmMessage: 'Full sync will re-fetch product information from the upstream and overwrite your current changes, including title, description, price, spec names, etc. Are you sure you want to continue?',
+        confirm: 'Confirm',
+        cancel: 'Cancel',
+        success: 'Full sync successful',
+        failed: 'Full sync failed',
       },
       batch: {
         selectAll: 'Select All',
