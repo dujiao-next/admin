@@ -222,11 +222,34 @@ export interface AdminCardSecret {
   secret: string
   status: string
   order_id?: number
+  export_id?: number
   reserved_at?: string
   used_at?: string
   created_at: string
   updated_at: string
   batch?: AdminCardSecretBatch
+}
+
+export interface AdminCardSecretExport {
+  id: number
+  product_id: number
+  sku_id: number
+  batch_id?: number
+  admin_id: number
+  format: 'txt' | 'csv'
+  count: number
+  delete_after_export: boolean
+  created_at: string
+}
+
+export interface AdminCardSecretImportResult {
+  requires_confirmation: boolean
+  duplicate_count?: number
+  duplicates?: string[]
+  created: number
+  imported: number
+  batch_id?: number
+  batch_no?: string
 }
 
 // --- Coupon ---

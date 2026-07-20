@@ -2,9 +2,10 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { adminAPI } from '@/api/admin'
+import type { AdminCardSecretImportResult } from '@/api/types'
+import { AlertTriangle, X } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import FileInput from '@/components/FileInput.vue'
 
@@ -27,7 +28,6 @@ const batchForm = ref({
   secrets: '',
   batch_no: '',
   note: '',
-  deduplicate: true,
 })
 const batchSubmitting = ref(false)
 const batchError = ref('')
@@ -38,19 +38,73 @@ const importForm = ref({
   file: null as File | null,
   batch_no: '',
   note: '',
-  deduplicate: true,
 })
 const importSubmitting = ref(false)
 const importError = ref('')
 const importSuccess = ref('')
+const fileInputKey = ref(0)
+type ImportKind = 'manual' | 'csv'
+const duplicateDialog = ref<{
+  kind: ImportKind
+  count: number
+  duplicates: string[]
+} | null>(null)
+const duplicateSubmitting = ref(false)
+const duplicateError = ref('')
 
 const resetBatchForm = () => {
   batchForm.value.secrets = ''
   batchForm.value.batch_no = ''
   batchForm.value.note = ''
-  batchForm.value.deduplicate = true
   batchError.value = ''
   batchSuccess.value = ''
+}
+
+const parseImportResult = (response: any): AdminCardSecretImportResult => {
+  const payload = response?.data?.data || {}
+  return {
+    requires_confirmation: Boolean(payload.requires_confirmation),
+    duplicate_count: Number(payload.duplicate_count || 0),
+    duplicates: Array.isArray(payload.duplicates) ? payload.duplicates.map((item: unknown) => String(item)) : [],
+    created: Number(payload.created || 0),
+    imported: Number(payload.imported ?? payload.created ?? 0),
+    batch_id: Number(payload.batch_id || 0) || undefined,
+    batch_no: String(payload.batch_no || '') || undefined,
+  }
+}
+
+const normalizedBatchSecrets = () => Array.from(new Set(
+  batchForm.value.secrets
+    .split(/\r?\n/)
+    .map((item) => item.trim())
+    .filter((item) => item),
+))
+
+const requestBatchImport = async (overwriteDuplicates: boolean) => {
+  const response = await adminAPI.createCardSecretBatch({
+    product_id: props.productId,
+    sku_id: props.skuId || undefined,
+    secrets: normalizedBatchSecrets(),
+    batch_no: batchForm.value.batch_no.trim(),
+    note: batchForm.value.note.trim(),
+    overwrite_duplicates: overwriteDuplicates,
+  })
+  return parseImportResult(response)
+}
+
+const openDuplicateDialog = (kind: ImportKind, result: AdminCardSecretImportResult) => {
+  duplicateDialog.value = {
+    kind,
+    count: Number(result.duplicate_count || result.duplicates?.length || 0),
+    duplicates: result.duplicates || [],
+  }
+  duplicateError.value = ''
+}
+
+const finishBatchImport = (result: AdminCardSecretImportResult) => {
+  batchSuccess.value = t('admin.cardSecrets.success.batchCreatedCount', { count: result.imported })
+  batchForm.value.secrets = ''
+  emit('success')
 }
 
 const handleBatchCreate = async () => {
@@ -64,10 +118,7 @@ const handleBatchCreate = async () => {
     batchError.value = t('admin.cardSecrets.errors.skuRequired')
     return
   }
-  const secrets = batchForm.value.secrets
-    .split(/\r?\n/)
-    .map((item) => item.trim())
-    .filter((item) => item)
+  const secrets = normalizedBatchSecrets()
   if (!secrets.length) {
     batchError.value = t('admin.cardSecrets.errors.secretsRequired')
     return
@@ -75,17 +126,12 @@ const handleBatchCreate = async () => {
 
   batchSubmitting.value = true
   try {
-    await adminAPI.createCardSecretBatch({
-      product_id: props.productId,
-      sku_id: props.skuId || undefined,
-      secrets,
-      batch_no: batchForm.value.batch_no.trim(),
-      note: batchForm.value.note.trim(),
-      deduplicate: batchForm.value.deduplicate,
-    })
-    batchSuccess.value = t('admin.cardSecrets.success.batchCreated')
-    batchForm.value.secrets = ''
-    emit('success')
+    const result = await requestBatchImport(false)
+    if (result.requires_confirmation) {
+      openDuplicateDialog('manual', result)
+      return
+    }
+    finishBatchImport(result)
   } catch (err: any) {
     batchError.value = err.message || t('admin.cardSecrets.errors.batchFailed')
   } finally {
@@ -99,15 +145,37 @@ const handleFileChange = (files: FileList | null) => {
 
 const clearImportFile = () => {
   importForm.value.file = null
+  fileInputKey.value += 1
 }
 
 const resetImportForm = () => {
   clearImportFile()
   importForm.value.batch_no = ''
   importForm.value.note = ''
-  importForm.value.deduplicate = true
   importError.value = ''
   importSuccess.value = ''
+}
+
+const requestCSVImport = async (overwriteDuplicates: boolean) => {
+  const formData = new FormData()
+  formData.append('product_id', String(props.productId))
+  if (props.skuId > 0) {
+    formData.append('sku_id', String(props.skuId))
+  }
+  formData.append('batch_no', importForm.value.batch_no.trim())
+  formData.append('note', importForm.value.note.trim())
+  formData.append('overwrite_duplicates', String(overwriteDuplicates))
+  formData.append('file', importForm.value.file as File)
+  const response = await adminAPI.importCardSecretCSV(formData)
+  return parseImportResult(response)
+}
+
+const finishCSVImport = (result: AdminCardSecretImportResult) => {
+  clearImportFile()
+  importForm.value.batch_no = ''
+  importForm.value.note = ''
+  importSuccess.value = t('admin.cardSecrets.success.importedCount', { count: result.imported })
+  emit('success')
 }
 
 const handleImport = async () => {
@@ -128,23 +196,48 @@ const handleImport = async () => {
 
   importSubmitting.value = true
   try {
-    const formData = new FormData()
-    formData.append('product_id', String(props.productId))
-    if (props.skuId > 0) {
-      formData.append('sku_id', String(props.skuId))
+    const result = await requestCSVImport(false)
+    if (result.requires_confirmation) {
+      openDuplicateDialog('csv', result)
+      return
     }
-    formData.append('batch_no', importForm.value.batch_no.trim())
-    formData.append('note', importForm.value.note.trim())
-    formData.append('deduplicate', String(importForm.value.deduplicate))
-    formData.append('file', importForm.value.file)
-    await adminAPI.importCardSecretCSV(formData)
-    importSuccess.value = t('admin.cardSecrets.success.imported')
-    resetImportForm()
-    emit('success')
+    finishCSVImport(result)
   } catch (err: any) {
     importError.value = err.message || t('admin.cardSecrets.errors.importFailed')
   } finally {
     importSubmitting.value = false
+  }
+}
+
+const closeDuplicateDialog = () => {
+  if (duplicateSubmitting.value) return
+  duplicateDialog.value = null
+  duplicateError.value = ''
+}
+
+const confirmDuplicateOverwrite = async () => {
+  const pending = duplicateDialog.value
+  if (!pending) return
+  duplicateSubmitting.value = true
+  duplicateError.value = ''
+  try {
+    const result = pending.kind === 'manual'
+      ? await requestBatchImport(true)
+      : await requestCSVImport(true)
+    if (result.requires_confirmation) {
+      openDuplicateDialog(pending.kind, result)
+      return
+    }
+    if (pending.kind === 'manual') {
+      finishBatchImport(result)
+    } else {
+      finishCSVImport(result)
+    }
+    duplicateDialog.value = null
+  } catch (err: any) {
+    duplicateError.value = err.message || t('admin.cardSecrets.errors.importFailed')
+  } finally {
+    duplicateSubmitting.value = false
   }
 }
 </script>
@@ -169,15 +262,6 @@ const handleImport = async () => {
             <Input v-model="batchForm.note" :placeholder="t('admin.cardSecrets.notePlaceholder')" />
           </div>
         </div>
-        <div class="flex items-start justify-between gap-4 border-y border-border py-3">
-          <div>
-            <label for="card-secret-batch-deduplicate" class="text-sm font-medium text-foreground">
-              {{ t('admin.cardSecrets.deduplicateLabel') }}
-            </label>
-            <p class="mt-1 text-xs text-muted-foreground">{{ t('admin.cardSecrets.deduplicateHint') }}</p>
-          </div>
-          <Switch id="card-secret-batch-deduplicate" v-model="batchForm.deduplicate" class="mt-0.5" />
-        </div>
         <div v-if="batchError" class="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
           {{ batchError }}
         </div>
@@ -201,6 +285,7 @@ const handleImport = async () => {
           <label class="block text-xs font-medium text-muted-foreground mb-1.5">{{ t('admin.cardSecrets.csvLabel') }} *</label>
           <div class="flex flex-wrap items-center gap-2">
             <FileInput
+              :key="fileInputKey"
               accept=".csv"
               :button-text="t('admin.cardSecrets.csvChoose')"
               @change="handleFileChange"
@@ -219,15 +304,6 @@ const handleImport = async () => {
             <Input v-model="importForm.note" :placeholder="t('admin.cardSecrets.importNotePlaceholder')" />
           </div>
         </div>
-        <div class="flex items-start justify-between gap-4 border-y border-border py-3">
-          <div>
-            <label for="card-secret-csv-deduplicate" class="text-sm font-medium text-foreground">
-              {{ t('admin.cardSecrets.deduplicateLabel') }}
-            </label>
-            <p class="mt-1 text-xs text-muted-foreground">{{ t('admin.cardSecrets.deduplicateHint') }}</p>
-          </div>
-          <Switch id="card-secret-csv-deduplicate" v-model="importForm.deduplicate" class="mt-0.5" />
-        </div>
         <div v-if="importError" class="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
           {{ importError }}
         </div>
@@ -241,6 +317,63 @@ const handleImport = async () => {
           </Button>
         </div>
       </form>
+    </div>
+
+    <div
+      v-if="duplicateDialog"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 py-6 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div class="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
+        <div class="flex items-start gap-3 border-b border-border px-5 py-4">
+          <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
+            <AlertTriangle class="h-5 w-5" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-base font-semibold text-foreground">{{ t('admin.cardSecrets.duplicate.title') }}</h3>
+            <p class="mt-1 text-sm leading-6 text-muted-foreground">
+              {{ t('admin.cardSecrets.duplicate.description', { count: duplicateDialog.count }) }}
+            </p>
+          </div>
+          <button
+            type="button"
+            class="rounded-full p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+            :title="t('admin.common.close')"
+            :aria-label="t('admin.common.close')"
+            :disabled="duplicateSubmitting"
+            @click="closeDuplicateDialog"
+          >
+            <X class="h-4 w-4" />
+          </button>
+        </div>
+
+        <div class="min-h-0 flex-1 space-y-3 px-5 py-4">
+          <div class="max-h-[46vh] overflow-y-auto rounded-lg border border-border bg-muted/20">
+            <div
+              v-for="(secret, index) in duplicateDialog.duplicates"
+              :key="`${secret}-${index}`"
+              class="flex gap-3 border-b border-border px-3 py-2 text-xs last:border-b-0"
+            >
+              <span class="w-8 shrink-0 text-right text-muted-foreground">{{ index + 1 }}</span>
+              <span class="min-w-0 break-all font-mono text-foreground">{{ secret }}</span>
+            </div>
+          </div>
+          <p class="text-xs leading-5 text-muted-foreground">{{ t('admin.cardSecrets.duplicate.preserveHint') }}</p>
+          <p v-if="duplicateError" class="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+            {{ duplicateError }}
+          </p>
+        </div>
+
+        <div class="flex flex-col-reverse gap-2 border-t border-border bg-muted/30 px-5 py-4 sm:flex-row sm:justify-end">
+          <Button variant="outline" :disabled="duplicateSubmitting" @click="closeDuplicateDialog">
+            {{ t('admin.cardSecrets.duplicate.cancel') }}
+          </Button>
+          <Button :disabled="duplicateSubmitting" @click="confirmDuplicateOverwrite">
+            {{ duplicateSubmitting ? t('admin.cardSecrets.duplicate.overwriting') : t('admin.cardSecrets.duplicate.overwrite') }}
+          </Button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
