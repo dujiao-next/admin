@@ -234,7 +234,7 @@ onMounted(() => {
     </div>
 
     <div class="rounded-xl border border-border bg-card overflow-x-auto">
-      <Table class="min-w-[940px]">
+      <Table class="min-w-[1028px]">
         <TableHeader class="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground">
           <TableRow>
             <TableHead class="min-w-[80px] px-6 py-3">{{ t('admin.memberLevels.table.id') }}</TableHead>
@@ -245,6 +245,7 @@ onMounted(() => {
             <TableHead class="min-w-[90px] px-6 py-3">{{ t('admin.memberLevels.table.rechargeThreshold') }}</TableHead>
             <TableHead class="min-w-[90px] px-6 py-3">{{ t('admin.memberLevels.table.spendThreshold') }}</TableHead>
             <TableHead class="min-w-[90px] px-6 py-3">{{ t('admin.memberLevels.table.sortOrder') }}</TableHead>
+            <TableHead class="min-w-[88px] px-6 py-3">{{ t('admin.memberLevels.table.memberCount') }}</TableHead>
             <TableHead class="min-w-[90px] px-6 py-3">{{ t('admin.memberLevels.table.isActive') }}</TableHead>
             <TableHead class="min-w-[80px] px-6 py-3">{{ t('admin.memberLevels.table.createdAt') }}</TableHead>
             <TableHead class="min-w-[80px] px-6 py-3 text-right">{{ t('admin.memberLevels.table.action') }}</TableHead>
@@ -252,12 +253,12 @@ onMounted(() => {
         </TableHeader>
         <TableBody class="divide-y divide-border">
           <TableRow v-if="loading">
-            <TableCell :colspan="11" class="p-0">
-              <TableSkeleton :columns="11" :rows="5" />
+            <TableCell :colspan="12" class="p-0">
+              <TableSkeleton :columns="12" :rows="5" />
             </TableCell>
           </TableRow>
           <TableRow v-else-if="levels.length === 0">
-            <TableCell colspan="11" class="px-6 py-8 text-center text-muted-foreground">
+            <TableCell colspan="12" class="px-6 py-8 text-center text-muted-foreground">
               {{ t('admin.memberLevels.empty') }}
             </TableCell>
           </TableRow>
@@ -295,6 +296,9 @@ onMounted(() => {
             </TableCell>
             <TableCell class="min-w-[90px] px-6 py-4 text-xs text-muted-foreground">
               {{ level.sort_order }}
+            </TableCell>
+            <TableCell class="min-w-[88px] px-6 py-4 text-xs font-mono text-muted-foreground">
+              {{ level.member_count ?? 0 }}
             </TableCell>
             <TableCell class="min-w-[90px] px-6 py-4">
               <span
